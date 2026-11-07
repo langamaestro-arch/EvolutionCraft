@@ -1,0 +1,38 @@
+
+name: Compilar Evolution Craft 26.3
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Preparar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+
+      - name: Compilar
+        run: gradle build --stacktrace --no-daemon
+
+      - name: Subir JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: EvolutionCraft-26.3
+          path: build/libs/*.jar
+          if-no-files-found: error

@@ -9,7 +9,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
-/** Tecla P: consulta el progreso real del servidor. */
+/** Tecla P configurable para consultar el progreso del jugador en el servidor. */
 @EventBusSubscriber(modid = EvolutionCraft.ID, value = Dist.CLIENT)
 public final class GuideKey {
     private static final KeyMapping SHOW = new KeyMapping(
@@ -17,18 +17,15 @@ public final class GuideKey {
 
     private GuideKey() {}
 
-    @EventBusSubscriber(modid = EvolutionCraft.ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
-    public static final class Registration {
-        @SubscribeEvent
-        public static void registerKeys(RegisterKeyMappingsEvent event) {
-            event.register(SHOW);
-        }
+    @SubscribeEvent
+    public static void registerKeys(RegisterKeyMappingsEvent event) {
+        event.register(SHOW);
     }
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.screen != null || minecraft.getConnection() == null) return;
+        if (minecraft.player == null || minecraft.getConnection() == null) return;
         while (SHOW.consumeClick()) minecraft.getConnection().sendCommand("ecprogreso");
     }
 }

@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
 import net.neoforged.neoforge.event.entity.living.AnimalTameEvent;
 import net.neoforged.neoforge.event.entity.living.BabyEntitySpawnEvent;
 
@@ -31,7 +31,7 @@ public final class FarmingEvents {
     }
 
     @SubscribeEvent
-    public static void harvest(BlockEvent.BreakEvent event) {
+    public static void harvest(BreakBlockEvent event) {
         if (!(event.getPlayer() instanceof ServerPlayer player) || event.isCanceled()) return;
         BlockState state = event.getState();
         String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();

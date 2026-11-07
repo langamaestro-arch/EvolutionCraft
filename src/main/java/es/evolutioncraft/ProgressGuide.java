@@ -1,0 +1,108 @@
+package es.evolutioncraft;
+
+import com.mojang.brigadier.Command;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+
+/** Desglosa la progresión guardada en el servidor, sin alterar sus reglas. */
+@EventBusSubscriber(modid = EvolutionCraft.ID)
+public final class ProgressGuide {
+    private ProgressGuide() {}
+
+    @SubscribeEvent
+    public static void commands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("ecprogreso").executes(ctx -> {
+            show(ctx.getSource().getPlayerOrException());
+            return Command.SINGLE_SUCCESS;
+        }));
+    }
+
+    private static void line(ServerPlayer player, boolean done, String message) {
+        player.sendSystemMessage(Component.literal((done ? "§a✔ " : "§c✘ ") + "§f" + message));
+    }
+
+    private static void items(ServerPlayer player, Progress p, String material, boolean armor) {
+        String[] suffixes = armor
+                ? new String[]{"helmet", "chestplate", "leggings", "boots"}
+                : new String[]{"pickaxe", "axe", "sword", "shovel", "hoe"};
+        String[] labels = armor
+                ? new String[]{"casco", "peto", "pantalones", "botas"}
+                : new String[]{"pico", "hacha", "espada", "pala", "azada"};
+        for (int i = 0; i < suffixes.length; i++)
+            line(player, p.crafted.contains("minecraft:" + material + "_" + suffixes[i]),
+                    "Fabricar " + labels[i] + " de " + material);
+    }
+
+    private static boolean trade(Progress p, String material) {
+        return p.trades.stream().anyMatch(s -> s.startsWith("minecraft:" + material + "_") &&
+                (s.endsWith("_pickaxe") || s.endsWith("_axe") || s.endsWith("_sword") ||
+                 s.endsWith("_shovel") || s.endsWith("_hoe")));
+    }
+
+    public static void show(ServerPlayer player) {
+        Progress p = ProgressStore.get(player);
+        int era = p.era();
+        player.sendSystemMessage(Component.literal("§6§l════ EVOLUTION CRAFT · PROGRESO ════"));
+        player.sendSystemMessage(Component.literal("§eEra actual: §f" + Progress.ERA_NAMES[era]
+                + " §7(" + (era + 1) + "/" + Progress.ERA_NAMES.length + ")"));
+        if (era == 5) {
+            player.sendSystemMessage(Component.literal("§a¡Has alcanzado la última era!"));
+        } else {
+            player.sendSystemMessage(Component.literal("§e§lObjetivos para: " + Progress.ERA_NAMES[era + 1]));
+            switch (era) {
+                case 0 -> {
+                    items(player, p, "wooden", false);
+                    line(player, p.advancements.contains("minecraft:story/mine_stone"), "Logro: conseguir piedra");
+                }
+                case 1 -> {
+                    items(player, p, "stone", false);
+                    items(player, p, "leather", true);
+                    line(player, p.tradeCount >= 1, "Comerciar con aldeanos (" + p.tradeCount + "/1)");
+                }
+                case 2 -> {
+                    items(player, p, "copper", false);
+                    items(player, p, "copper", true);
+                    line(player, trade(p, "iron"), "Conseguir herramienta de hierro comerciando");
+                    line(player, p.advancements.contains("minecraft:story/smelt_iron"), "Logro: fundir hierro");
+                }
+                case 3 -> {
+                    items(player, p, "iron", false);
+                    items(player, p, "iron", true);
+                    line(player, trade(p, "diamond"), "Conseguir herramienta de diamante comerciando");
+                    line(player, p.advancements.contains("minecraft:story/mine_diamond"), "Logro: encontrar diamante");
+                }
+                case 4 -> {
+                    items(player, p, "diamond", false);
+                    items(player, p, "diamond", true);
+                    line(player, p.advancements.contains("minecraft:story/enter_the_nether"), "Logro: entrar al Nether");
+                }
+                default -> { }
+            }
+        }
+        player.sendSystemMessage(Component.literal("§b§lPesca §7· nivel " + p.fishingLevel() + "/5"));
+        line(player, p.fish >= 10, "Capturar peces (" + p.fish + "/10)");
+        line(player, p.fishSpecies.size() >= 4, "Especies distintas (" + p.fishSpecies.size() + "/4)");
+        line(player, p.fishingTreasures.size() >= 3, "Tesoros distintos (" + p.fishingTreasures.size() + "/3)");
+        line(player, p.fish >= 100, "Capturar 100 peces (" + p.fish + "/100)");
+        line(player, p.advancements.contains("minecraft:husbandry/tactical_fishing"), "Logro: pesca táctica");
+
+        player.sendSystemMessage(Component.literal("§5§lAcceso al Nether §7" + (p.canNether() ? "§aDESBLOQUEADO" : "§cBLOQUEADO")));
+        line(player, p.era() >= 3, "Era de Hierro alcanzada");
+        line(player, p.fishingLevel() >= 3, "Pesca nivel 3");
+        line(player, p.bossKills.contains("minecraft:warden"), "Derrotar al Warden");
+        line(player, p.advancements.size() >= 20, "Avances originales (" + p.advancements.size() + "/20)");
+        line(player, p.advancements.contains("minecraft:adventure/adventuring_time"), "Logro: explorar biomas del Overworld");
+
+        player.sendSystemMessage(Component.literal("§d§lAcceso al End §7" + (p.canEnd() ? "§aDESBLOQUEADO" : "§cBLOQUEADO")));
+        line(player, p.canNether(), "Acceso al Nether desbloqueado");
+        line(player, p.fishingLevel() == 5, "Pesca nivel 5");
+        line(player, p.bossKills.contains("minecraft:wither"), "Derrotar al Wither");
+        line(player, p.advancements.size() >= 45, "Avances originales (" + p.advancements.size() + "/45)");
+        line(player, p.advancements.contains("minecraft:nether/explore_nether"), "Logro: explorar biomas del Nether");
+        player.sendSystemMessage(Component.literal("§7Pulsa T para revisar el historial del chat."));
+    }
+}

@@ -91,11 +91,16 @@ public final class ProgressGuide {
             }
         }
         player.sendSystemMessage(Component.literal("§b§lPesca §7· nivel " + p.fishingLevel() + "/5"));
-        line(player, p.fish >= 10, "Capturar peces (" + p.fish + "/10)");
-        line(player, p.fishSpecies.size() >= 4, "Especies distintas (" + p.fishSpecies.size() + "/4)");
-        line(player, p.fishingTreasures.size() >= 3, "Tesoros distintos (" + p.fishingTreasures.size() + "/3)");
-        line(player, p.fish >= 100, "Capturar 100 peces (" + p.fish + "/100)");
-        line(player, p.advancements.contains("minecraft:husbandry/tactical_fishing"), "Logro: pesca táctica");
+        line(player, p.fish >= 25, "Pesca I: 25 peces (" + p.fish + "/25)");
+        line(player, p.fish >= 60, "Pesca II: 60 peces (" + p.fish + "/60)");
+        line(player, p.fishSpecies.size() >= 3, "Pesca II: 3 especies (" + p.fishSpecies.size() + "/3)");
+        line(player, p.fish >= 120, "Pesca III: 120 peces (" + p.fish + "/120)");
+        line(player, p.fishSpecies.size() >= 4, "Pesca III: 4 especies (" + p.fishSpecies.size() + "/4)");
+        line(player, p.fishingTreasures.size() >= 2, "Pesca III: 2 tesoros (" + p.fishingTreasures.size() + "/2)");
+        line(player, p.fish >= 250, "Pesca IV: 250 peces (" + p.fish + "/250)");
+        line(player, p.fishingTreasures.size() >= 3, "Pesca IV: 3 tesoros (" + p.fishingTreasures.size() + "/3)");
+        line(player, p.fish >= 500, "Pesca V: 500 peces (" + p.fish + "/500)");
+        line(player, p.advancements.contains("minecraft:husbandry/tactical_fishing"), "Pesca V: avance Pesca táctica");
 
         player.sendSystemMessage(Component.literal("§5§lAcceso al Nether §7" + (p.canNether() ? "§aDESBLOQUEADO" : "§cBLOQUEADO")));
         line(player, p.era() >= 3, "Era de Hierro alcanzada");

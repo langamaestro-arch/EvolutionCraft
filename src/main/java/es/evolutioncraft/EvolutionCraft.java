@@ -9,6 +9,7 @@ import net.neoforged.neoforge.event.entity.player.ItemFishedEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.TradeWithVillagerEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -96,6 +97,23 @@ public final class EvolutionCraft {
         String entity = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).toString();
         if (entity.equals("minecraft:warden") || entity.equals("minecraft:wither")) {
             update(player, p -> p.bossKills.add(entity));
+        }
+    }
+
+    // La validación se realiza ANTES del teletransporte, por jugador y en servidor.
+    @SubscribeEvent
+    public void dimensionTravel(EntityTravelToDimensionEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        Progress progress = ProgressStore.get(player);
+        boolean netherDenied = event.getDimension() == Level.NETHER && !progress.canNether();
+        boolean endDenied = event.getDimension() == Level.END && !progress.canEnd();
+        if (!netherDenied && !endDenied) return;
+        event.setCanceled(true);
+        // Evita saturar el chat si el jugador permanece dentro de un portal.
+        if (player.tickCount % 40 == 0) {
+            player.sendSystemMessage(Component.literal(netherDenied
+                    ? "§c[Evolution Craft] Nether bloqueado: pesca III, Warden, biomas y 20 avances."
+                    : "§c[Evolution Craft] End bloqueado: pesca V, Wither, biomas y 45 avances."));
         }
     }
 

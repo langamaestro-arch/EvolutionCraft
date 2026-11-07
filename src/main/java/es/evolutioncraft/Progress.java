@@ -64,7 +64,7 @@ public final class Progress {
             if (!s.endsWith(suffix)) continue;
             if (s.startsWith("netherite_")) return 5;
             if (s.startsWith("diamond_")) return 4;
-            if (s.startsWith("iron_")) return 3;
+            if (s.startsWith("iron_") || s.startsWith("golden_")) return 3;
             if (s.startsWith("copper_")) return 2;
             if (s.startsWith("stone_") || s.startsWith("leather_")) return 1;
         }

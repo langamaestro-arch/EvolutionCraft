@@ -15,12 +15,13 @@ public final class Progress {
     public int fish;
     public int tradeCount;
     public int harvests;
+    public int wheatHarvests;
     public Set<String> harvested = new HashSet<>();
     public int breedings;
     public Set<String> bred = new HashSet<>();
     public Set<String> tamed = new HashSet<>();
     public int agricultureLevel() {
-        if (harvests < 32 || !harvested.contains("minecraft:wheat")) return 0;
+        if (wheatHarvests < 32) return 0;
         if (!harvested.containsAll(Set.of("minecraft:wheat", "minecraft:carrots", "minecraft:potatoes", "minecraft:beetroots"))) return 1;
         if (harvests < 250 || !harvested.containsAll(Set.of("minecraft:melon", "minecraft:pumpkin"))) return 2;
         if (harvests < 500 || !harvested.containsAll(Set.of("minecraft:cocoa", "minecraft:nether_wart"))) return 3;

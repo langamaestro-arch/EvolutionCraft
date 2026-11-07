@@ -4,6 +4,7 @@ import com.mojang.brigadier.Command;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -16,11 +17,17 @@ public final class ProgressGuide {
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("ecprogreso").executes(ctx -> {
+            PacketDistributor.sendToPlayer(ctx.getSource().getPlayerOrException(),
+                    new GuidePayload(GuideData.snapshot(ctx.getSource().getPlayerOrException())));
+            return Command.SINGLE_SUCCESS;
+        }));
+        event.getDispatcher().register(Commands.literal("ecprogresochat").executes(ctx -> {
             show(ctx.getSource().getPlayerOrException());
             return Command.SINGLE_SUCCESS;
         }));
     }
 
+    // Compatibilidad: /ecprogresochat conserva el listado textual.
     private static void line(ServerPlayer player, boolean done, String message) {
         player.sendSystemMessage(Component.literal((done ? "§a✔ " : "§c✘ ") + "§f" + message));
     }

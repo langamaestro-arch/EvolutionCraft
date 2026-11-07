@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.level.Level;
 import java.util.Locale;
 
@@ -37,7 +38,7 @@ public final class EvolutionCraft {
         ProgressStore.save(player);
         int current = p.era();
         if (current > previous) {
-            player.displayClientMessage(Component.literal("§a[Evolution Craft] ¡Nueva era desbloqueada! " + Progress.ERA_NAMES[current]), false);
+            player.sendSystemMessage(Component.literal("§a[Evolution Craft] ¡Nueva era desbloqueada! " + Progress.ERA_NAMES[current]), false);
         }
     }
 
@@ -113,8 +114,8 @@ public final class EvolutionCraft {
             if (requiredEra > progress.era()) {
                 ItemStack dropped = stack.copy();
                 player.setItemSlot(slot, ItemStack.EMPTY);
-                player.drop(dropped, false);
-                player.displayClientMessage(Component.literal("§c[Evolution Craft] Equipo bloqueado: " + Progress.ERA_NAMES[requiredEra]), true);
+                player.drop(dropped, false, Prediction.SERVER_ONLY);
+                player.sendSystemMessage(Component.literal("§c[Evolution Craft] Equipo bloqueado: " + Progress.ERA_NAMES[requiredEra]), true);
             }
         }
     }

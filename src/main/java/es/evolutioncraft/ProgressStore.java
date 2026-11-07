@@ -17,7 +17,7 @@ public final class ProgressStore {
     private static final Map<Path, Map<UUID, Progress>> WORLDS = new HashMap<>();
     private ProgressStore() {}
     private static Path path(ServerPlayer player) {
-        return player.getServer().getWorldPath(LevelResource.ROOT).resolve("evolutioncraft_players.json");
+        return player.level().getServer().getWorldPath(LevelResource.ROOT).resolve("evolutioncraft_players.json");
     }
     private static Map<UUID, Progress> world(Path path) {
         return WORLDS.computeIfAbsent(path, p -> {

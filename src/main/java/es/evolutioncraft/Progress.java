@@ -63,12 +63,13 @@ public final class Progress {
                 !advancements.contains("minecraft:story/enter_the_nether")) return 4;
         return 5;
     }
+    /** Cinco niveles acumulativos; todos los peces proceden de la pesca registrada. */
     public int fishingLevel() {
-        if (fish < 10) return 0;
-        if (fishSpecies.size() < 4) return 1;
-        if (fishingTreasures.size() < 3) return 2;
-        if (fish < 100) return 3;
-        if (!advancements.contains("minecraft:husbandry/tactical_fishing")) return 4;
+        if (fish < 25) return 0;
+        if (fish < 60 || fishSpecies.size() < 3) return 1;
+        if (fish < 120 || fishSpecies.size() < 4 || fishingTreasures.size() < 2) return 2;
+        if (fish < 250 || fishingTreasures.size() < 3) return 3;
+        if (fish < 500 || !advancements.contains("minecraft:husbandry/tactical_fishing")) return 4;
         return 5;
     }
     public boolean canNether() {

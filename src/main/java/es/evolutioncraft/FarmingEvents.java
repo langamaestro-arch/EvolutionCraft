@@ -42,7 +42,7 @@ public final class FarmingEvents {
                 && state.getValue(net.minecraft.world.level.block.NetherWartBlock.AGE) == 3)
             || id.equals("minecraft:melon") || id.equals("minecraft:pumpkin");
         if (!mature) return;
-        record(player, p -> { p.harvests++; p.harvested.add(id); });
+        record(player, p -> { p.harvests++; if (id.equals("minecraft:wheat")) p.wheatHarvests++; p.harvested.add(id); });
     }
 
     @SubscribeEvent

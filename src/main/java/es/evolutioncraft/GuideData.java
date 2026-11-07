@@ -83,7 +83,7 @@ public final class GuideData {
         goal(fish,"Capturar 100 peces ("+p.fish+"/100)",p.fish>=100);
         goal(fish,"Avance: pesca táctica",p.advancements.contains("minecraft:husbandry/tactical_fishing"));
         JsonObject farm=group(root,"agricultureGoals","Agricultura");
-        goal(farm,"Nivel I: cosechar 32 cultivos y trigo ("+p.harvests+"/32)",p.harvests>=32 && p.harvested.contains("minecraft:wheat"));
+        goal(farm,"Nivel I: cosechar 32 cosechas de trigo ("+p.wheatHarvests+"/32)",p.wheatHarvests>=32);
         goal(farm,"Nivel II: trigo, zanahoria, patata y remolacha ("+p.harvested.stream().filter(s->java.util.Set.of("minecraft:wheat","minecraft:carrots","minecraft:potatoes","minecraft:beetroots").contains(s)).count()+"/4)",p.harvested.containsAll(java.util.Set.of("minecraft:wheat","minecraft:carrots","minecraft:potatoes","minecraft:beetroots")));
         goal(farm,"Nivel III: 250 cosechas ("+p.harvests+"/250)",p.harvests>=250);
         goal(farm,"Nivel III: melones y calabazas",p.harvested.containsAll(java.util.Set.of("minecraft:melon","minecraft:pumpkin")));

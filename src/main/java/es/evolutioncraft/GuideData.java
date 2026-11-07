@@ -77,11 +77,16 @@ public final class GuideData {
             eras.getAsJsonArray("goals").add(stage);
         }
         JsonObject fish=group(root,"fishingGoals","Maestría de pesca");
-        goal(fish,"Capturar 10 peces ("+p.fish+"/10)",p.fish>=10);
-        goal(fish,"Capturar las 4 especies ("+p.fishSpecies.size()+"/4)",p.fishSpecies.size()>=4);
-        goal(fish,"Obtener 3 tesoros distintos ("+p.fishingTreasures.size()+"/3)",p.fishingTreasures.size()>=3);
-        goal(fish,"Capturar 100 peces ("+p.fish+"/100)",p.fish>=100);
-        goal(fish,"Avance: pesca táctica",p.advancements.contains("minecraft:husbandry/tactical_fishing"));
+        goal(fish,"Nivel I: pescar 25 peces ("+p.fish+"/25)",p.fish>=25);
+        goal(fish,"Nivel II: pescar 60 peces ("+p.fish+"/60)",p.fish>=60);
+        goal(fish,"Nivel II: 3 especies ("+p.fishSpecies.size()+"/3)",p.fishSpecies.size()>=3);
+        goal(fish,"Nivel III: pescar 120 peces ("+p.fish+"/120)",p.fish>=120);
+        goal(fish,"Nivel III: 4 especies ("+p.fishSpecies.size()+"/4)",p.fishSpecies.size()>=4);
+        goal(fish,"Nivel III: 2 tesoros ("+p.fishingTreasures.size()+"/2)",p.fishingTreasures.size()>=2);
+        goal(fish,"Nivel IV: pescar 250 peces ("+p.fish+"/250)",p.fish>=250);
+        goal(fish,"Nivel IV: 3 tesoros ("+p.fishingTreasures.size()+"/3)",p.fishingTreasures.size()>=3);
+        goal(fish,"Nivel V: pescar 500 peces ("+p.fish+"/500)",p.fish>=500);
+        goal(fish,"Nivel V: avance Pesca táctica",p.advancements.contains("minecraft:husbandry/tactical_fishing"));
         JsonObject farm=group(root,"agricultureGoals","Agricultura");
         goal(farm,"Nivel I: cosechar 32 cosechas de trigo ("+p.wheatHarvests+"/32)",p.wheatHarvests>=32);
         goal(farm,"Nivel II: trigo, zanahoria, patata y remolacha ("+p.harvested.stream().filter(s->java.util.Set.of("minecraft:wheat","minecraft:carrots","minecraft:potatoes","minecraft:beetroots").contains(s)).count()+"/4)",p.harvested.containsAll(java.util.Set.of("minecraft:wheat","minecraft:carrots","minecraft:potatoes","minecraft:beetroots")));

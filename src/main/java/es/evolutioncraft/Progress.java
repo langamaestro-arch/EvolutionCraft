@@ -14,6 +14,27 @@ public final class Progress {
     public Set<String> bossKills = new HashSet<>();
     public int fish;
     public int tradeCount;
+    public int harvests;
+    public Set<String> harvested = new HashSet<>();
+    public int breedings;
+    public Set<String> bred = new HashSet<>();
+    public Set<String> tamed = new HashSet<>();
+    public int agricultureLevel() {
+        if (harvests < 32 || !harvested.contains("minecraft:wheat")) return 0;
+        if (!harvested.containsAll(Set.of("minecraft:wheat", "minecraft:carrots", "minecraft:potatoes", "minecraft:beetroots"))) return 1;
+        if (harvests < 250 || !harvested.containsAll(Set.of("minecraft:melon", "minecraft:pumpkin"))) return 2;
+        if (harvests < 500 || !harvested.containsAll(Set.of("minecraft:cocoa", "minecraft:nether_wart"))) return 3;
+        if (harvests < 1000) return 4;
+        return 5;
+    }
+    public int husbandryLevel() {
+        if (breedings < 5) return 0;
+        if (!bred.containsAll(Set.of("minecraft:cow", "minecraft:sheep", "minecraft:pig", "minecraft:chicken"))) return 1;
+        if (breedings < 30 || !tamed.containsAll(Set.of("minecraft:wolf", "minecraft:cat"))) return 2;
+        if (breedings < 75 || !bred.contains("minecraft:horse")) return 3;
+        if (breedings < 150) return 4;
+        return 5;
+    }
 
     private boolean craftedTools(String material) {
         for (String tool : new String[]{"pickaxe", "axe", "sword", "shovel", "hoe"})
@@ -32,11 +53,11 @@ public final class Progress {
     }
     public int era() {
         if (!craftedTools("wooden") || !advancements.contains("minecraft:story/mine_stone")) return 0;
-        if (!craftedTools("stone") || !craftedArmor("leather") || tradeCount < 1) return 1;
+        if (!craftedTools("stone") || !craftedArmor("leather") || tradeCount < 1 || agricultureLevel() < 1 || husbandryLevel() < 1) return 1;
         if (!craftedTools("copper") || !craftedArmor("copper") || !tradedEquipment("iron") ||
-                !advancements.contains("minecraft:story/smelt_iron")) return 2;
+                !advancements.contains("minecraft:story/smelt_iron") || agricultureLevel() < 2 || husbandryLevel() < 2) return 2;
         if (!craftedTools("iron") || !craftedArmor("iron") || !tradedEquipment("diamond") ||
-                !advancements.contains("minecraft:story/mine_diamond")) return 3;
+                !advancements.contains("minecraft:story/mine_diamond") || agricultureLevel() < 3 || husbandryLevel() < 3) return 3;
         if (!craftedTools("diamond") || !craftedArmor("diamond") ||
                 !advancements.contains("minecraft:story/enter_the_nether")) return 4;
         return 5;
@@ -51,11 +72,11 @@ public final class Progress {
     }
     public boolean canNether() {
         return era() >= 3 && fishingLevel() >= 3 && bossKills.contains("minecraft:warden") &&
-               advancements.size() >= 20 && advancements.contains("minecraft:adventure/adventuring_time");
+               agricultureLevel() >= 3 && husbandryLevel() >= 3 && advancements.size() >= 20 && advancements.contains("minecraft:adventure/adventuring_time");
     }
     public boolean canEnd() {
         return canNether() && fishingLevel() == 5 && bossKills.contains("minecraft:wither") &&
-               advancements.size() >= 45 && advancements.contains("minecraft:nether/explore_nether");
+               agricultureLevel() >= 5 && husbandryLevel() >= 5 && advancements.size() >= 45 && advancements.contains("minecraft:nether/explore_nether");
     }
     public static int requiredEra(String item) {
         if (!item.startsWith("minecraft:")) return 0;

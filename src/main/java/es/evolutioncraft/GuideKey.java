@@ -25,14 +25,14 @@ public final class GuideKey {
     @SubscribeEvent
     public static void registerPackets(RegisterClientPayloadHandlersEvent event) {
         event.register(GuidePayload.TYPE, (payload, context) -> {
-            Minecraft.getInstance().setScreen(new ProgressScreen(payload.json()));
+            Minecraft.getInstance().gui.setScreen(new ProgressScreen(payload.json()));
         });
     }
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.getConnection() == null || minecraft.screen() != null) return;
+        if (minecraft.player == null || minecraft.getConnection() == null || minecraft.gui.screen() != null) return;
         while (SHOW.consumeClick()) minecraft.getConnection().sendCommand("ecprogreso");
     }
 }

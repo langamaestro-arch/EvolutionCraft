@@ -29,6 +29,7 @@ public final class EvolutionEvents {
         Progress p=ProgressStore.get(player);
         p.cleanNights=0;
         p.lastNightIndex=-1;
+        p.nightTicksObserved=0;
         ProgressStore.save(player);
     }
 
@@ -94,14 +95,22 @@ public final class EvolutionEvents {
         long phase=time%24000L;
         // Solo se acredita tras presenciar el tramo nocturno y su amanecer.
         if(player.level().dimension()==Level.OVERWORLD) {
-            if(phase>=13500 && phase<22500 && p.lastNightIndex!=day) {
-                p.lastNightIndex=day; changed=true;
+            if(phase>=13000 && phase<23000) {
+                if(p.lastNightIndex!=day) {
+                    p.lastNightIndex=day;
+                    p.nightTicksObserved=0;
+                }
+                p.nightTicksObserved=Math.min(10000,p.nightTicksObserved+80);
+                changed=true;
             }
-            if(phase<1000 && p.lastNightIndex==day-1) {
-                // Este contador se afina con los eventos de muerte y descanso.
-                p.nightsSurvived++;
-                p.cleanNights++;
+            if(phase<1200 && p.lastNightIndex==day-1) {
+                // Exige al menos 7200 ticks presenciados; desconectarse no supera el reto.
+                if(p.nightTicksObserved>=7200) {
+                    p.nightsSurvived++;
+                    p.cleanNights++;
+                }
                 p.lastNightIndex=-1;
+                p.nightTicksObserved=0;
                 changed=true;
             }
         }

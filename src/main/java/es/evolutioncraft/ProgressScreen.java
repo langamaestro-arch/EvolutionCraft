@@ -131,6 +131,10 @@ public final class ProgressScreen extends Screen {
         }
         page=Math.max(0,Math.min(page,pageStarts.size()-1));
     }
+    @Override protected void init(){
+        // Minecraft inicializa la fuente y las dimensiones antes de representar el primer fotograma.
+        paginate();
+    }
     private void switchSection(int next){
         section=next;tab=SECTION_TABS[next][0];page=0;paginate();
     }
@@ -145,7 +149,8 @@ public final class ProgressScreen extends Screen {
     private int gridW(int cols){return (mainW()-18)/cols-5;}
 
     @Override public boolean mouseClicked(MouseButtonEvent event,boolean doubleClick){
-        if(event.button()!=1)return super.mouseClicked(event,doubleClick);
+        if(event.button()!=0)return super.mouseClicked(event,doubleClick);
+        if(pageStarts.isEmpty())paginate();
         double mx=event.x(),my=event.y();
         int xx=x(),yy=y(),ww=panelW(),hh=panelH();
         if(inside(mx,my,xx+ww-34,yy+10,23,22)){onClose();return true;}
@@ -181,6 +186,7 @@ public final class ProgressScreen extends Screen {
         return super.mouseClicked(event,doubleClick);
     }
     @Override public boolean mouseScrolled(double mx,double my,double scrollX,double scrollY){
+        if(pageStarts.isEmpty())paginate();
         if(inside(mx,my,mainX(),contentY(),mainW(),contentBottom()-contentY())&&scrollY!=0){
             page=Math.max(0,Math.min(pageStarts.size()-1,page+(scrollY<0?1:-1)));
             return true;
@@ -306,6 +312,7 @@ public final class ProgressScreen extends Screen {
     private void item(GuiGraphicsExtractor g,Item i,int xx,int yy){g.item(new ItemStack(i),xx,yy);}
 
     @Override public void extractRenderState(GuiGraphicsExtractor g,int mouseX,int mouseY,float delta){
+        if(pageStarts.isEmpty())paginate();
         int xx=x(),yy=y(),ww=panelW(),hh=panelH(),sx=xx+10,sw=sidebarW(),mx=mainX(),mw=mainW();
         int accent=accent();
         fill(g,0,0,width,height,0xC6000000);
@@ -382,7 +389,7 @@ public final class ProgressScreen extends Screen {
         if(!side.isEmpty()&&font.width(side)<mw-150)
             text(g,side,mx+mw-9-font.width(side),yy+195,GOLD);
         fill(g,mx+7,contentY()-1,mx+mw-7,contentBottom()+2,0xFF101E2A);
-        int begin=pageStarts.get(page),end=page+1<pageStarts.size()?pageStarts.get(page+1):list.size();
+        int begin=pageStarts.get(Math.max(0,Math.min(page,pageStarts.size()-1))),end=page+1<pageStarts.size()?pageStarts.get(page+1):list.size();
         int cy=contentY()+4;
         for(int i=begin;i<end;i++){
             JsonObject objective=list.get(i).getAsJsonObject();

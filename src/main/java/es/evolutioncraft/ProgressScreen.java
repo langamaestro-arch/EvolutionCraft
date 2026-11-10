@@ -117,7 +117,23 @@ public final class ProgressScreen extends Screen {
         if(lines.isEmpty())lines.add("");
         return lines;
     }
+    private boolean secretEntry(JsonObject o){return o.has("rarity");}
+    private int rarityColor(String rarity){
+        return switch(rarity){
+            case "Bronce" -> 0xFFD39A65;
+            case "Plata" -> 0xFFC4D0E0;
+            case "Oro" -> 0xFFF4D17B;
+            default -> GOLD;
+        };
+    }
     private int rowHeight(JsonObject o){
+        if(secretEntry(o)){
+            String second=o.get("done").getAsBoolean()
+                ?"Distintivo: "+o.get("reward").getAsString()
+                :"Pista: "+o.get("hint").getAsString();
+            int lineCount=wrap(second,Math.max(55,mainW()-92)).size();
+            return Math.max(47,32+lineCount*11);
+        }
         return Math.max(29,10+11*wrap(o.get("text").getAsString(),Math.max(45,mainW()-94)).size());
     }
     private void paginate(){
@@ -304,6 +320,21 @@ public final class ProgressScreen extends Screen {
         return ICONS[tab];
     }
     private void fill(GuiGraphicsExtractor g,int x1,int y1,int x2,int y2,int c){g.fill(x1,y1,x2,y2,c);}
+    private void corner(GuiGraphicsExtractor g,int xx,int yy,int dirX,int dirY,int color){
+        fill(g,Math.min(xx,xx+dirX*15),yy,Math.max(xx,xx+dirX*15)+1,yy+1,color);
+        fill(g,xx,Math.min(yy,yy+dirY*15),xx+1,Math.max(yy,yy+dirY*15)+1,color);
+        fill(g,Math.min(xx+dirX*3,xx+dirX*8),yy+dirY*3,
+            Math.max(xx+dirX*3,xx+dirX*8)+1,yy+dirY*3+1,color);
+    }
+    private String motto(){
+        return switch(section){
+            case 0 -> "Cada era comienza con un nuevo desafío";
+            case 1 -> "La maestría se forja con experiencia";
+            case 2 -> "Dos mundos esperan tu conquista";
+            case 3 -> "Cada paso forma parte de tu historia";
+            default -> "El misterio recompensa a los valientes";
+        };
+    }
     /** Pixel-art rounded rectangles: no external textures or render APIs required. */
     private void rounded(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int radius,int color){
         if(ww<=0||hh<=0)return;
@@ -338,18 +369,28 @@ public final class ProgressScreen extends Screen {
         fill(g,xx-5,yy-5,xx+ww+5,yy+hh+5,EDGE);
         fill(g,xx-3,yy-3,xx+ww+3,yy+hh+3,0xFF080F18);
         fill(g,xx,yy,xx+ww,yy+hh,BG);
+        // Ornamentos de esquina, doble marco y pequeños remaches de bronce.
+        corner(g,xx+5,yy+5,1,1,GOLD);
+        corner(g,xx+ww-6,yy+5,-1,1,GOLD);
+        corner(g,xx+5,yy+hh-6,1,-1,GOLD);
+        corner(g,xx+ww-6,yy+hh-6,-1,-1,GOLD);
+        fill(g,xx+9,yy+hh-6,xx+ww-9,yy+hh-5,0xFF435365);
         fill(g,xx+5,yy+5,xx+ww-5,yy+49,0xFF263C39);
         fill(g,xx+5,yy+47,xx+ww-5,yy+49,GOLD);
-        item(g,Items.ENCHANTED_BOOK,xx+18,yy+19);
-        text(g,"EVOLUTIONCRAFT",xx+43,yy+13,GOLD);
-        text(g,"D I A R I O    D E L    A V E N T U R E R O",xx+43,yy+28,MUTED);
+        roundedBorder(g,xx+12,yy+10,32,32,6,0xFF88734E,0xFF172735);
+        item(g,Items.ENCHANTED_BOOK,xx+20,yy+18);
+        text(g,"✦  EVOLUTIONCRAFT  ✦",xx+52,yy+12,GOLD);
+        text(g,"C R O N I C A S    D E L    A V E N T U R E R O",xx+52,yy+29,MUTED);
+        fill(g,xx+ww-118,yy+21,xx+ww-46,yy+22,0xFF6D775E);
+        fill(g,xx+ww-120,yy+19,xx+ww-118,yy+24,GOLD);
         rounded(g,xx+ww-35,yy+11,24,22,5,
             inside(mouseX,mouseY,xx+ww-35,yy+11,24,22)?0xFFAD474A:0xFF432D34);
         center(g,"X",xx+ww-23,yy+18,TEXT);
 
         fill(g,sx,yy+60,sx+sw,yy+hh-11,SIDEBAR);
         fill(g,sx+sw+4,yy+60,sx+sw+5,yy+hh-11,0xFF334656);
-        text(g,"SECCIONES",sx+13,yy+70,MUTED);
+        text(g,"SECCIONES",sx+13,yy+70,GOLD);
+        fill(g,sx+13,yy+84,sx+sw-13,yy+85,0xFF445C67);
         for(int i=0;i<5;i++){
             int ny=navY()+i*43;
             boolean selected=section==i,hover=inside(mouseX,mouseY,xx+12,ny,sw-8,37);
@@ -366,6 +407,7 @@ public final class ProgressScreen extends Screen {
         fill(g,sx+11,base+17,sx+11+(sw-20)*Math.min(100,getInt("overallPercent"))/100,
             base+24,GREEN);
         text(g,getInt("overallPercent")+"% completado",sx+10,base+31,MUTED);
+        fill(g,sx+9,base-9,sx+sw-9,base-8,0xFF40505C);
         if(section==4 && data.has("unlockedBadges")&&data.getAsJsonArray("unlockedBadges").size()>0){
             int by=yy+hh-58;
             roundedBorder(g,xx+12,by,sw-8,32,6,GOLD,
@@ -374,11 +416,15 @@ public final class ProgressScreen extends Screen {
         }
 
         fill(g,mx-3,yy+60,mx+mw+3,yy+hh-11,PANEL);
-        fill(g,mx+6,yy+66,mx+mw-6,yy+98,0xFF233746);
-        fill(g,mx+6,yy+66,mx+9,yy+98,accent);
+        roundedBorder(g,mx+5,yy+65,mw-10,35,5,0xFF415364,0xFF233746);
+        fill(g,mx+7,yy+72,mx+10,yy+93,accent);
+        rounded(g,mx+14,yy+73,19,19,4,0xFF142735);
         item(g,ICONS[tab],mx+15,yy+74);
-        text(g,title(),mx+39,yy+73,accent);
-        text(g,detail(),mx+39,yy+87,MUTED);
+        text(g,title(),mx+40,yy+72,accent);
+        text(g,detail(),mx+40,yy+86,MUTED);
+        // Emblema derecho: cambia con la sección activa.
+        roundedBorder(g,mx+mw-38,yy+69,27,27,5,0xFF5D7180,0xFF162936);
+        item(g,SECTION_ICONS[section],mx+mw-32,yy+74);
         int[] subtabs=SECTION_TABS[section];
         int cols=Math.min(3,subtabs.length);
         for(int i=0;i<subtabs.length;i++){
@@ -391,8 +437,13 @@ public final class ProgressScreen extends Screen {
             item(g,ICONS[target],tx+7,ty+4);
             text(g,TITLES[target],tx+26,ty+8,selected?TEXT:MUTED);
         }
+        if(tab!=0){
+            String phrase=motto();
+            if(font.width(phrase)<mw-30)
+                center(g,phrase,mx+mw/2,yy+169,0xFF8FAAA9);
+        }
         if(tab==0){
-            fill(g,mx+8,yy+159,mx+mw-8,yy+182,0xFF1A2C3A);
+            rounded(g,mx+8,yy+159,mw-16,23,4,0xFF1A2C3A);
             center(g,Progress.ERA_NAMES[stage+1].toUpperCase(Locale.ROOT),
                 mx+mw/2,yy+166,GOLD);
             if(stage>0)text(g,"<",mx+19,yy+165,TEXT);
@@ -406,22 +457,46 @@ public final class ProgressScreen extends Screen {
         String side=tab==9?"Distintivo: "+badgeLabel():tab==11?"Progreso de todas las habilidades":"";
         if(!side.isEmpty()&&font.width(side)<mw-150)
             text(g,side,mx+mw-9-font.width(side),yy+195,GOLD);
-        fill(g,mx+7,contentY()-1,mx+mw-7,contentBottom()+2,0xFF101E2A);
+        roundedBorder(g,mx+7,contentY()-1,mw-14,contentBottom()-contentY()+3,
+            5,0xFF354656,0xFF101E2A);
         int begin=pageStarts.get(Math.max(0,Math.min(page,pageStarts.size()-1))),end=page+1<pageStarts.size()?pageStarts.get(page+1):list.size();
         int cy=contentY()+4;
         for(int i=begin;i<end;i++){
             JsonObject objective=list.get(i).getAsJsonObject();
             boolean ok=objective.get("done").getAsBoolean();
             String label=objective.get("text").getAsString();
-            List<String> lines=wrap(label,Math.max(45,mw-94));
-            int height=rowHeight(objective),left=mx+11,right=mx+mw-11;
-            fill(g,left,cy,left+(right-left),cy+height-3,
-                ok?0xFF213D39:i%2==0?CARD:CARD2);
-            fill(g,left,cy,left+3,cy+height-3,ok?GREEN:DIM);
-            item(g,objectiveItem(label),left+9,cy+Math.max(1,(height-17)/2));
-            text(g,ok?"✔":"◇",left+31,cy+Math.max(1,(height-10)/2),ok?GREEN:RED);
-            int textY=cy+Math.max(2,(height-lines.size()*11)/2);
-            for(String line:lines){text(g,line,left+48,textY,ok?GREEN:TEXT);textY+=11;}
+            int height=rowHeight(objective),left=mx+11,cardW=mw-22;
+            if(secretEntry(objective)){
+                String rarity=objective.get("rarity").getAsString();
+                int tierColor=rarityColor(rarity);
+                boolean hover=inside(mouseX,mouseY,left,cy,cardW,height-3);
+                roundedBorder(g,left,cy,cardW,height-3,5,
+                    hover?tierColor:0xFF394A56,
+                    ok?0xFF203B37:hover?0xFF2A3D4A:i%2==0?CARD:CARD2);
+                fill(g,left+2,cy+8,left+5,cy+height-11,ok?GREEN:tierColor);
+                item(g,ok?Items.NETHER_STAR:Items.ENCHANTED_BOOK,left+10,cy+10);
+                String heading=ok?label:"??? · DESAFIO OCULTO";
+                text(g,heading,left+31,cy+8,ok?GREEN:TEXT);
+                String tier="["+rarity.toUpperCase(Locale.ROOT)+"]";
+                text(g,tier,left+cardW-9-font.width(tier),cy+8,tierColor);
+                String hint=ok?"Distintivo: "+objective.get("reward").getAsString():
+                    "Pista: "+objective.get("hint").getAsString();
+                int hintY=cy+24;
+                for(String line:wrap(hint,Math.max(55,mw-92))){
+                    text(g,line,left+31,hintY,ok?GREEN:MUTED);
+                    hintY+=11;
+                }
+                if(hover && !ok)fill(g,left+7,cy+height-7,left+cardW-7,cy+height-6,tierColor);
+            } else {
+                List<String> lines=wrap(label,Math.max(45,mw-94));
+                rounded(g,left,cy,cardW,height-3,4,
+                    ok?0xFF213D39:i%2==0?CARD:CARD2);
+                fill(g,left+2,cy+7,left+5,cy+height-10,ok?GREEN:DIM);
+                item(g,objectiveItem(label),left+9,cy+Math.max(1,(height-17)/2));
+                text(g,ok?"✔":"◇",left+31,cy+Math.max(1,(height-10)/2),ok?GREEN:RED);
+                int textY=cy+Math.max(2,(height-lines.size()*11)/2);
+                for(String line:lines){text(g,line,left+48,textY,ok?GREEN:TEXT);textY+=11;}
+            }
             cy+=height;
         }
         int footY=yy+hh-45;

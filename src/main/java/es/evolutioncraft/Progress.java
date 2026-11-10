@@ -38,12 +38,15 @@ public final class Progress {
         if (overworldBiomes.size() < 30 || visitedStructures.size() < 6 || netherBiomes.size() < 3) return 4;
         return 5;
     }
+    private int distinctTools(String material) {
+        return (int) toolTypes.stream().filter(item -> item.startsWith(material + "_")).count();
+    }
     public int toolLevel() {
         if (toolWood < 50) return 0;
-        if (toolStone < 150) return 1;
-        if (toolCopper < 250) return 2;
-        if (toolIron < 400) return 3;
-        if (toolDiamond < 600) return 4;
+        if (toolStone < 150 || distinctTools("stone") < 3) return 1;
+        if (toolCopper < 250 || distinctTools("copper") < 3) return 2;
+        if (toolIron < 400 || distinctTools("iron") < 3) return 3;
+        if (toolDiamond < 600 || distinctTools("diamond") < 3) return 4;
         return 5;
     }
     public int alchemyLevel() {
@@ -105,7 +108,8 @@ public final class Progress {
         if (!craftedTools("iron") || !craftedArmor("iron") || !tradedEquipment("diamond") ||
                 !advancements.contains("minecraft:story/mine_diamond") || toolLevel() < 4 || naturalDiamondOre < 5 || agricultureLevel() < 3 || husbandryLevel() < 3) return 3;
         if (!craftedTools("diamond") || !craftedArmor("diamond") ||
-                !advancements.contains("minecraft:story/enter_the_nether")) return 4;
+                !advancements.contains("minecraft:story/enter_the_nether") || toolLevel() < 5 ||
+                !completedMissions.contains("ancient_debris")) return 4;
         return 5;
     }
     /** Cinco niveles acumulativos; todos los peces proceden de la pesca registrada. */

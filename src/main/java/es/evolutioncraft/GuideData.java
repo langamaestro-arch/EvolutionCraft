@@ -38,6 +38,9 @@ public final class GuideData {
         JsonObject root=new JsonObject();
         root.addProperty("era",p.era());
         root.addProperty("fishing",p.fishingLevel());
+        root.addProperty("exploration",p.explorationLevel());
+        root.addProperty("tools",p.toolLevel());
+        root.addProperty("alchemy",p.alchemyLevel());
         root.addProperty("agriculture",p.agricultureLevel());
         root.addProperty("husbandry",p.husbandryLevel());
         root.addProperty("nether",p.canNether());
@@ -58,15 +61,28 @@ public final class GuideData {
             if(era==1) equipment(tmp,p,"leather",true,"cuero");
             if(era>=2) equipment(tmp,p,mats[era],true,labels[era]);
             switch(era) {
-                case 0 -> goal(tmp,"Avance: conseguir piedra",p.advancements.contains("minecraft:story/mine_stone"));
-                case 1 -> goal(tmp,"Intercambiar con aldeanos ("+p.tradeCount+"/1)",p.tradeCount>=1);
+                case 0 -> {
+                    goal(tmp,"Avance: conseguir piedra",p.advancements.contains("minecraft:story/mine_stone"));
+                    goal(tmp,"Mision: primera noche, hoguera y herramientas",p.completedMissions.contains("wood"));
+                    goal(tmp,"Maestria herramientas I",p.toolLevel()>=1);
+                }
+                case 1 -> {
+                    goal(tmp,"Intercambiar con aldeanos ("+p.tradeCount+"/1)",p.tradeCount>=1);
+                    goal(tmp,"Mision: descubrir una aldea y comerciar",p.completedMissions.contains("stone"));
+                    goal(tmp,"Maestria herramientas II",p.toolLevel()>=2);
+                }
                 case 2 -> {
                     goal(tmp,"Comerciar una herramienta de hierro",trade(p,"iron"));
                     goal(tmp,"Avance: fundir hierro",p.advancements.contains("minecraft:story/smelt_iron"));
+                    goal(tmp,"Extraer cobre ("+p.naturalCopperOre+"/32)",p.naturalCopperOre>=32);
+                    goal(tmp,"Maestria herramientas III",p.toolLevel()>=3);
                 }
                 case 3 -> {
                     goal(tmp,"Comerciar una herramienta de diamante",trade(p,"diamond"));
                     goal(tmp,"Avance: conseguir diamante",p.advancements.contains("minecraft:story/mine_diamond"));
+                    goal(tmp,"Extraer mineral de diamante ("+p.naturalDiamondOre+"/5)",p.naturalDiamondOre>=5);
+                    goal(tmp,"Visitar ciudad antigua o camaras de prueba",p.completedMissions.contains("deep_structure"));
+                    goal(tmp,"Maestria herramientas IV",p.toolLevel()>=4);
                 }
                 case 4 -> goal(tmp,"Avance: entrar al Nether",p.advancements.contains("minecraft:story/enter_the_nether"));
             }
@@ -103,21 +119,49 @@ public final class GuideData {
         goal(animal,"Nivel IV: 75 reproducciones ("+p.breedings+"/75)",p.breedings>=75);
         goal(animal,"Nivel IV: criar caballos",p.bred.contains("minecraft:horse"));
         goal(animal,"Nivel V: 150 reproducciones ("+p.breedings+"/150)",p.breedings>=150);
+        JsonObject explore=group(root,"explorationGoals","Exploracion");
+        goal(explore,"Nivel I: 5 biomas Overworld ("+p.overworldBiomes.size()+"/5)",p.overworldBiomes.size()>=5);
+        goal(explore,"Nivel II: 10 biomas ("+p.overworldBiomes.size()+"/10)",p.overworldBiomes.size()>=10);
+        goal(explore,"Nivel II: descubrir una aldea",p.visitedVillage);
+        goal(explore,"Nivel III: 15 biomas ("+p.overworldBiomes.size()+"/15)",p.overworldBiomes.size()>=15);
+        goal(explore,"Nivel III: 2 estructuras ("+p.visitedStructures.size()+"/2)",p.visitedStructures.size()>=2);
+        goal(explore,"Nivel IV: 20 biomas ("+p.overworldBiomes.size()+"/20)",p.overworldBiomes.size()>=20);
+        goal(explore,"Nivel IV: 4 estructuras ("+p.visitedStructures.size()+"/4)",p.visitedStructures.size()>=4);
+        goal(explore,"Nivel V: 30 biomas ("+p.overworldBiomes.size()+"/30)",p.overworldBiomes.size()>=30);
+        goal(explore,"Nivel V: 6 estructuras ("+p.visitedStructures.size()+"/6)",p.visitedStructures.size()>=6);
+        goal(explore,"Nivel V: 3 biomas Nether ("+p.netherBiomes.size()+"/3)",p.netherBiomes.size()>=3);
+        JsonObject tools=group(root,"toolGoals","Maestria de herramientas");
+        goal(tools,"Nivel I: 50 bloques con madera ("+p.toolWood+"/50)",p.toolWood>=50);
+        goal(tools,"Nivel II: 150 bloques con piedra ("+p.toolStone+"/150)",p.toolStone>=150);
+        goal(tools,"Nivel III: 250 bloques con cobre ("+p.toolCopper+"/250)",p.toolCopper>=250);
+        goal(tools,"Nivel IV: 400 bloques con hierro ("+p.toolIron+"/400)",p.toolIron>=400);
+        goal(tools,"Nivel V: 600 bloques con diamante ("+p.toolDiamond+"/600)",p.toolDiamond>=600);
+        JsonObject alchemy=group(root,"alchemyGoals","Alquimia");
+        goal(alchemy,"Nivel I: 3 tandas y 2 efectos ("+p.brewingBatches+"/3, "+p.potionEffects.size()+"/2)",p.brewingBatches>=3 && p.potionEffects.size()>=2);
+        goal(alchemy,"Nivel II: 8 tandas y 5 efectos ("+p.brewingBatches+"/8, "+p.potionEffects.size()+"/5)",p.brewingBatches>=8 && p.potionEffects.size()>=5);
+        goal(alchemy,"Nivel II: curacion y fuerza",p.potionEffects.containsAll(java.util.Set.of("minecraft:healing","minecraft:strength")));
+        goal(alchemy,"Nivel III: 15 tandas y 8 efectos ("+p.brewingBatches+"/15, "+p.potionEffects.size()+"/8)",p.brewingBatches>=15 && p.potionEffects.size()>=8);
+        goal(alchemy,"Nivel III: redstone, glowstone y arrojadiza",p.potionTechniques.containsAll(java.util.Set.of("extended","strong","splash")));
+        goal(alchemy,"Nivel IV: 30 tandas y 12 efectos",p.brewingBatches>=30 && p.potionEffects.size()>=12);
+        goal(alchemy,"Nivel V: 50 tandas y 15 efectos",p.brewingBatches>=50 && p.potionEffects.size()>=15);
         JsonObject nether=group(root,"netherGoals","Desbloquear Nether");
-        goal(nether,"Alcanzar la Era de Hierro",p.era()>=3);
+        goal(nether,"Alcanzar la Era de Diamante",p.era()>=4);
         goal(nether,"Pesca nivel III",p.fishingLevel()>=3);
         goal(nether,"Agricultura nivel III",p.agricultureLevel()>=3);
         goal(nether,"Ganadería nivel III",p.husbandryLevel()>=3);
         goal(nether,"Derrotar al Warden",p.bossKills.contains("minecraft:warden"));
-        goal(nether,"Avances originales ("+p.advancements.size()+"/20)",p.advancements.size()>=20);
-        goal(nether,"Explorar los biomas del Overworld",p.advancements.contains("minecraft:adventure/adventuring_time"));
+        goal(nether,"Avances originales ("+p.advancements.size()+"/40)",p.advancements.size()>=40);
+        goal(nether,"Biomas del Overworld ("+p.overworldBiomes.size()+"/20)",p.overworldBiomes.size()>=20);
+        goal(nether,"Exploracion nivel IV",p.explorationLevel()>=4);
         JsonObject end=group(root,"endGoals","Desbloquear End");
         goal(end,"Desbloquear el Nether",p.canNether());
         goal(end,"Pesca nivel V",p.fishingLevel()==5);
+        goal(end,"Exploracion nivel V",p.explorationLevel()>=5);
+        goal(end,"Alquimia nivel III",p.alchemyLevel()>=3);
         goal(end,"Agricultura nivel V",p.agricultureLevel()>=5);
         goal(end,"Ganadería nivel V",p.husbandryLevel()>=5);
         goal(end,"Derrotar al Wither",p.bossKills.contains("minecraft:wither"));
-        goal(end,"Avances originales ("+p.advancements.size()+"/45)",p.advancements.size()>=45);
+        goal(end,"Avances originales ("+p.advancements.size()+"/70)",p.advancements.size()>=70);
         goal(end,"Explorar los biomas del Nether",p.advancements.contains("minecraft:nether/explore_nether"));
         return root.toString();
     }

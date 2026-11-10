@@ -54,7 +54,7 @@ public final class Progress {
         if (brewingBatches < 15 || potionEffects.size() < 8 ||
             !potionTechniques.containsAll(Set.of("extended", "strong", "splash"))) return 2;
         if (brewingBatches < 30 || potionEffects.size() < 12 ||
-            !potionEffects.containsAll(Set.of("minecraft:invisibility","minecraft:slow_falling","minecraft:resistance"))) return 3;
+            !potionEffects.containsAll(Set.of("minecraft:invisibility","minecraft:slow_falling","minecraft:turtle_master"))) return 3;
         if (brewingBatches < 50 || potionEffects.size() < 15 ||
             !potionTechniques.contains("lingering")) return 4;
         return 5;

@@ -14,6 +14,7 @@ public final class Progress {
     public Set<String> bossKills = new HashSet<>();
     public int fish;
     public int tradeCount;
+    public String selectedBadge="";
     public int cleanNights;
     public int harvestStreak;
     public int treasuresCaught;

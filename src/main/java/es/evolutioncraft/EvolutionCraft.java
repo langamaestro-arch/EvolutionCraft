@@ -108,6 +108,7 @@ public final class EvolutionCraft {
             p.harvestStreak=0;
             p.cleanNights=0;
             p.lastNightIndex=-1;
+            p.netherKillTypes.clear();
             ProgressStore.save(dead);
             return;
         }
@@ -116,8 +117,12 @@ public final class EvolutionCraft {
         update(player, p -> {
             if(entity.equals("minecraft:warden") || entity.equals("minecraft:wither"))p.bossKills.add(entity);
             if(entity.equals("minecraft:elder_guardian"))p.elderGuardianKills++;
-            if(entity.equals("minecraft:ender_dragon"))p.dragonSlain=true;
-            if(entity.equals("minecraft:warden"))p.wardenSlainWithoutDeath=true;
+            if(entity.equals("minecraft:ender_dragon"))
+                p.dragonSlain=p.dragonAttemptId.equals(event.getEntity().getUUID().toString()) &&
+                    p.dragonAttemptDeaths==p.deathCount;
+            if(entity.equals("minecraft:warden"))
+                p.wardenSlainWithoutDeath=p.wardenAttemptId.equals(event.getEntity().getUUID().toString()) &&
+                    p.wardenAttemptDeaths==p.deathCount;
             if(player.level().dimension()==Level.NETHER &&
                 (entity.equals("minecraft:blaze") || entity.equals("minecraft:ghast") ||
                  entity.equals("minecraft:wither_skeleton"))) p.netherKillTypes.add(entity);

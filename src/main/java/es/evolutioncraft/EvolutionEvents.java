@@ -7,6 +7,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerWakeUpEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import java.util.Map;
 
@@ -16,8 +18,24 @@ public final class EvolutionEvents {
     private EvolutionEvents() {}
 
     @SubscribeEvent
+    public static void placed(BlockEvent.EntityPlaceEvent event){
+        if(event.isCanceled() || !(event.getEntity() instanceof ServerPlayer player))return;
+        PlacedBlockStore.placed(player,event.getPos());
+    }
+
+    @SubscribeEvent
+    public static void wake(PlayerWakeUpEvent event){
+        if(!(event.getEntity() instanceof ServerPlayer player))return;
+        Progress p=ProgressStore.get(player);
+        p.cleanNights=0;
+        p.lastNightIndex=-1;
+        ProgressStore.save(player);
+    }
+
+    @SubscribeEvent
     public static void mine(BreakBlockEvent event) {
         if(event.isCanceled() || !(event.getPlayer() instanceof ServerPlayer player)) return;
+        if(PlacedBlockStore.consumePlaced(player,event.getPos())) return;
         String block=BuiltInRegistries.BLOCK.getKey(event.getState().getBlock()).toString();
         String item=BuiltInRegistries.ITEM.getKey(player.getMainHandItem().getItem()).toString();
         Progress p=ProgressStore.get(player);
@@ -82,6 +100,7 @@ public final class EvolutionEvents {
             if(phase<1000 && p.lastNightIndex==day-1) {
                 // Este contador se afina con los eventos de muerte y descanso.
                 p.nightsSurvived++;
+                p.cleanNights++;
                 p.lastNightIndex=-1;
                 changed=true;
             }

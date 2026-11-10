@@ -49,6 +49,7 @@ public final class Progress {
     public Set<String> toolTypes = new HashSet<>();
     public int naturalCopperOre, naturalDiamondOre;
     public int nightsSurvived;
+    public int nightTicksObserved;
     public long lastNightIndex = -1;
     public boolean visitedVillage;
     public int explorationLevel() {

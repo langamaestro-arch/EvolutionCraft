@@ -238,7 +238,7 @@ public final class ProgressScreen extends Screen {
         g.centeredText(font,"GUIA DEL AVENTURERO · PROGRESION",width/2,y+24,MUTED);
 
         int tw=(w-24)/3;
-        for(int t=0;t<6;t++){
+        for(int t=0;t<9;t++){
             int tx=x+10+(t%3)*tw,ty=y+42+(t/3)*24;
             if(t==tab) g.outline(tx-1,ty-1,tw-1,23,color);
             g.item(new ItemStack(TAB_ICONS[t]),tx+7,ty+3);

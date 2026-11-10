@@ -4,8 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -14,39 +14,67 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/** Diario de aventuras EvolutionCraft: diseño híbrido Minecraft + RPG. */
+/**
+ * Diario RPG de EvolutionCraft 2.0.
+ * Navegación dibujada a mano: no usa los botones grises estándar.
+ * Los requisitos y niveles proceden exclusivamente del servidor.
+ */
 public final class ProgressScreen extends Screen {
-    private static final int WHITE=0xFFF4F0E4, GOLD=0xFFF5D07C, GREEN=0xFF82DE9B;
-    private static final int RED=0xFFE78A80, MUTED=0xFFAAB8C4, BACK=0xFF17212C;
-    private static final String[] TABS={"ERAS","PESCA","AGRICULTURA","GANADERIA","EXPLORACION",
-        "HERRAMIENTAS","ALQUIMIA","NETHER","END","SECRETOS","MISIONES"};
-    private static final Item[] ITEMS={Items.IRON_PICKAXE,Items.FISHING_ROD,Items.WHEAT,
+    private static final int BG=0xFF101924, PANEL=0xFF172634, SIDEBAR=0xFF101D2B;
+    private static final int CARD=0xFF223441, CARD2=0xFF1B2C3A, MUTED=0xFFA7BAC8;
+    private static final int TEXT=0xFFF2F1E7, GOLD=0xFFF4CE82, GREEN=0xFF7BD9A4;
+    private static final int RED=0xFFE78B83, DIM=0xFF526979, EDGE=0xFF896C45;
+    private static final String[] SECTIONS={"EVOLUCION","HABILIDADES","DIMENSIONES","LOGROS","SECRETOS"};
+    private static final Item[] SECTION_ICONS={Items.DIAMOND_PICKAXE,Items.ENCHANTED_BOOK,
+        Items.ENDER_EYE,Items.BOOK,Items.NETHER_STAR};
+    private static final int[][] SECTION_TABS={{0,10},{1,2,3,4,5,6},{7,8},{11},{9}};
+    private static final String[] TITLES={"ERAS","PESCA","AGRICULTURA","GANADERIA",
+        "EXPLORACION","HERRAMIENTAS","ALQUIMIA","NETHER","END","SECRETOS","MISIONES","RESUMEN"};
+    private static final Item[] ICONS={Items.IRON_PICKAXE,Items.FISHING_ROD,Items.WHEAT,
         Items.WHEAT,Items.COMPASS,Items.DIAMOND_PICKAXE,Items.BREWING_STAND,
-        Items.OBSIDIAN,Items.ENDER_EYE,Items.NETHER_STAR,Items.BOOK};
-    private static final int[][] GROUPS={{0,10,7,8},{1,2,3,4,5,6},{9}};
-    private static final String[] GROUP_NAMES={"EVOLUCION","HABILIDADES","LOGROS"};
-    private static final Item[] GROUP_ICONS={Items.DIAMOND_PICKAXE,Items.ENCHANTED_BOOK,Items.NETHER_STAR};
+        Items.OBSIDIAN,Items.ENDER_EYE,Items.NETHER_STAR,Items.BOOK,Items.NETHER_STAR};
+
     private final JsonObject data;
-    private int group=0,tab=0,stage=0,page=0;
-    private String selectedBadge="";
-    private final List<Integer> starts=new ArrayList<>();
+    private int section=0,tab=0,stage=0,page=0;
+    private String badge="";
+    private final List<Integer> pageStarts=new ArrayList<>();
 
     public ProgressScreen(String json){
         super(Component.literal("EvolutionCraft - Diario del aventurero"));
-        data=JsonParser.parseString(json).getAsJsonObject();
-        stage=Math.min(data.get("era").getAsInt(),4);
-        if(data.has("selectedBadge"))selectedBadge=data.get("selectedBadge").getAsString();
+        this.data=JsonParser.parseString(json).getAsJsonObject();
+        this.stage=Math.min(4,Math.max(0,getInt("era")));
+        if(data.has("selectedBadge")) badge=data.get("selectedBadge").getAsString();
     }
-    private int panelWidth(){return Math.min(555,width-16);}
-    private int panelHeight(){return Math.min(451,height-12);}
-    private int left(){return (width-panelWidth())/2;}
-    private int top(){return (height-panelHeight())/2;}
-    private int listTop(){return top()+208;}
-    private int listBottom(){return top()+panelHeight()-67;}
+    private int getInt(String key){return data.has(key)?data.get(key).getAsInt():0;}
+    private boolean getBool(String key){return data.has(key)&&data.get(key).getAsBoolean();}
+    private int panelW(){return Math.min(635,width-12);}
+    private int panelH(){return Math.min(455,height-12);}
+    private int x(){return (width-panelW())/2;}
+    private int y(){return (height-panelH())/2;}
+    private int sidebarW(){return Math.min(140,Math.max(100,panelW()/4));}
+    private int mainX(){return x()+sidebarW()+19;}
+    private int mainW(){return panelW()-sidebarW()-31;}
+    private int contentY(){return y()+208;}
+    private int contentBottom(){return y()+panelH()-57;}
+    private int navY(){return y()+91;}
+    private int tabsY(){return y()+112;}
 
     private JsonArray goals(){
         if(tab==0)return data.getAsJsonObject("eras").getAsJsonArray("goals")
             .get(stage).getAsJsonObject().getAsJsonArray("goals");
+        if(tab==11){
+            JsonArray summary=new JsonArray();
+            addSummary(summary,"Era actual: "+Progress.ERA_NAMES[getInt("era")],getInt("era")==5);
+            String[] names={"Pesca","Agricultura","Ganaderia","Exploracion","Herramientas","Alquimia"};
+            String[] keys={"fishing","agriculture","husbandry","exploration","tools","alchemy"};
+            for(int i=0;i<keys.length;i++)
+                addSummary(summary,names[i]+": nivel "+getInt(keys[i])+" / 5",getInt(keys[i])>=5);
+            addSummary(summary,"Nether: "+(getBool("nether")?"desbloqueado":"bloqueado"),getBool("nether"));
+            addSummary(summary,"End: "+(getBool("end")?"desbloqueado":"bloqueado"),getBool("end"));
+            addSummary(summary,"Avances originales: "+getInt("advancements"),getInt("advancements")>=70);
+            addSummary(summary,"Desafios secretos: "+getInt("secretCount")+" / 15",getInt("secretCount")>=15);
+            return summary;
+        }
         String key=switch(tab){
             case 1 -> "fishingGoals";
             case 2 -> "agricultureGoals";
@@ -61,58 +89,125 @@ public final class ProgressScreen extends Screen {
         };
         return data.getAsJsonObject(key).getAsJsonArray("goals");
     }
-    private static int complete(JsonArray list){
-        int count=0;
-        for(var e:list)if(e.getAsJsonObject().get("done").getAsBoolean())count++;
-        return count;
+    private static void addSummary(JsonArray list,String text,boolean complete){
+        JsonObject o=new JsonObject();o.addProperty("text",text);o.addProperty("done",complete);list.add(o);
     }
-    private List<String> wrap(String text,int maxWidth){
-        List<String> output=new ArrayList<>();
-        StringBuilder current=new StringBuilder();
-        for(String word:text.split(" ")){
-            String proposed=current.isEmpty()?word:current+" "+word;
-            if(font.width(proposed)<=maxWidth){current.setLength(0);current.append(proposed);continue;}
-            if(!current.isEmpty()){output.add(current.toString());current.setLength(0);}
-            StringBuilder piece=new StringBuilder();
+    private static int completed(JsonArray goals){
+        int n=0;for(var item:goals)if(item.getAsJsonObject().get("done").getAsBoolean())n++;
+        return n;
+    }
+    private List<String> wrap(String input,int maxWidth){
+        List<String> lines=new ArrayList<>();
+        StringBuilder line=new StringBuilder();
+        for(String word:input.split(" ")){
+            String joined=line.isEmpty()?word:line+" "+word;
+            if(font.width(joined)<=maxWidth){
+                line.setLength(0);line.append(joined);continue;
+            }
+            if(!line.isEmpty()){lines.add(line.toString());line.setLength(0);}
             for(int i=0;i<word.length();i++){
                 char ch=word.charAt(i);
-                if(!piece.isEmpty()&&font.width(piece.toString()+ch)>maxWidth){
-                    output.add(piece.toString());piece.setLength(0);
+                if(!line.isEmpty()&&font.width(line.toString()+ch)>maxWidth){
+                    lines.add(line.toString());line.setLength(0);
                 }
-                piece.append(ch);
+                line.append(ch);
             }
-            current.append(piece);
         }
-        if(!current.isEmpty())output.add(current.toString());
-        if(output.isEmpty())output.add("");
-        return output;
+        if(!line.isEmpty())lines.add(line.toString());
+        if(lines.isEmpty())lines.add("");
+        return lines;
     }
-    private int rowHeight(JsonObject obj){
-        return Math.max(28,8+11*wrap(obj.get("text").getAsString(),Math.max(80,panelWidth()-103)).size());
+    private int rowHeight(JsonObject o){
+        return Math.max(29,10+11*wrap(o.get("text").getAsString(),Math.max(45,mainW()-94)).size());
     }
     private void paginate(){
-        starts.clear(); starts.add(0);
-        JsonArray goals=goals();
-        int used=0,available=Math.max(28,listBottom()-listTop()-8);
-        for(int i=0;i<goals.size();i++){
-            int height=rowHeight(goals.get(i).getAsJsonObject());
-            if(used>0&&used+height>available){starts.add(i);used=0;}
-            used+=height;
+        pageStarts.clear();pageStarts.add(0);
+        JsonArray arr=goals();
+        int used=0,available=Math.max(29,contentBottom()-contentY()-8);
+        for(int i=0;i<arr.size();i++){
+            int h=rowHeight(arr.get(i).getAsJsonObject());
+            if(used>0 && used+h>available){pageStarts.add(i);used=0;}
+            used+=h;
         }
-        page=Math.max(0,Math.min(page,starts.size()-1));
+        page=Math.max(0,Math.min(page,pageStarts.size()-1));
     }
-    private String badgeName(String key){
-        return switch(key){
+    private void switchSection(int next){
+        section=next;tab=SECTION_TABS[next][0];page=0;paginate();
+    }
+    private void switchTab(int next){tab=next;page=0;paginate();}
+    private boolean inside(double mx,double my,int xx,int yy,int ww,int hh){
+        return mx>=xx&&mx<xx+ww&&my>=yy&&my<yy+hh;
+    }
+    private int gridX(int col,int cols){
+        int left=mainX()+9;
+        return left+col*(mainW()-18)/cols;
+    }
+    private int gridW(int cols){return (mainW()-18)/cols-5;}
+
+    @Override public boolean mouseClicked(MouseButtonEvent event,boolean doubleClick){
+        if(event.button()!=1)return super.mouseClicked(event,doubleClick);
+        double mx=event.x(),my=event.y();
+        int xx=x(),yy=y(),ww=panelW(),hh=panelH();
+        if(inside(mx,my,xx+ww-34,yy+10,23,22)){onClose();return true;}
+        for(int s=0;s<5;s++){
+            if(inside(mx,my,xx+12,navY()+s*43,sidebarW()-8,37)){
+                switchSection(s);return true;
+            }
+        }
+        int[] subs=SECTION_TABS[section];
+        int cols=Math.min(3,subs.length);
+        for(int i=0;i<subs.length;i++){
+            int tx=gridX(i%cols,cols),ty=tabsY()+(i/cols)*27;
+            if(inside(mx,my,tx,ty,gridW(cols),24)){
+                switchTab(subs[i]);return true;
+            }
+        }
+        if(tab==0){
+            if(inside(mx,my,mainX()+10,y()+159,24,23)&&stage>0){
+                stage--;page=0;paginate();return true;
+            }
+            if(inside(mx,my,mainX()+mainW()-34,y()+159,24,23)&&stage<4){
+                stage++;page=0;paginate();return true;
+            }
+        }
+        int fy=y()+hh-45;
+        if(inside(mx,my,mainX()+7,fy,34,29)&&page>0){page--;return true;}
+        if(inside(mx,my,mainX()+mainW()-41,fy,34,29)&&page<pageStarts.size()-1){
+            page++;return true;
+        }
+        if(section==4&&inside(mx,my,xx+12,yy+hh-58,sidebarW()-8,34)){
+            changeBadge();return true;
+        }
+        return super.mouseClicked(event,doubleClick);
+    }
+    @Override public boolean mouseScrolled(double mx,double my,double scrollX,double scrollY){
+        if(inside(mx,my,mainX(),contentY(),mainW(),contentBottom()-contentY())&&scrollY!=0){
+            page=Math.max(0,Math.min(pageStarts.size()-1,page+(scrollY<0?1:-1)));
+            return true;
+        }
+        return super.mouseScrolled(mx,my,scrollX,scrollY);
+    }
+    private void changeBadge(){
+        JsonArray unlocked=data.getAsJsonArray("unlockedBadges");
+        if(unlocked==null||unlocked.isEmpty())return;
+        int i=-1;
+        for(int n=0;n<unlocked.size();n++)if(unlocked.get(n).getAsString().equals(badge))i=n;
+        badge=unlocked.get((i+1)%unlocked.size()).getAsString();
+        var conn=net.minecraft.client.Minecraft.getInstance().getConnection();
+        if(conn!=null)conn.sendCommand("ecdistintivo "+badge);
+    }
+    private String badgeLabel(){
+        return switch(badge){
             case "noche" -> "Superviviente";
             case "tesoros" -> "Pescador afortunado";
             case "comerciante" -> "Mercader";
-            case "tierra" -> "Granjero incansable";
+            case "tierra" -> "Granjero";
             case "animales" -> "Domador";
             case "diamantes" -> "Minero experto";
-            case "fronteras" -> "Explorador legendario";
-            case "oceano" -> "Conquistador del océano";
+            case "fronteras" -> "Explorador";
+            case "oceano" -> "Conquistador";
             case "arcano" -> "Encantador";
-            case "elixir" -> "Alquimista excepcional";
+            case "elixir" -> "Alquimista";
             case "terror" -> "Cazador de pesadillas";
             case "infierno" -> "Señor del Nether";
             case "dragon" -> "Matadragones";
@@ -121,105 +216,55 @@ public final class ProgressScreen extends Screen {
             default -> "Sin distintivo";
         };
     }
-    private void changeBadge(){
-        JsonArray unlocked=data.getAsJsonArray("unlockedBadges");
-        if(unlocked==null || unlocked.isEmpty())return;
-        int current=-1;
-        for(int i=0;i<unlocked.size();i++){
-            if(unlocked.get(i).getAsString().equals(selectedBadge)){current=i;break;}
-        }
-        selectedBadge=unlocked.get((current+1)%unlocked.size()).getAsString();
-        var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
-        if(connection!=null)connection.sendCommand("ecdistintivo "+selectedBadge);
-        rebuildWidgets();
-    }
-    private void selectGroup(int g){group=g;tab=GROUPS[g][0];page=0;rebuildWidgets();}
-    private void selectTab(int t){tab=t;page=0;rebuildWidgets();}
-    @Override protected void init(){
-        paginate();
-        int x=left(),y=top(),w=panelWidth(),tW=(w-24)/3;
-        for(int g=0;g<3;g++){
-            final int index=g;
-            addRenderableWidget(Button.builder(Component.literal("     "+GROUP_NAMES[g]),
-                bt->selectGroup(index)).bounds(x+11+g*tW,y+43,tW-4,23).build());
-        }
-        int[] sub=GROUPS[group];
-        for(int i=0;i<sub.length;i++){
-            final int target=sub[i];
-            addRenderableWidget(Button.builder(Component.literal("    "+TABS[target]),
-                bt->selectTab(target)).bounds(x+11+(i%3)*tW,y+75+(i/3)*24,tW-4,21).build());
-        }
-        if(tab==0){
-            addRenderableWidget(Button.builder(Component.literal("<"),bt->{
-                if(stage>0){stage--;page=0;rebuildWidgets();}
-            }).bounds(x+13,y+132,23,20).build()).active=stage>0;
-            addRenderableWidget(Button.builder(Component.literal(">"),bt->{
-                if(stage<4){stage++;page=0;rebuildWidgets();}
-            }).bounds(x+w-36,y+132,23,20).build()).active=stage<4;
-        }
-        addRenderableWidget(Button.builder(Component.literal("◀"),bt->{
-            if(page>0){page--;rebuildWidgets();}
-        }).bounds(x+14,y+panelHeight()-52,28,21).build()).active=page>0;
-        addRenderableWidget(Button.builder(Component.literal("▶"),bt->{
-            if(page<starts.size()-1){page++;rebuildWidgets();}
-        }).bounds(x+w-42,y+panelHeight()-52,28,21).build()).active=page<starts.size()-1;
-        if(group==2&&data.has("unlockedBadges")&&data.getAsJsonArray("unlockedBadges").size()>0){
-            addRenderableWidget(Button.builder(Component.literal("Cambiar distintivo"),
-                bt->changeBadge()).bounds(x+16,y+panelHeight()-29,147,20).build());
-        }
-        addRenderableWidget(Button.builder(Component.literal("Cerrar"),bt->onClose())
-            .bounds(width/2-46,y+panelHeight()-29,92,20).build());
-    }
-
-    private int color(){
+    private int accent(){
         return switch(tab){
-            case 1 -> 0xFF75BDEC;
-            case 2 -> 0xFF96D877;
-            case 3 -> 0xFFD7B878;
-            case 4 -> 0xFF8FD5AE;
-            case 5 -> 0xFFC5A8ED;
-            case 6 -> 0xFFBD9FED;
-            case 7 -> 0xFFEB856B;
-            case 8 -> 0xFFC4A5EF;
-            case 9 -> GOLD;
-            case 10 -> 0xFFF2C982;
+            case 1 -> 0xFF77C7EF;
+            case 2 -> 0xFF8FDB84;
+            case 3 -> 0xFFE1BD88;
+            case 4 -> 0xFF89D7BA;
+            case 5 -> 0xFFB9B8E9;
+            case 6 -> 0xFFB895EC;
+            case 7 -> 0xFFF18B68;
+            case 8 -> 0xFFD6A4F5;
             default -> GOLD;
         };
     }
-    private String heading(){
+    private String title(){
         return switch(tab){
-            case 0 -> "EDAD: "+Progress.ERA_NAMES[stage+1];
+            case 0 -> "EVOLUCION DE ERAS";
             case 1 -> "MAESTRIA DE PESCA";
-            case 2 -> "CULTIVOS Y COSECHAS";
-            case 3 -> "CRIA Y DOMESTICACION";
-            case 4 -> "EXPLORACION DEL MUNDO";
+            case 2 -> "AGRICULTURA";
+            case 3 -> "GANADERIA";
+            case 4 -> "EXPLORACION";
             case 5 -> "MAESTRIA DE HERRAMIENTAS";
-            case 6 -> "ALQUIMIA Y POCIONES";
-            case 7 -> "DESBLOQUEAR EL NETHER";
-            case 8 -> "DESBLOQUEAR EL END";
-            case 9 -> "DESAFIOS SECRETOS";
-            default -> "MISIONES DE LAS ERAS";
+            case 6 -> "ALQUIMIA";
+            case 7 -> "PORTAL DEL NETHER";
+            case 8 -> "PORTAL DEL END";
+            case 9 -> "DESAFIOS OCULTOS";
+            case 10 -> "MISIONES DE AVENTURA";
+            default -> "TU EVOLUCION";
         };
     }
     private String detail(){
         return switch(tab){
-            case 0 -> "Era actual: "+Progress.ERA_NAMES[data.get("era").getAsInt()];
-            case 1 -> "Nivel "+data.get("fishing").getAsInt()+"/5";
-            case 2 -> "Nivel "+data.get("agriculture").getAsInt()+"/5";
-            case 3 -> "Nivel "+data.get("husbandry").getAsInt()+"/5";
-            case 4 -> "Nivel "+data.get("exploration").getAsInt()+"/5";
-            case 5 -> "Nivel "+data.get("tools").getAsInt()+"/5";
-            case 6 -> "Nivel "+data.get("alchemy").getAsInt()+"/5";
-            case 7 -> data.get("nether").getAsBoolean()?"DESBLOQUEADO":"BLOQUEADO";
-            case 8 -> data.get("end").getAsBoolean()?"DESBLOQUEADO":"BLOQUEADO";
-            case 9 -> selectedBadge.isEmpty()?data.get("secretCount").getAsInt()+"/15 descubiertos":"Distintivo: "+badgeName(selectedBadge);
-            default -> "6 misiones de aventura";
+            case 0 -> "Era actual: "+Progress.ERA_NAMES[getInt("era")];
+            case 1 -> "Nivel "+getInt("fishing")+" / 5";
+            case 2 -> "Nivel "+getInt("agriculture")+" / 5";
+            case 3 -> "Nivel "+getInt("husbandry")+" / 5";
+            case 4 -> "Nivel "+getInt("exploration")+" / 5";
+            case 5 -> "Nivel "+getInt("tools")+" / 5";
+            case 6 -> "Nivel "+getInt("alchemy")+" / 5";
+            case 7 -> getBool("nether")?"DESBLOQUEADO":"BLOQUEADO";
+            case 8 -> getBool("end")?"DESBLOQUEADO":"BLOQUEADO";
+            case 9 -> getInt("secretCount")+" / 15 secretos";
+            case 10 -> "6 misiones de era";
+            default -> getInt("overallPercent")+"% completado";
         };
     }
-    private Item icon(String label){
+    private Item objectiveItem(String label){
         String s=label.toLowerCase(Locale.ROOT);
         if(s.startsWith("???"))return Items.NETHER_STAR;
-        if(s.contains("pico"))return Items.DIAMOND_PICKAXE;
+        if(s.contains("pico"))return Items.IRON_PICKAXE;
         if(s.contains("hacha"))return Items.IRON_AXE;
         if(s.contains("espada"))return Items.IRON_SWORD;
         if(s.contains("pala"))return Items.IRON_SHOVEL;
@@ -228,90 +273,143 @@ public final class ProgressScreen extends Screen {
         if(s.contains("peto"))return Items.IRON_CHESTPLATE;
         if(s.contains("pantalones"))return Items.IRON_LEGGINGS;
         if(s.contains("botas"))return Items.IRON_BOOTS;
-        if(s.contains("tesoro"))return Items.NAME_TAG;
         if(s.contains("pesca")||s.contains("peces")||s.contains("especies"))return Items.FISHING_ROD;
+        if(s.contains("tesoro"))return Items.NAME_TAG;
         if(s.contains("bioma")||s.contains("estructura")||s.contains("aldea"))return Items.COMPASS;
-        if(s.contains("tanda")||s.contains("efecto")||s.contains("pocion")||s.contains("alquimia"))return Items.BREWING_STAND;
-        if(s.contains("bloques con")||s.contains("herramientas"))return Items.IRON_PICKAXE;
-        if(s.contains("trigo"))return Items.WHEAT;
-        if(s.contains("zanahoria")||s.contains("patata")||s.contains("remolacha"))return Items.CARROT;
-        if(s.contains("melon"))return Items.MELON_SLICE;
+        if(s.contains("pocion")||s.contains("tanda")||s.contains("efecto")||s.contains("alquimia"))return Items.BREWING_STAND;
+        if(s.contains("trigo")||s.contains("cosecha"))return Items.WHEAT;
+        if(s.contains("zanahoria")||s.contains("patata"))return Items.CARROT;
         if(s.contains("calabaza"))return Items.PUMPKIN;
+        if(s.contains("melon"))return Items.MELON_SLICE;
         if(s.contains("cacao"))return Items.COCOA_BEANS;
         if(s.contains("verruga"))return Items.NETHER_WART;
-        if(s.contains("cosecha")||s.contains("agricultura"))return Items.WHEAT;
         if(s.contains("lobo"))return Items.BONE;
         if(s.contains("gato"))return Items.COD;
         if(s.contains("caballo"))return Items.SADDLE;
-        if(s.contains("criar")||s.contains("reproducci")||s.contains("ganaderia"))return Items.WHEAT;
         if(s.contains("warden"))return Items.SCULK_CATALYST;
         if(s.contains("wither"))return Items.WITHER_SKELETON_SKULL;
         if(s.contains("netherita"))return Items.NETHERITE_INGOT;
         if(s.contains("nether"))return Items.OBSIDIAN;
         if(s.contains("end"))return Items.ENDER_EYE;
-        if(s.contains("hierro"))return Items.IRON_INGOT;
         if(s.contains("diamante"))return Items.DIAMOND;
-        if(s.contains("comerciar")||s.contains("intercambiar"))return Items.EMERALD;
+        if(s.contains("hierro"))return Items.IRON_INGOT;
         if(s.contains("piedra"))return Items.COBBLESTONE;
-        return ITEMS[tab];
+        if(s.contains("comerciar")||s.contains("intercambiar"))return Items.EMERALD;
+        return ICONS[tab];
     }
+    private void fill(GuiGraphicsExtractor g,int x1,int y1,int x2,int y2,int c){g.fill(x1,y1,x2,y2,c);}
+    private void outline(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int c){
+        if(ww>2&&hh>2)g.outline(xx,yy,ww,hh,c);
+    }
+    private void text(GuiGraphicsExtractor g,String s,int xx,int yy,int c){g.text(font,s,xx,yy,c);}
+    private void center(GuiGraphicsExtractor g,String s,int xx,int yy,int c){g.centeredText(font,s,xx,yy,c);}
+    private void item(GuiGraphicsExtractor g,Item i,int xx,int yy){g.item(new ItemStack(i),xx,yy);}
 
-    @Override public void extractRenderState(GuiGraphicsExtractor g,int mx,int my,float partial){
-        int w=panelWidth(),h=panelHeight(),x=left(),y=top(),accent=color();
-        g.fill(0,0,width,height,0xB9000000);
-        g.fill(x-5,y-5,x+w+5,y+h+5,0xFF866B45);
-        g.fill(x-3,y-3,x+w+3,y+h+3,0xFF0B1119);
-        g.fill(x,y,x+w,y+h,BACK);
-        g.fill(x+7,y+7,x+w-7,y+39,0xFF2A3E37);
-        g.fill(x+7,y+37,x+w-7,y+39,GOLD);
-        g.centeredText(font,"✦   E V O L U T I O N   C R A F T   ✦",width/2,y+11,GOLD);
-        g.centeredText(font,"DIARIO DEL AVENTURERO",width/2,y+25,MUTED);
+    @Override public void extractRenderState(GuiGraphicsExtractor g,int mouseX,int mouseY,float delta){
+        int xx=x(),yy=y(),ww=panelW(),hh=panelH(),sx=xx+10,sw=sidebarW(),mx=mainX(),mw=mainW();
+        int accent=accent();
+        fill(g,0,0,width,height,0xC6000000);
+        fill(g,xx-5,yy-5,xx+ww+5,yy+hh+5,EDGE);
+        fill(g,xx-3,yy-3,xx+ww+3,yy+hh+3,0xFF080F18);
+        fill(g,xx,yy,xx+ww,yy+hh,BG);
+        fill(g,xx+5,yy+5,xx+ww-5,yy+49,0xFF263C39);
+        fill(g,xx+5,yy+47,xx+ww-5,yy+49,GOLD);
+        item(g,Items.ENCHANTED_BOOK,xx+18,yy+19);
+        text(g,"EVOLUTIONCRAFT",xx+43,yy+13,GOLD);
+        text(g,"D I A R I O    D E L    A V E N T U R E R O",xx+43,yy+28,MUTED);
+        fill(g,xx+ww-35,yy+11,xx+ww-11,yy+33,
+            inside(mouseX,mouseY,xx+ww-35,yy+11,24,22)?0xFFAD474A:0xFF432D34);
+        center(g,"X",xx+ww-23,yy+18,TEXT);
 
-        int subWidth=(w-24)/3;
-        for(int i=0;i<3;i++){
-            int xx=x+11+i*subWidth,yy=y+43;
-            if(group==i){g.outline(xx-1,yy-1,subWidth-2,25,GOLD);g.fill(xx,yy,xx+subWidth-4,yy+2,GOLD);}
-            g.item(new ItemStack(GROUP_ICONS[i]),xx+5,yy+4);
+        fill(g,sx,yy+60,sx+sw,yy+hh-11,SIDEBAR);
+        fill(g,sx+sw+4,yy+60,sx+sw+5,yy+hh-11,0xFF334656);
+        text(g,"SECCIONES",sx+13,yy+70,MUTED);
+        for(int i=0;i<5;i++){
+            int ny=navY()+i*43;
+            boolean selected=section==i,hover=inside(mouseX,mouseY,xx+12,ny,sw-8,37);
+            fill(g,xx+12,ny,xx+sw+4,ny+37,
+                selected?0xFF314A59:hover?0xFF253B4D:0xFF172938);
+            if(selected)fill(g,xx+12,ny,xx+15,ny+37,accent);
+            if(hover||selected)outline(g,xx+12,ny,sw-8,37,selected?accent:0xFF567184);
+            item(g,SECTION_ICONS[i],xx+19,ny+10);
+            text(g,SECTIONS[i],xx+40,ny+14,selected?TEXT:MUTED);
         }
-        int[] sub=GROUPS[group];
-        for(int i=0;i<sub.length;i++){
-            int xx=x+11+(i%3)*subWidth,yy=y+75+(i/3)*24,selected=sub[i];
-            if(tab==selected)g.outline(xx-1,yy-1,subWidth-2,23,accent);
-            g.item(new ItemStack(ITEMS[selected]),xx+5,yy+3);
+        int base=yy+hh-94;
+        text(g,"PROGRESO GLOBAL",sx+10,base,GOLD);
+        fill(g,sx+10,base+16,sx+sw-9,base+25,0xFF080F15);
+        fill(g,sx+11,base+17,sx+11+(sw-20)*Math.min(100,getInt("overallPercent"))/100,
+            base+24,GREEN);
+        text(g,getInt("overallPercent")+"% completado",sx+10,base+31,MUTED);
+        if(section==4 && data.has("unlockedBadges")&&data.getAsJsonArray("unlockedBadges").size()>0){
+            int by=yy+hh-58;
+            fill(g,xx+12,by,xx+sw+4,by+32,
+                inside(mouseX,mouseY,xx+12,by,sw-8,32)?0xFF3E5043:0xFF263E36);
+            outline(g,xx+12,by,sw-8,32,GOLD);
+            text(g,"CAMBIAR INSIGNIA",xx+18,by+10,GOLD);
         }
-        g.fill(x+11,y+127,x+w-11,y+158,0xFF24333D);
-        g.fill(x+11,y+127,x+14,y+158,accent);
-        g.centeredText(font,heading(),width/2,y+136,accent);
-        JsonArray all=goals();
-        int done=complete(all),count=all.size();
-        g.fill(x+18,y+168,x+w-18,y+180,0xFF0B151D);
-        if(count>0)g.fill(x+19,y+169,x+19+(w-38)*done/count,y+179,GREEN);
-        g.text(font,done+" / "+count+" objetivos",x+17,y+187,WHITE);
-        String state=detail();
-        g.text(font,state,x+w-17-font.width(state),y+187,
-            (tab==7||tab==8)?(state.equals("DESBLOQUEADO")?GREEN:RED):MUTED);
-        g.fill(x+11,listTop()-3,x+w-11,listBottom()+2,0xFF0F1922);
-        int begin=starts.get(page),end=page+1<starts.size()?starts.get(page+1):all.size();
-        int cy=listTop()+3;
+
+        fill(g,mx-3,yy+60,mx+mw+3,yy+hh-11,PANEL);
+        fill(g,mx+6,yy+66,mx+mw-6,yy+98,0xFF233746);
+        fill(g,mx+6,yy+66,mx+9,yy+98,accent);
+        item(g,ICONS[tab],mx+15,yy+74);
+        text(g,title(),mx+39,yy+73,accent);
+        text(g,detail(),mx+39,yy+87,MUTED);
+        int[] subtabs=SECTION_TABS[section];
+        int cols=Math.min(3,subtabs.length);
+        for(int i=0;i<subtabs.length;i++){
+            int target=subtabs[i],tx=gridX(i%cols,cols),ty=tabsY()+(i/cols)*27;
+            int tw=gridW(cols);
+            boolean selected=tab==target,hover=inside(mouseX,mouseY,tx,ty,tw,24);
+            fill(g,tx,ty,tx+tw,ty+24,selected?0xFF3B5262:hover?0xFF304557:0xFF192D3D);
+            if(selected)fill(g,tx,ty+21,tx+tw,ty+24,accent);
+            outline(g,tx,ty,tw,24,selected?accent:0xFF354F60);
+            item(g,ICONS[target],tx+7,ty+4);
+            text(g,TITLES[target],tx+26,ty+8,selected?TEXT:MUTED);
+        }
+        if(tab==0){
+            fill(g,mx+8,yy+159,mx+mw-8,yy+182,0xFF1A2C3A);
+            center(g,Progress.ERA_NAMES[stage+1].toUpperCase(Locale.ROOT),
+                mx+mw/2,yy+166,GOLD);
+            if(stage>0)text(g,"<",mx+19,yy+165,TEXT);
+            if(stage<4)text(g,">",mx+mw-27,yy+165,TEXT);
+        }
+        JsonArray list=goals();
+        int done=completed(list),total=list.size();
+        fill(g,mx+8,yy+183,mx+mw-8,yy+191,0xFF0A151D);
+        if(total>0)fill(g,mx+9,yy+184,mx+9+(mw-18)*done/total,yy+190,GREEN);
+        text(g,done+" / "+total+" objetivos",mx+9,yy+195,MUTED);
+        String side=tab==9?"Distintivo: "+badgeLabel():tab==11?"Progreso de todas las habilidades":"";
+        if(!side.isEmpty()&&font.width(side)<mw-150)
+            text(g,side,mx+mw-9-font.width(side),yy+195,GOLD);
+        fill(g,mx+7,contentY()-1,mx+mw-7,contentBottom()+2,0xFF101E2A);
+        int begin=pageStarts.get(page),end=page+1<pageStarts.size()?pageStarts.get(page+1):list.size();
+        int cy=contentY()+4;
         for(int i=begin;i<end;i++){
-            JsonObject obj=all.get(i).getAsJsonObject();
-            boolean ok=obj.get("done").getAsBoolean();
-            String label=obj.get("text").getAsString();
-            List<String> lines=wrap(label,Math.max(80,w-103));
-            int rowH=rowHeight(obj);
-            if(i%2==0)g.fill(x+15,cy-2,x+w-15,cy+rowH-2,0xFF243440);
-            g.fill(x+15,cy-2,x+18,cy+rowH-2,ok?GREEN:0xFFBB6D67);
-            g.item(new ItemStack(icon(label)),x+24,cy+Math.max(0,(rowH-17)/2));
-            g.text(font,ok?"✔":"◇",x+46,cy+Math.max(0,(rowH-11)/2),ok?GREEN:RED);
-            int textY=cy+Math.max(1,(rowH-lines.size()*11)/2);
-            for(String line:lines){g.text(font,line,x+64,textY,ok?GREEN:WHITE);textY+=11;}
-            cy+=rowH;
+            JsonObject objective=list.get(i).getAsJsonObject();
+            boolean ok=objective.get("done").getAsBoolean();
+            String label=objective.get("text").getAsString();
+            List<String> lines=wrap(label,Math.max(45,mw-94));
+            int height=rowHeight(objective),left=mx+11,right=mx+mw-11;
+            fill(g,left,cy,left+(right-left),cy+height-3,
+                ok?0xFF213D39:i%2==0?CARD:CARD2);
+            fill(g,left,cy,left+3,cy+height-3,ok?GREEN:DIM);
+            item(g,objectiveItem(label),left+9,cy+Math.max(1,(height-17)/2));
+            text(g,ok?"✔":"◇",left+31,cy+Math.max(1,(height-10)/2),ok?GREEN:RED);
+            int textY=cy+Math.max(2,(height-lines.size()*11)/2);
+            for(String line:lines){text(g,line,left+48,textY,ok?GREEN:TEXT);textY+=11;}
+            cy+=height;
         }
-        if(group==2)g.centeredText(font,
-            "EvolutionCraft completado: "+data.get("overallPercent").getAsInt()+"%",width/2,y+h-64,GOLD);
-        else g.centeredText(font,"Progreso real del servidor · Pulsa Esc para salir",width/2,y+h-64,MUTED);
-        g.centeredText(font,"Pagina "+(page+1)+" / "+starts.size(),width/2,y+h-46,MUTED);
-        super.extractRenderState(g,mx,my,partial);
+        int footY=yy+hh-45;
+        boolean hasPrev=page>0,hasNext=page<pageStarts.size()-1;
+        fill(g,mx+7,footY,mx+41,footY+29,hasPrev?0xFF314B5B:0xFF1B2B37);
+        fill(g,mx+mw-41,footY,mx+mw-7,footY+29,hasNext?0xFF314B5B:0xFF1B2B37);
+        outline(g,mx+7,footY,34,29,hasPrev?accent:DIM);
+        outline(g,mx+mw-41,footY,34,29,hasNext?accent:DIM);
+        center(g,"<",mx+24,footY+10,hasPrev?TEXT:DIM);
+        center(g,">",mx+mw-24,footY+10,hasNext?TEXT:DIM);
+        center(g,"PAGINA "+(page+1)+" / "+pageStarts.size(),
+            mx+mw/2,footY+9,MUTED);
+        super.extractRenderState(g,mouseX,mouseY,delta);
     }
     @Override public boolean isPauseScreen(){return false;}
 }

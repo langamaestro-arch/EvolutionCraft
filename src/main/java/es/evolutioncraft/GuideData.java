@@ -163,6 +163,43 @@ public final class GuideData {
         goal(end,"Derrotar al Wither",p.bossKills.contains("minecraft:wither"));
         goal(end,"Avances originales ("+p.advancements.size()+"/70)",p.advancements.size()>=70);
         goal(end,"Explorar los biomas del Nether",p.advancements.contains("minecraft:nether/explore_nether"));
+        JsonObject missions=group(root,"missionGoals","Misiones especiales");
+        goal(missions,"Madera: sobrevivir la primera noche y hacer una hoguera",p.completedMissions.contains("wood"));
+        goal(missions,"Piedra: encontrar aldea y comerciar",p.completedMissions.contains("stone"));
+        goal(missions,"Cobre: extraer 32 minerales de cobre y fundir hierro",p.completedMissions.contains("copper"));
+        goal(missions,"Hierro: extraer 5 diamantes y visitar estructuras profundas",p.completedMissions.contains("iron"));
+        goal(missions,"Diamante: entrar al Nether y extraer escombro ancestral",p.completedMissions.contains("nether"));
+        goal(missions,"Netherita: equipamiento completo y herramientas V",p.completedMissions.contains("netherite"));
+        JsonObject secrets=group(root,"secretGoals","Desafíos secretos");
+        String[][] hidden={
+            {"noche","La noche es mía","Bronce · Supervivir sin dormir"},
+            {"tesoros","La suerte del pescador","Bronce · Aventuras de pesca"},
+            {"comerciante","Comerciante legendario","Bronce · Comercio"},
+            {"tierra","Tierra fértil","Bronce · Agricultura"},
+            {"animales","Amigo de los animales","Bronce · Domesticación"},
+            {"diamantes","Corazón de diamante","Plata · Minería"},
+            {"fronteras","Sin fronteras","Plata · Exploración"},
+            {"oceano","Señor de los océanos","Plata · Océanos"},
+            {"arcano","Poder arcano","Plata · Encantamientos"},
+            {"elixir","Elixir de la vida","Plata · Alquimia"},
+            {"terror","El terror tiene miedo","Oro · Warden"},
+            {"infierno","Infierno dominado","Oro · Nether"},
+            {"dragon","Cazador de dragones","Oro · End"},
+            {"equipo","El equipo definitivo","Oro · Netherita"},
+            {"evolucion","La evolución definitiva","Oro · EvolutionCraft"}
+        };
+        for(int i=0;i<hidden.length;i++) {
+            boolean solved=p.secretChallenges.contains(hidden[i][0]);
+            goal(secrets,solved?hidden[i][1]+" - "+hidden[i][2]:
+                "??? · Desafío oculto ("+hidden[i][2].split(" · ")[0]+")",solved);
+        }
+        root.addProperty("secretCount",p.secretChallenges.size());
+        root.addProperty("overallPercent",Math.min(100,100*
+            (p.era()+p.fishingLevel()+p.agricultureLevel()+p.husbandryLevel()+
+            p.explorationLevel()+p.toolLevel()+p.alchemyLevel()+
+            p.secretChallenges.size()+p.completedMissions.stream().filter(s->
+            java.util.Set.of("wood","stone","copper","iron","nether","netherite").contains(s)).count())
+            /56));
         return root.toString();
     }
 }

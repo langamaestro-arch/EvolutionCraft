@@ -61,9 +61,9 @@ public final class EvolutionEvents {
                 if(player.level().dimension()==Level.OVERWORLD) changed|=p.overworldBiomes.add(biome);
                 else changed|=p.netherBiomes.add(biome);
             }
-            var structures=player.serverLevel().structureManager().getAllStructuresAt(player.blockPosition());
+            var structures=player.level().structureManager().getAllStructuresAt(player.blockPosition());
             for(var structure:structures.keySet()){
-                var key=player.serverLevel().registryAccess().lookupOrThrow(Registries.STRUCTURE).getKey(structure);
+                var key=player.level().registryAccess().lookupOrThrow(Registries.STRUCTURE).getKey(structure);
                 if(key==null)continue;
                 String id=key.toString();
                 changed|=p.visitedStructures.add(id);
@@ -71,7 +71,7 @@ public final class EvolutionEvents {
                 if(id.contains("ancient_city") || id.contains("trial_chambers")) changed|=p.completedMissions.add("deep_structure");
             }
         }
-        long time=player.level().getDayTime();
+        long time=player.level().getOverworldClockTime();
         long day=time/24000L;
         long phase=time%24000L;
         // Solo se acredita tras presenciar el tramo nocturno y su amanecer.

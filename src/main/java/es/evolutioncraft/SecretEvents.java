@@ -57,6 +57,9 @@ public final class SecretEvents {
 
     private static void check(ServerPlayer player){
         Progress p=ProgressStore.get(player);
+        var beforeSecrets=new java.util.HashSet<>(p.secretChallenges);
+        var beforeMissions=new java.util.HashSet<>(p.completedMissions);
+        boolean beforeSponge=p.obtainedSponge,beforeEnchanted=p.threeHighEnchantments;
         if(!p.obtainedSponge || !p.threeHighEnchantments) {
             for(int i=0;i<player.getInventory().getContainerSize();i++){
                 ItemStack stack=player.getInventory().getItem(i);
@@ -68,7 +71,6 @@ public final class SecretEvents {
             p.completedMissions.contains("ancient_debris"))p.completedMissions.add("nether");
         if(fullNetherite(p)&&p.toolLevel()>=5)p.completedMissions.add("netherite");
 
-        p.secretChallenges.addAll(java.util.Set.of()); // Mantener compatibilidad con partidas guardadas.
         if(p.cleanNights>=10)p.secretChallenges.add("noche");
         if(p.treasuresCaught>=5)p.secretChallenges.add("tesoros");
         if(p.tradeCount>=50)p.secretChallenges.add("comerciante");
@@ -86,7 +88,9 @@ public final class SecretEvents {
         if(p.era()==5 && p.fishingLevel()==5 && p.agricultureLevel()==5 &&
             p.husbandryLevel()==5 && p.explorationLevel()==5 && p.toolLevel()==5 &&
             p.alchemyLevel()==5 && p.secretChallenges.size()>=14)p.secretChallenges.add("evolucion");
-        ProgressStore.save(player);
+        if(!beforeSecrets.equals(p.secretChallenges) || !beforeMissions.equals(p.completedMissions) ||
+            beforeSponge!=p.obtainedSponge || beforeEnchanted!=p.threeHighEnchantments)
+            ProgressStore.save(player);
     }
     @SubscribeEvent
     public static void tick(PlayerTickEvent.Post event){

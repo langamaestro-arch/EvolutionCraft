@@ -127,7 +127,7 @@ public final class Progress {
         if (!craftedTools("copper") || !craftedArmor("copper") || !tradedEquipment("iron") ||
                 !advancements.contains("minecraft:story/smelt_iron") || toolLevel() < 3 || naturalCopperOre < 32 || agricultureLevel() < 2 || husbandryLevel() < 2) return 2;
         if (!craftedTools("iron") || !craftedArmor("iron") || !tradedEquipment("diamond") ||
-                !advancements.contains("minecraft:story/mine_diamond") || toolLevel() < 4 || naturalDiamondOre < 5 || agricultureLevel() < 3 || husbandryLevel() < 3) return 3;
+                !advancements.contains("minecraft:story/mine_diamond") || toolLevel() < 4 || naturalDiamondOre < 5 || !completedMissions.contains("iron") || agricultureLevel() < 3 || husbandryLevel() < 3) return 3;
         if (!craftedTools("diamond") || !craftedArmor("diamond") ||
                 !advancements.contains("minecraft:story/enter_the_nether") || toolLevel() < 5 ||
                 !completedMissions.contains("ancient_debris")) return 4;

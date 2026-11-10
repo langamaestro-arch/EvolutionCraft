@@ -1,6 +1,7 @@
 package es.evolutioncraft;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,6 +22,20 @@ public final class ProgressGuide {
                     new GuidePayload(GuideData.snapshot(ctx.getSource().getPlayerOrException())));
             return Command.SINGLE_SUCCESS;
         }));
+        event.getDispatcher().register(Commands.literal("ecdistintivo")
+            .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->{
+                ServerPlayer player=ctx.getSource().getPlayerOrException();
+                String id=StringArgumentType.getString(ctx,"id");
+                Progress progress=ProgressStore.get(player);
+                if(!progress.secretChallenges.contains(id)){
+                    player.sendSystemMessage(Component.literal("§cNo tienes ese distintivo desbloqueado."),true);
+                    return 0;
+                }
+                progress.selectedBadge=id;
+                ProgressStore.save(player);
+                player.sendSystemMessage(Component.literal("§aDistintivo seleccionado: "+id),true);
+                return Command.SINGLE_SUCCESS;
+            })));
         event.getDispatcher().register(Commands.literal("ecprogresochat").executes(ctx -> {
             show(ctx.getSource().getPlayerOrException());
             return Command.SINGLE_SUCCESS;

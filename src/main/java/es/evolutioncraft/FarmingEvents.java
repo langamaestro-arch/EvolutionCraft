@@ -42,7 +42,7 @@ public final class FarmingEvents {
                 && state.getValue(net.minecraft.world.level.block.NetherWartBlock.AGE) == 3)
             || id.equals("minecraft:melon") || id.equals("minecraft:pumpkin");
         if (!mature) return;
-        record(player, p -> { p.harvests++; if (id.equals("minecraft:wheat")) p.wheatHarvests++; p.harvested.add(id); });
+        record(player, p -> { p.harvests++; p.harvestStreak++; if (id.equals("minecraft:wheat")) p.wheatHarvests++; p.harvested.add(id); });
     }
 
     @SubscribeEvent
@@ -56,7 +56,7 @@ public final class FarmingEvents {
     public static void tame(AnimalTameEvent event) {
         if (event.isCanceled() || !(event.getTamer() instanceof ServerPlayer player)) return;
         String kind = BuiltInRegistries.ENTITY_TYPE.getKey(event.getAnimal().getType()).toString();
-        if (kind.equals("minecraft:cat") || kind.equals("minecraft:wolf"))
-            record(player, p -> p.tamed.add(kind));
+        if (kind.equals("minecraft:cat") || kind.equals("minecraft:wolf") || kind.equals("minecraft:horse"))
+            record(player, p -> {p.tamed.add(kind); if(kind.equals("minecraft:horse"))p.horseTamed=true;});
     }
 }

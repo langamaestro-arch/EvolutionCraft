@@ -84,7 +84,11 @@ public final class GuideData {
                     goal(tmp,"Visitar ciudad antigua o camaras de prueba",p.completedMissions.contains("deep_structure"));
                     goal(tmp,"Maestria herramientas IV",p.toolLevel()>=4);
                 }
-                case 4 -> goal(tmp,"Avance: entrar al Nether",p.advancements.contains("minecraft:story/enter_the_nether"));
+                case 4 -> {
+                    goal(tmp,"Avance: entrar al Nether",p.advancements.contains("minecraft:story/enter_the_nether"));
+                    goal(tmp,"Extraer escombro ancestral",p.completedMissions.contains("ancient_debris"));
+                    goal(tmp,"Maestria herramientas V",p.toolLevel()>=5);
+                }
             }
             if (era>=1 && era<=3) {
                 goal(tmp,"Agricultura nivel "+era,p.agricultureLevel()>=era);
@@ -133,17 +137,24 @@ public final class GuideData {
         JsonObject tools=group(root,"toolGoals","Maestria de herramientas");
         goal(tools,"Nivel I: 50 bloques con madera ("+p.toolWood+"/50)",p.toolWood>=50);
         goal(tools,"Nivel II: 150 bloques con piedra ("+p.toolStone+"/150)",p.toolStone>=150);
+        goal(tools,"Nivel II: usar 3 herramientas de piedra",p.toolTypes.stream().filter(s->s.startsWith("stone_")).count()>=3);
         goal(tools,"Nivel III: 250 bloques con cobre ("+p.toolCopper+"/250)",p.toolCopper>=250);
+        goal(tools,"Nivel III: usar 3 herramientas de cobre",p.toolTypes.stream().filter(s->s.startsWith("copper_")).count()>=3);
         goal(tools,"Nivel IV: 400 bloques con hierro ("+p.toolIron+"/400)",p.toolIron>=400);
+        goal(tools,"Nivel IV: usar 3 herramientas de hierro",p.toolTypes.stream().filter(s->s.startsWith("iron_")).count()>=3);
         goal(tools,"Nivel V: 600 bloques con diamante ("+p.toolDiamond+"/600)",p.toolDiamond>=600);
+        goal(tools,"Nivel V: usar 3 herramientas de diamante",p.toolTypes.stream().filter(s->s.startsWith("diamond_")).count()>=3);
         JsonObject alchemy=group(root,"alchemyGoals","Alquimia");
+        goal(alchemy,"Nivel I: fabricar soporte de pociones",p.crafted.contains("minecraft:brewing_stand"));
         goal(alchemy,"Nivel I: 3 tandas y 2 efectos ("+p.brewingBatches+"/3, "+p.potionEffects.size()+"/2)",p.brewingBatches>=3 && p.potionEffects.size()>=2);
         goal(alchemy,"Nivel II: 8 tandas y 5 efectos ("+p.brewingBatches+"/8, "+p.potionEffects.size()+"/5)",p.brewingBatches>=8 && p.potionEffects.size()>=5);
         goal(alchemy,"Nivel II: curacion y fuerza",p.potionEffects.containsAll(java.util.Set.of("minecraft:healing","minecraft:strength")));
         goal(alchemy,"Nivel III: 15 tandas y 8 efectos ("+p.brewingBatches+"/15, "+p.potionEffects.size()+"/8)",p.brewingBatches>=15 && p.potionEffects.size()>=8);
         goal(alchemy,"Nivel III: redstone, glowstone y arrojadiza",p.potionTechniques.containsAll(java.util.Set.of("extended","strong","splash")));
         goal(alchemy,"Nivel IV: 30 tandas y 12 efectos",p.brewingBatches>=30 && p.potionEffects.size()>=12);
+        goal(alchemy,"Nivel IV: invisibilidad, caída lenta y maestro tortuga",p.potionEffects.containsAll(java.util.Set.of("minecraft:invisibility","minecraft:slow_falling","minecraft:turtle_master")));
         goal(alchemy,"Nivel V: 50 tandas y 15 efectos",p.brewingBatches>=50 && p.potionEffects.size()>=15);
+        goal(alchemy,"Nivel V: 5 pociones persistentes ("+p.lingeringBrews+"/5)",p.lingeringBrews>=5);
         JsonObject nether=group(root,"netherGoals","Desbloquear Nether");
         goal(nether,"Alcanzar la Era de Diamante",p.era()>=4);
         goal(nether,"Pesca nivel III",p.fishingLevel()>=3);

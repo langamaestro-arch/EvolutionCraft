@@ -30,7 +30,7 @@ public final class EvolutionEvents {
                 if(tool.startsWith("copper_")) p.toolCopper++;
                 if(tool.startsWith("iron_")) p.toolIron++;
                 if(tool.startsWith("diamond_")) p.toolDiamond++;
-                p.toolTypes.add(tool.substring(tool.indexOf('_')+1));
+                p.toolTypes.add(tool);
                 changed=true;
             }
         }

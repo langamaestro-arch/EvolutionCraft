@@ -39,6 +39,7 @@ public final class Progress {
     public Set<String> potionEffects = new HashSet<>();
     public Set<String> potionTechniques = new HashSet<>();
     public int brewingBatches;
+    public long lastBrewExtractionTick=-100000;
     public int toolWood, toolStone, toolCopper, toolIron, toolDiamond;
     public Set<String> toolTypes = new HashSet<>();
     public int naturalCopperOre, naturalDiamondOre;

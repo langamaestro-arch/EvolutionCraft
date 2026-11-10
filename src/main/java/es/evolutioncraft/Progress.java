@@ -27,6 +27,10 @@ public final class Progress {
     public boolean wardenSlainWithoutDeath;
     public int lingeringBrews;
     public int deathCount;
+    public String wardenAttemptId="";
+    public int wardenAttemptDeaths;
+    public String dragonAttemptId="";
+    public int dragonAttemptDeaths;
     public int deathsWhenBossStarted;
     public Set<String> smithing=new HashSet<>();
     /** Registro persistente por jugador: biomas visitados realmente en cada dimension. */
@@ -66,7 +70,7 @@ public final class Progress {
         return 5;
     }
     public int alchemyLevel() {
-        if (brewingBatches < 3 || potionEffects.size() < 2) return 0;
+        if (brewingBatches < 3 || potionEffects.size() < 2 || !crafted.contains("minecraft:brewing_stand")) return 0;
         if (brewingBatches < 8 || potionEffects.size() < 5
             || !potionEffects.contains("minecraft:healing")
             || !potionEffects.contains("minecraft:strength")) return 1;
@@ -75,7 +79,7 @@ public final class Progress {
         if (brewingBatches < 30 || potionEffects.size() < 12 ||
             !potionEffects.containsAll(Set.of("minecraft:invisibility","minecraft:slow_falling","minecraft:turtle_master"))) return 3;
         if (brewingBatches < 50 || potionEffects.size() < 15 ||
-            !potionTechniques.contains("lingering")) return 4;
+            lingeringBrews < 5) return 4;
         return 5;
     }
     public int harvests;

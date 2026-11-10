@@ -14,6 +14,51 @@ public final class Progress {
     public Set<String> bossKills = new HashSet<>();
     public int fish;
     public int tradeCount;
+    /** Registro persistente por jugador: biomas visitados realmente en cada dimension. */
+    public Set<String> overworldBiomes = new HashSet<>();
+    public Set<String> netherBiomes = new HashSet<>();
+    public Set<String> visitedStructures = new HashSet<>();
+    /** Registros de la futura maestria, misiones y alquimia. */
+    public Set<String> completedMissions = new HashSet<>();
+    public Set<String> secretChallenges = new HashSet<>();
+    public Set<String> potionEffects = new HashSet<>();
+    public Set<String> potionTechniques = new HashSet<>();
+    public int brewingBatches;
+    public int toolWood, toolStone, toolCopper, toolIron, toolDiamond;
+    public Set<String> toolTypes = new HashSet<>();
+    public int naturalCopperOre, naturalDiamondOre;
+    public int nightsSurvived;
+    public long lastNightIndex = -1;
+    public boolean visitedVillage;
+    public int explorationLevel() {
+        if (overworldBiomes.size() < 5) return 0;
+        if (overworldBiomes.size() < 10 || !visitedVillage) return 1;
+        if (overworldBiomes.size() < 15 || visitedStructures.size() < 2) return 2;
+        if (overworldBiomes.size() < 20 || visitedStructures.size() < 4) return 3;
+        if (overworldBiomes.size() < 30 || visitedStructures.size() < 6 || netherBiomes.size() < 3) return 4;
+        return 5;
+    }
+    public int toolLevel() {
+        if (toolWood < 50) return 0;
+        if (toolStone < 150) return 1;
+        if (toolCopper < 250) return 2;
+        if (toolIron < 400) return 3;
+        if (toolDiamond < 600) return 4;
+        return 5;
+    }
+    public int alchemyLevel() {
+        if (brewingBatches < 3 || potionEffects.size() < 2) return 0;
+        if (brewingBatches < 8 || potionEffects.size() < 5
+            || !potionEffects.contains("minecraft:healing")
+            || !potionEffects.contains("minecraft:strength")) return 1;
+        if (brewingBatches < 15 || potionEffects.size() < 8 ||
+            !potionTechniques.containsAll(Set.of("extended", "strong", "splash"))) return 2;
+        if (brewingBatches < 30 || potionEffects.size() < 12 ||
+            !potionEffects.containsAll(Set.of("minecraft:invisibility","minecraft:slow_falling","minecraft:resistance"))) return 3;
+        if (brewingBatches < 50 || potionEffects.size() < 15 ||
+            !potionTechniques.contains("lingering")) return 4;
+        return 5;
+    }
     public int harvests;
     public int wheatHarvests;
     public Set<String> harvested = new HashSet<>();
@@ -53,12 +98,12 @@ public final class Progress {
                  s.endsWith("_shovel") || s.endsWith("_hoe")));
     }
     public int era() {
-        if (!craftedTools("wooden") || !advancements.contains("minecraft:story/mine_stone")) return 0;
-        if (!craftedTools("stone") || !craftedArmor("leather") || tradeCount < 1 || agricultureLevel() < 1 || husbandryLevel() < 1) return 1;
+        if (!craftedTools("wooden") || !advancements.contains("minecraft:story/mine_stone") || toolLevel() < 1 || !completedMissions.contains("wood")) return 0;
+        if (!craftedTools("stone") || !craftedArmor("leather") || tradeCount < 1 || !visitedVillage || toolLevel() < 2 || !completedMissions.contains("stone") || agricultureLevel() < 1 || husbandryLevel() < 1) return 1;
         if (!craftedTools("copper") || !craftedArmor("copper") || !tradedEquipment("iron") ||
-                !advancements.contains("minecraft:story/smelt_iron") || agricultureLevel() < 2 || husbandryLevel() < 2) return 2;
+                !advancements.contains("minecraft:story/smelt_iron") || toolLevel() < 3 || naturalCopperOre < 32 || agricultureLevel() < 2 || husbandryLevel() < 2) return 2;
         if (!craftedTools("iron") || !craftedArmor("iron") || !tradedEquipment("diamond") ||
-                !advancements.contains("minecraft:story/mine_diamond") || agricultureLevel() < 3 || husbandryLevel() < 3) return 3;
+                !advancements.contains("minecraft:story/mine_diamond") || toolLevel() < 4 || naturalDiamondOre < 5 || agricultureLevel() < 3 || husbandryLevel() < 3) return 3;
         if (!craftedTools("diamond") || !craftedArmor("diamond") ||
                 !advancements.contains("minecraft:story/enter_the_nether")) return 4;
         return 5;
@@ -73,12 +118,12 @@ public final class Progress {
         return 5;
     }
     public boolean canNether() {
-        return era() >= 3 && fishingLevel() >= 3 && bossKills.contains("minecraft:warden") &&
-               agricultureLevel() >= 3 && husbandryLevel() >= 3 && advancements.size() >= 20 && advancements.contains("minecraft:adventure/adventuring_time");
+        return era() >= 4 && fishingLevel() >= 3 && bossKills.contains("minecraft:warden") &&
+               agricultureLevel() >= 3 && husbandryLevel() >= 3 && advancements.size() >= 40 && overworldBiomes.size() >= 20 && explorationLevel() >= 4;
     }
     public boolean canEnd() {
-        return canNether() && fishingLevel() == 5 && bossKills.contains("minecraft:wither") &&
-               agricultureLevel() >= 5 && husbandryLevel() >= 5 && advancements.size() >= 45 && advancements.contains("minecraft:nether/explore_nether");
+        return canNether() && fishingLevel() == 5 && explorationLevel() >= 5 && alchemyLevel() >= 3 && bossKills.contains("minecraft:wither") &&
+               agricultureLevel() >= 5 && husbandryLevel() >= 5 && advancements.size() >= 70 && advancements.contains("minecraft:nether/explore_nether");
     }
     public static int requiredEra(String item) {
         if (!item.startsWith("minecraft:")) return 0;

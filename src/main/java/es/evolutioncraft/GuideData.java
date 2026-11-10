@@ -205,6 +205,10 @@ public final class GuideData {
                 "??? · Desafío oculto ("+hidden[i][2].split(" · ")[0]+")",solved);
         }
         root.addProperty("secretCount",p.secretChallenges.size());
+        root.addProperty("selectedBadge",p.selectedBadge);
+        JsonArray badges=new JsonArray();
+        for(String[] entry:hidden)if(p.secretChallenges.contains(entry[0]))badges.add(entry[0]);
+        root.add("unlockedBadges",badges);
         root.addProperty("overallPercent",Math.min(100,100*
             (p.era()+p.fishingLevel()+p.agricultureLevel()+p.husbandryLevel()+
             p.explorationLevel()+p.toolLevel()+p.alchemyLevel()+

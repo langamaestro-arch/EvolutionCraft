@@ -107,6 +107,7 @@ public final class EvolutionCraft {
             p.harvestStreak=0;
             p.cleanNights=0;
             p.lastNightIndex=-1;
+            p.nightTicksObserved=0;
             p.netherKillTypes.clear();
             ProgressStore.save(dead);
             return;

@@ -28,12 +28,14 @@ public final class ProgressScreen extends Screen {
     private static final Item[] GROUP_ICONS={Items.DIAMOND_PICKAXE,Items.ENCHANTED_BOOK,Items.NETHER_STAR};
     private final JsonObject data;
     private int group=0,tab=0,stage=0,page=0;
+    private String selectedBadge="";
     private final List<Integer> starts=new ArrayList<>();
 
     public ProgressScreen(String json){
         super(Component.literal("EvolutionCraft - Diario del aventurero"));
         data=JsonParser.parseString(json).getAsJsonObject();
         stage=Math.min(data.get("era").getAsInt(),4);
+        if(data.has("selectedBadge"))selectedBadge=data.get("selectedBadge").getAsString();
     }
     private int panelWidth(){return Math.min(555,width-16);}
     private int panelHeight(){return Math.min(451,height-12);}
@@ -99,6 +101,38 @@ public final class ProgressScreen extends Screen {
         }
         page=Math.max(0,Math.min(page,starts.size()-1));
     }
+    private String badgeName(String key){
+        return switch(key){
+            case "noche" -> "Superviviente";
+            case "tesoros" -> "Pescador afortunado";
+            case "comerciante" -> "Mercader";
+            case "tierra" -> "Granjero incansable";
+            case "animales" -> "Domador";
+            case "diamantes" -> "Minero experto";
+            case "fronteras" -> "Explorador legendario";
+            case "oceano" -> "Conquistador del océano";
+            case "arcano" -> "Encantador";
+            case "elixir" -> "Alquimista excepcional";
+            case "terror" -> "Cazador de pesadillas";
+            case "infierno" -> "Señor del Nether";
+            case "dragon" -> "Matadragones";
+            case "equipo" -> "Maestro herrero";
+            case "evolucion" -> "Leyenda de EvolutionCraft";
+            default -> "Sin distintivo";
+        };
+    }
+    private void changeBadge(){
+        JsonArray unlocked=data.getAsJsonArray("unlockedBadges");
+        if(unlocked==null || unlocked.isEmpty())return;
+        int current=-1;
+        for(int i=0;i<unlocked.size();i++){
+            if(unlocked.get(i).getAsString().equals(selectedBadge)){current=i;break;}
+        }
+        selectedBadge=unlocked.get((current+1)%unlocked.size()).getAsString();
+        var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
+        if(connection!=null)connection.sendCommand("ecdistintivo "+selectedBadge);
+        rebuildWidgets();
+    }
     private void selectGroup(int g){group=g;tab=GROUPS[g][0];page=0;rebuildWidgets();}
     private void selectTab(int t){tab=t;page=0;rebuildWidgets();}
     @Override protected void init(){
@@ -129,6 +163,10 @@ public final class ProgressScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal("▶"),bt->{
             if(page<starts.size()-1){page++;rebuildWidgets();}
         }).bounds(x+w-42,y+panelHeight()-52,28,21).build()).active=page<starts.size()-1;
+        if(group==2&&data.has("unlockedBadges")&&data.getAsJsonArray("unlockedBadges").size()>0){
+            addRenderableWidget(Button.builder(Component.literal("Cambiar distintivo"),
+                bt->changeBadge()).bounds(x+16,y+panelHeight()-29,147,20).build());
+        }
         addRenderableWidget(Button.builder(Component.literal("Cerrar"),bt->onClose())
             .bounds(width/2-46,y+panelHeight()-29,92,20).build());
     }
@@ -174,7 +212,7 @@ public final class ProgressScreen extends Screen {
             case 6 -> "Nivel "+data.get("alchemy").getAsInt()+"/5";
             case 7 -> data.get("nether").getAsBoolean()?"DESBLOQUEADO":"BLOQUEADO";
             case 8 -> data.get("end").getAsBoolean()?"DESBLOQUEADO":"BLOQUEADO";
-            case 9 -> data.get("secretCount").getAsInt()+"/15 descubiertos";
+            case 9 -> selectedBadge.isEmpty()?data.get("secretCount").getAsInt()+"/15 descubiertos":"Distintivo: "+badgeName(selectedBadge);
             default -> "6 misiones de aventura";
         };
     }

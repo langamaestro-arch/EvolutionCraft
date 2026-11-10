@@ -14,6 +14,21 @@ public final class Progress {
     public Set<String> bossKills = new HashSet<>();
     public int fish;
     public int tradeCount;
+    public int cleanNights;
+    public int harvestStreak;
+    public int treasuresCaught;
+    public boolean horseTamed;
+    public int elderGuardianKills;
+    public boolean obtainedSponge;
+    public Set<String> netherKillTypes=new HashSet<>();
+    public Set<String> consumedPotions=new HashSet<>();
+    public boolean threeHighEnchantments;
+    public boolean dragonSlain;
+    public boolean wardenSlainWithoutDeath;
+    public int lingeringBrews;
+    public int deathCount;
+    public int deathsWhenBossStarted;
+    public Set<String> smithing=new HashSet<>();
     /** Registro persistente por jugador: biomas visitados realmente en cada dimension. */
     public Set<String> overworldBiomes = new HashSet<>();
     public Set<String> netherBiomes = new HashSet<>();

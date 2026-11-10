@@ -17,7 +17,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.level.Level;
 import java.util.Locale;
 
@@ -154,7 +153,7 @@ public final class EvolutionCraft {
         }
     }
 
-    // Versión alfa: impide equipar objetos de eras superiores, sin eliminarlos del inventario.
+    // Al encontrar equipo superior, se devuelve al inventario, nunca se arroja al suelo.
     @SubscribeEvent
     public void tick(PlayerTickEvent.Post event) {
         ServerPlayer player = server(event.getEntity());
@@ -167,10 +166,21 @@ public final class EvolutionCraft {
             String key = id(stack);
             int requiredEra = Progress.requiredEra(key);
             if (requiredEra > progress.era()) {
-                ItemStack dropped = stack.copy();
-                player.setItemSlot(slot, ItemStack.EMPTY);
-                player.drop(dropped, false, Prediction.SERVER_ONLY);
-                player.sendSystemMessage(Component.literal("§c[Evolution Craft] Equipo bloqueado: " + Progress.ERA_NAMES[requiredEra]), true);
+                var inventory = player.getInventory();
+                int free = -1;
+                for(int i=0;i<36;i++) {
+                    if(i==inventory.getSelectedSlot())continue;
+                    if(inventory.getItem(i).isEmpty()){free=i;break;}
+                }
+                if(free>=0){
+                    ItemStack kept=stack.copy();
+                    player.setItemSlot(slot,ItemStack.EMPTY);
+                    inventory.setItem(free,kept);
+                }
+                if(player.tickCount%40==0)
+                    player.sendSystemMessage(Component.literal(
+                        "§c[EvolutionCraft] Equipo de "+Progress.ERA_NAMES[requiredEra]+
+                        " bloqueado. "+(free>=0?"Guardado en el inventario.":"Libera espacio en tu inventario.")),true);
             }
         }
     }

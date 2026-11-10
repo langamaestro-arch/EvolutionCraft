@@ -103,17 +103,20 @@ public final class ProgressGuide {
         line(player, p.advancements.contains("minecraft:husbandry/tactical_fishing"), "Pesca V: avance Pesca táctica");
 
         player.sendSystemMessage(Component.literal("§5§lAcceso al Nether §7" + (p.canNether() ? "§aDESBLOQUEADO" : "§cBLOQUEADO")));
-        line(player, p.era() >= 3, "Era de Hierro alcanzada");
+        line(player, p.era() >= 4, "Era de Diamante alcanzada");
         line(player, p.fishingLevel() >= 3, "Pesca nivel 3");
+        line(player, p.explorationLevel() >= 4, "Exploracion nivel 4");
         line(player, p.bossKills.contains("minecraft:warden"), "Derrotar al Warden");
-        line(player, p.advancements.size() >= 20, "Avances originales (" + p.advancements.size() + "/20)");
-        line(player, p.advancements.contains("minecraft:adventure/adventuring_time"), "Logro: explorar biomas del Overworld");
+        line(player, p.advancements.size() >= 40, "Avances originales (" + p.advancements.size() + "/40)");
+        line(player, p.overworldBiomes.size() >= 20, "Biomas del Overworld (" + p.overworldBiomes.size() + "/20)");
 
         player.sendSystemMessage(Component.literal("§d§lAcceso al End §7" + (p.canEnd() ? "§aDESBLOQUEADO" : "§cBLOQUEADO")));
         line(player, p.canNether(), "Acceso al Nether desbloqueado");
         line(player, p.fishingLevel() == 5, "Pesca nivel 5");
+        line(player, p.explorationLevel() >= 5, "Exploracion nivel 5");
+        line(player, p.alchemyLevel() >= 3, "Alquimia nivel 3");
         line(player, p.bossKills.contains("minecraft:wither"), "Derrotar al Wither");
-        line(player, p.advancements.size() >= 45, "Avances originales (" + p.advancements.size() + "/45)");
+        line(player, p.advancements.size() >= 70, "Avances originales (" + p.advancements.size() + "/70)");
         line(player, p.advancements.contains("minecraft:nether/explore_nether"), "Logro: explorar biomas del Nether");
         player.sendSystemMessage(Component.literal("§7Pulsa T para revisar el historial del chat."));
     }

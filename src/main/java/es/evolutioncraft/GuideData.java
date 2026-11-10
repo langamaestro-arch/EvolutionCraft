@@ -182,27 +182,35 @@ public final class GuideData {
         goal(missions,"Diamante: entrar al Nether y extraer escombro ancestral",p.completedMissions.contains("nether"));
         goal(missions,"Netherita: equipamiento completo y herramientas V",p.completedMissions.contains("netherite"));
         JsonObject secrets=group(root,"secretGoals","Desafíos secretos");
+        // El servidor solo revela el nombre y la recompensa cuando el reto está completado.
+        // Las pistas no contienen números ni requisitos exactos.
         String[][] hidden={
-            {"noche","La noche es mía","Bronce · Supervivir sin dormir"},
-            {"tesoros","La suerte del pescador","Bronce · Aventuras de pesca"},
-            {"comerciante","Comerciante legendario","Bronce · Comercio"},
-            {"tierra","Tierra fértil","Bronce · Agricultura"},
-            {"animales","Amigo de los animales","Bronce · Domesticación"},
-            {"diamantes","Corazón de diamante","Plata · Minería"},
-            {"fronteras","Sin fronteras","Plata · Exploración"},
-            {"oceano","Señor de los océanos","Plata · Océanos"},
-            {"arcano","Poder arcano","Plata · Encantamientos"},
-            {"elixir","Elixir de la vida","Plata · Alquimia"},
-            {"terror","El terror tiene miedo","Oro · Warden"},
-            {"infierno","Infierno dominado","Oro · Nether"},
-            {"dragon","Cazador de dragones","Oro · End"},
-            {"equipo","El equipo definitivo","Oro · Netherita"},
-            {"evolucion","La evolución definitiva","Oro · EvolutionCraft"}
+            {"noche","La noche es mía","Bronce","Cuando todos descansan, el verdadero superviviente permanece despierto","Superviviente"},
+            {"tesoros","La suerte del pescador","Bronce","No todos los tesoros se encuentran bajo tierra. Algunos esperan bajo el agua","Pescador afortunado"},
+            {"comerciante","Comerciante legendario","Bronce","Las esmeraldas abren puertas que ninguna herramienta puede romper","Mercader"},
+            {"tierra","Tierra fértil","Bronce","Una gran cosecha requiere paciencia, dedicación y mantenerse con vida","Granjero incansable"},
+            {"animales","Amigo de los animales","Bronce","Tres compañeros muy diferentes pueden convertirse en tus mejores aliados","Domador"},
+            {"diamantes","Corazón de diamante","Plata","Los diamantes más valiosos son aquellos que arrancas de las profundidades","Minero experto"},
+            {"fronteras","Sin fronteras","Plata","El mundo es mucho más grande de lo que imaginas. Atrévete a conocerlo","Explorador legendario"},
+            {"oceano","Señor de los océanos","Plata","En las profundidades del océano, un antiguo guardián protege un peculiar tesoro","Conquistador del océano"},
+            {"arcano","Poder arcano","Plata","Una herramienta excepcional puede contener varios poderes extraordinarios","Encantador"},
+            {"elixir","Elixir de la vida","Plata","El verdadero alquimista no solo crea sus pociones: también conoce sus efectos","Alquimista excepcional"},
+            {"terror","El terror tiene miedo","Oro","En la oscuridad más profunda habita un terror. Demuéstrale que tú no conoces el miedo","Cazador de pesadillas"},
+            {"infierno","Infierno dominado","Oro","Tres amenazas gobiernan el infierno. Solo quien las venza en una misma expedición dominará sus tierras","Señor del Nether"},
+            {"dragon","Cazador de dragones","Oro","El último gran desafío no admite una segunda oportunidad","Matadragones"},
+            {"equipo","El equipo definitivo","Oro","El metal más poderoso no sirve de nada sin alguien capaz de dominarlo","Maestro herrero"},
+            {"evolucion","La evolución definitiva","Oro","Solo quien lo haya dominado absolutamente todo podrá convertirse en una leyenda","Leyenda de EvolutionCraft"}
         };
-        for(int i=0;i<hidden.length;i++) {
-            boolean solved=p.secretChallenges.contains(hidden[i][0]);
-            goal(secrets,solved?hidden[i][1]+" - "+hidden[i][2]:
-                "??? · Desafío oculto ("+hidden[i][2].split(" · ")[0]+")",solved);
+        for(String[] entry:hidden){
+            boolean solved=p.secretChallenges.contains(entry[0]);
+            JsonObject secret=new JsonObject();
+            secret.addProperty("id",entry[0]);
+            secret.addProperty("done",solved);
+            secret.addProperty("text",solved?entry[1]:"??? · Desafío oculto");
+            secret.addProperty("rarity",entry[2]);
+            secret.addProperty("hint",solved?"":entry[3]);
+            secret.addProperty("reward",solved?entry[4]:"");
+            secrets.getAsJsonArray("goals").add(secret);
         }
         root.addProperty("secretCount",p.secretChallenges.size());
         root.addProperty("selectedBadge",p.selectedBadge);

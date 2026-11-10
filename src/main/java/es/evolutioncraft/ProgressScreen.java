@@ -22,9 +22,9 @@ public final class ProgressScreen extends Screen {
     private static final int WHITE=0xFFF4F0E4, GOLD=0xFFF2CC71, GREEN=0xFF77DA9B;
     private static final int RED=0xFFF18C83, MUTED=0xFFB0BBC5;
     private static final int BACK=0xFF17212A, INNER=0xFF22313B, EDGE=0xFF806844;
-    private static final String[] TAB_NAMES={"ERAS","PESCA","AGRICULTURA","GANADERIA","NETHER","END"};
+    private static final String[] TAB_NAMES={"ERAS","PESCA","AGRICULTURA","GANADERIA","EXPLORACION","HERRAMIENTAS","ALQUIMIA","NETHER","END"};
     private static final Item[] TAB_ICONS={Items.IRON_PICKAXE,Items.FISHING_ROD,Items.WHEAT,
-            Items.WHEAT,Items.OBSIDIAN,Items.ENDER_EYE};
+            Items.WHEAT,Items.COMPASS,Items.IRON_PICKAXE,Items.BREWING_STAND,Items.OBSIDIAN,Items.ENDER_EYE};
 
     private final JsonObject data;
     private int tab=0, stage=0, page=0;
@@ -38,10 +38,10 @@ public final class ProgressScreen extends Screen {
     }
 
     private int panelWidth(){return Math.min(510,width-20);}
-    private int panelHeight(){return Math.min(385,height-12);}
+    private int panelHeight(){return Math.min(420,height-12);}
     private int left(){return (width-panelWidth())/2;}
     private int top(){return (height-panelHeight())/2;}
-    private int listTop(){return top()+167;}
+    private int listTop(){return top()+191;}
     private int listBottom(){return top()+panelHeight()-64;}
 
     private JsonArray goals() {
@@ -51,7 +51,10 @@ public final class ProgressScreen extends Screen {
             case 1 -> "fishingGoals";
             case 2 -> "agricultureGoals";
             case 3 -> "husbandryGoals";
-            case 4 -> "netherGoals";
+            case 4 -> "explorationGoals";
+            case 5 -> "toolGoals";
+            case 6 -> "alchemyGoals";
+            case 7 -> "netherGoals";
             default -> "endGoals";
         };
         return data.getAsJsonObject(key).getAsJsonArray("goals");
@@ -108,7 +111,7 @@ public final class ProgressScreen extends Screen {
     @Override protected void init(){
         paginate();
         int w=panelWidth(),x=left(),y=top(),tw=(w-24)/3;
-        for(int t=0;t<6;t++){
+        for(int t=0;t<9;t++){
             int id=t;
             addRenderableWidget(Button.builder(Component.literal("   "+TAB_NAMES[t]),
                 b->changeTab(id)).bounds(x+10+(t%3)*tw,y+42+(t/3)*24,tw-3,21).build());
@@ -116,10 +119,10 @@ public final class ProgressScreen extends Screen {
         if(tab==0){
             addRenderableWidget(Button.builder(Component.literal("<"),b->{
                 if(stage>0){stage--;page=0;rebuildWidgets();}
-            }).bounds(x+14,y+97,24,20).build()).active=stage>0;
+            }).bounds(x+14,y+121,24,20).build()).active=stage>0;
             addRenderableWidget(Button.builder(Component.literal(">"),b->{
                 if(stage<4){stage++;page=0;rebuildWidgets();}
-            }).bounds(x+w-38,y+97,24,20).build()).active=stage<4;
+            }).bounds(x+w-38,y+121,24,20).build()).active=stage<4;
         }
         previous=addRenderableWidget(Button.builder(Component.literal("<"),b->{
             if(page>0){page--;rebuildWidgets();}
@@ -138,8 +141,11 @@ public final class ProgressScreen extends Screen {
             case 1 -> 0xFF68B9E9;
             case 2 -> 0xFF91D778;
             case 3 -> 0xFFD4B576;
-            case 4 -> 0xFFF18F62;
-            case 5 -> 0xFFC3A3F3;
+            case 4 -> 0xFF9FCC91;
+            case 5 -> 0xFFD1AF77;
+            case 6 -> 0xFFB4A1EB;
+            case 7 -> 0xFFF18F62;
+            case 8 -> 0xFFC3A3F3;
             default -> GOLD;
         };
     }
@@ -150,7 +156,10 @@ public final class ProgressScreen extends Screen {
             case 1 -> "MAESTRIA DE PESCA";
             case 2 -> "CULTIVOS Y COSECHAS";
             case 3 -> "CRIA Y DOMESTICACION";
-            case 4 -> "PORTAL DEL NETHER";
+            case 4 -> "EXPLORACION DEL MUNDO";
+            case 5 -> "MAESTRIA DE HERRAMIENTAS";
+            case 6 -> "ALQUIMIA Y POCIONES";
+            case 7 -> "PORTAL DEL NETHER";
             default -> "PORTAL DEL END";
         };
     }
@@ -161,7 +170,10 @@ public final class ProgressScreen extends Screen {
             case 1 -> "Pesca: "+data.get("fishing").getAsInt()+" / 5";
             case 2 -> "Agricultura: "+data.get("agriculture").getAsInt()+" / 5";
             case 3 -> "Ganaderia: "+data.get("husbandry").getAsInt()+" / 5";
-            case 4 -> data.get("nether").getAsBoolean()?"DESBLOQUEADO":"BLOQUEADO";
+            case 4 -> "Exploracion: "+data.get("exploration").getAsInt()+" / 5";
+            case 5 -> "Herramientas: "+data.get("tools").getAsInt()+" / 5";
+            case 6 -> "Alquimia: "+data.get("alchemy").getAsInt()+" / 5";
+            case 7 -> data.get("nether").getAsBoolean()?"DESBLOQUEADO":"BLOQUEADO";
             default -> data.get("end").getAsBoolean()?"DESBLOQUEADO":"BLOQUEADO";
         };
     }
@@ -180,6 +192,9 @@ public final class ProgressScreen extends Screen {
         if(s.contains("botas"))return Items.IRON_BOOTS;
         if(s.contains("pesca")||s.contains("pescar")||s.contains("peces")||s.contains("especies"))return Items.FISHING_ROD;
         if(s.contains("tesoros"))return Items.NAME_TAG;
+        if(s.contains("biomas")||s.contains("estructuras")||s.contains("aldea"))return Items.COMPASS;
+        if(s.contains("tandas")||s.contains("efectos")||s.contains("pocion")||s.contains("redstone"))return Items.BREWING_STAND;
+        if(s.contains("bloques con")||s.contains("maestria herramientas"))return Items.IRON_PICKAXE;
         if(s.contains("trigo"))return Items.WHEAT;
         if(s.contains("zanahoria")||s.contains("patata")||s.contains("remolacha"))return Items.CARROT;
         if(s.contains("melon"))return Items.MELON_SLICE;
@@ -229,16 +244,16 @@ public final class ProgressScreen extends Screen {
             g.item(new ItemStack(TAB_ICONS[t]),tx+7,ty+3);
         }
 
-        g.fill(x+10,y+92,x+w-10,y+123,0xFF22313B);
-        g.centeredText(font,heading(),width/2,y+103,color);
+        g.fill(x+10,y+116,x+w-10,y+147,0xFF22313B);
+        g.centeredText(font,heading(),width/2,y+127,color);
         JsonArray goals=goals();
         int done=0;
         for(var item:goals) if(item.getAsJsonObject().get("done").getAsBoolean())done++;
-        g.fill(x+16,y+129,x+w-16,y+139,0xFF0A141B);
-        if(goals.size()>0)g.fill(x+17,y+130,x+17+(w-34)*done/goals.size(),y+138,GREEN);
-        g.text(font,done+" / "+goals.size()+" objetivos",x+16,y+145,WHITE);
+        g.fill(x+16,y+153,x+w-16,y+163,0xFF0A141B);
+        if(goals.size()>0)g.fill(x+17,y+154,x+17+(w-34)*done/goals.size(),y+162,GREEN);
+        g.text(font,done+" / "+goals.size()+" objetivos",x+16,y+169,WHITE);
         String detail=detail();
-        g.text(font,detail,x+w-16-font.width(detail),y+145,tab>=4?(detail.equals("DESBLOQUEADO")?GREEN:RED):MUTED);
+        g.text(font,detail,x+w-16-font.width(detail),y+169,tab>=7?(detail.equals("DESBLOQUEADO")?GREEN:RED):MUTED);
 
         g.fill(x+11,listTop()-2,x+w-11,listBottom()+2,0xFF101A22);
         int begin=starts.get(page),end=page+1<starts.size()?starts.get(page+1):goals.size();

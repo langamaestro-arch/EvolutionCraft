@@ -52,6 +52,14 @@ public final class EvolutionCraft {
     }
 
     @SubscribeEvent
+    public void smithed(PlayerEvent.ItemSmithedEvent event){
+        ServerPlayer player=server(event.getEntity());
+        if(player==null)return;
+        String result=id(event.getResult());
+        update(player,p->{p.smithing.add(result);p.crafted.add(result);});
+    }
+
+    @SubscribeEvent
     public void traded(TradeWithVillagerEvent event) {
         ServerPlayer player = server(event.getEntity());
         if (player == null) return;
@@ -86,6 +94,7 @@ public final class EvolutionCraft {
                 } else if (item.equals("minecraft:enchanted_book") || item.equals("minecraft:name_tag") ||
                            item.equals("minecraft:saddle") || item.equals("minecraft:nautilus_shell")) {
                     p.fishingTreasures.add(item);
+                    p.treasuresCaught+=stack.getCount();
                 }
             }
         });
@@ -93,11 +102,34 @@ public final class EvolutionCraft {
 
     @SubscribeEvent
     public void defeated(LivingDeathEvent event) {
+        if(event.getEntity() instanceof ServerPlayer dead) {
+            Progress p=ProgressStore.get(dead);
+            p.deathCount++;
+            p.harvestStreak=0;
+            p.cleanNights=0;
+            p.lastNightIndex=-1;
+            ProgressStore.save(dead);
+            return;
+        }
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         String entity = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).toString();
-        if (entity.equals("minecraft:warden") || entity.equals("minecraft:wither")) {
-            update(player, p -> p.bossKills.add(entity));
-        }
+        update(player, p -> {
+            if(entity.equals("minecraft:warden") || entity.equals("minecraft:wither"))p.bossKills.add(entity);
+            if(entity.equals("minecraft:elder_guardian"))p.elderGuardianKills++;
+            if(entity.equals("minecraft:ender_dragon"))p.dragonSlain=true;
+            if(entity.equals("minecraft:warden"))p.wardenSlainWithoutDeath=true;
+            if(player.level().dimension()==Level.NETHER &&
+                (entity.equals("minecraft:blaze") || entity.equals("minecraft:ghast") ||
+                 entity.equals("minecraft:wither_skeleton"))) p.netherKillTypes.add(entity);
+        });
+    }
+
+    @SubscribeEvent
+    public void changedDimension(PlayerEvent.PlayerChangedDimensionEvent event){
+        ServerPlayer player=server(event.getEntity());
+        if(player==null || event.getTo()==Level.NETHER)return;
+        Progress p=ProgressStore.get(player);
+        if(!p.netherKillTypes.isEmpty()){p.netherKillTypes.clear();ProgressStore.save(player);}
     }
 
     // La validación se realiza ANTES del teletransporte, por jugador y en servidor.

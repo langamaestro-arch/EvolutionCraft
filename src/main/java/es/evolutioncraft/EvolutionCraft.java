@@ -112,8 +112,8 @@ public final class EvolutionCraft {
         // Evita saturar el chat si el jugador permanece dentro de un portal.
         if (player.tickCount % 40 == 0) {
             player.sendSystemMessage(Component.literal(netherDenied
-                    ? "§c[Evolution Craft] Nether bloqueado: pesca III, Warden, biomas y 20 avances."
-                    : "§c[Evolution Craft] End bloqueado: pesca V, Wither, biomas y 45 avances."));
+                    ? "§c[Evolution Craft] Nether bloqueado: Diamante, 20 biomas, 40 avances, habilidades III y Warden."
+                    : "§c[Evolution Craft] End bloqueado: 70 avances, Exploracion V, Alquimia III y Wither."));
         }
     }
 

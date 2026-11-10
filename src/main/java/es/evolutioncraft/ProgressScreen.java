@@ -149,7 +149,7 @@ public final class ProgressScreen extends Screen {
     private int gridW(int cols){return (mainW()-18)/cols-5;}
 
     @Override public boolean mouseClicked(MouseButtonEvent event,boolean doubleClick){
-        if(event.button()!=0)return super.mouseClicked(event,doubleClick);
+        if(event.button()!=1)return super.mouseClicked(event,doubleClick);
         if(pageStarts.isEmpty())paginate();
         double mx=event.x(),my=event.y();
         int xx=x(),yy=y(),ww=panelW(),hh=panelH();
@@ -304,6 +304,25 @@ public final class ProgressScreen extends Screen {
         return ICONS[tab];
     }
     private void fill(GuiGraphicsExtractor g,int x1,int y1,int x2,int y2,int c){g.fill(x1,y1,x2,y2,c);}
+    /** Pixel-art rounded rectangles: no external textures or render APIs required. */
+    private void rounded(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int radius,int color){
+        if(ww<=0||hh<=0)return;
+        int r=Math.min(radius,Math.min(ww/2,hh/2));
+        if(r<2){fill(g,xx,yy,xx+ww,yy+hh,color);return;}
+        fill(g,xx+r,yy,xx+ww-r,yy+hh,color);
+        fill(g,xx,yy+r,xx+ww,yy+hh-r,color);
+        for(int dy=0;dy<r;dy++){
+            double t=r-dy-0.5;
+            int inset=Math.max(0,(int)Math.ceil(r-Math.sqrt(r*r-t*t)));
+            fill(g,xx+inset,yy+dy,xx+ww-inset,yy+dy+1,color);
+            fill(g,xx+inset,yy+hh-dy-1,xx+ww-inset,yy+hh-dy,color);
+        }
+    }
+    private void roundedBorder(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,
+                               int radius,int edge,int middle){
+        rounded(g,xx,yy,ww,hh,radius,edge);
+        rounded(g,xx+1,yy+1,ww-2,hh-2,Math.max(2,radius-1),middle);
+    }
     private void outline(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int c){
         if(ww>2&&hh>2)g.outline(xx,yy,ww,hh,c);
     }
@@ -324,7 +343,7 @@ public final class ProgressScreen extends Screen {
         item(g,Items.ENCHANTED_BOOK,xx+18,yy+19);
         text(g,"EVOLUTIONCRAFT",xx+43,yy+13,GOLD);
         text(g,"D I A R I O    D E L    A V E N T U R E R O",xx+43,yy+28,MUTED);
-        fill(g,xx+ww-35,yy+11,xx+ww-11,yy+33,
+        rounded(g,xx+ww-35,yy+11,24,22,5,
             inside(mouseX,mouseY,xx+ww-35,yy+11,24,22)?0xFFAD474A:0xFF432D34);
         center(g,"X",xx+ww-23,yy+18,TEXT);
 
@@ -334,10 +353,10 @@ public final class ProgressScreen extends Screen {
         for(int i=0;i<5;i++){
             int ny=navY()+i*43;
             boolean selected=section==i,hover=inside(mouseX,mouseY,xx+12,ny,sw-8,37);
-            fill(g,xx+12,ny,xx+sw+4,ny+37,
-                selected?0xFF314A59:hover?0xFF253B4D:0xFF172938);
-            if(selected)fill(g,xx+12,ny,xx+15,ny+37,accent);
-            if(hover||selected)outline(g,xx+12,ny,sw-8,37,selected?accent:0xFF567184);
+            int navColor=selected?0xFF314A59:hover?0xFF253B4D:0xFF172938;
+            roundedBorder(g,xx+12,ny,sw-8,37,6,
+                selected?accent:hover?0xFF567184:0xFF284253,navColor);
+            if(selected)fill(g,xx+14,ny+7,xx+17,ny+30,accent);
             item(g,SECTION_ICONS[i],xx+19,ny+10);
             text(g,SECTIONS[i],xx+40,ny+14,selected?TEXT:MUTED);
         }
@@ -349,9 +368,8 @@ public final class ProgressScreen extends Screen {
         text(g,getInt("overallPercent")+"% completado",sx+10,base+31,MUTED);
         if(section==4 && data.has("unlockedBadges")&&data.getAsJsonArray("unlockedBadges").size()>0){
             int by=yy+hh-58;
-            fill(g,xx+12,by,xx+sw+4,by+32,
+            roundedBorder(g,xx+12,by,sw-8,32,6,GOLD,
                 inside(mouseX,mouseY,xx+12,by,sw-8,32)?0xFF3E5043:0xFF263E36);
-            outline(g,xx+12,by,sw-8,32,GOLD);
             text(g,"CAMBIAR INSIGNIA",xx+18,by+10,GOLD);
         }
 
@@ -367,9 +385,9 @@ public final class ProgressScreen extends Screen {
             int target=subtabs[i],tx=gridX(i%cols,cols),ty=tabsY()+(i/cols)*27;
             int tw=gridW(cols);
             boolean selected=tab==target,hover=inside(mouseX,mouseY,tx,ty,tw,24);
-            fill(g,tx,ty,tx+tw,ty+24,selected?0xFF3B5262:hover?0xFF304557:0xFF192D3D);
-            if(selected)fill(g,tx,ty+21,tx+tw,ty+24,accent);
-            outline(g,tx,ty,tw,24,selected?accent:0xFF354F60);
+            int tabColor=selected?0xFF3B5262:hover?0xFF304557:0xFF192D3D;
+            roundedBorder(g,tx,ty,tw,24,5,selected?accent:0xFF354F60,tabColor);
+            if(selected)fill(g,tx+7,ty+21,tx+tw-7,ty+22,accent);
             item(g,ICONS[target],tx+7,ty+4);
             text(g,TITLES[target],tx+26,ty+8,selected?TEXT:MUTED);
         }
@@ -408,10 +426,10 @@ public final class ProgressScreen extends Screen {
         }
         int footY=yy+hh-45;
         boolean hasPrev=page>0,hasNext=page<pageStarts.size()-1;
-        fill(g,mx+7,footY,mx+41,footY+29,hasPrev?0xFF314B5B:0xFF1B2B37);
-        fill(g,mx+mw-41,footY,mx+mw-7,footY+29,hasNext?0xFF314B5B:0xFF1B2B37);
-        outline(g,mx+7,footY,34,29,hasPrev?accent:DIM);
-        outline(g,mx+mw-41,footY,34,29,hasNext?accent:DIM);
+        roundedBorder(g,mx+7,footY,34,29,5,hasPrev?accent:DIM,
+            hasPrev?0xFF314B5B:0xFF1B2B37);
+        roundedBorder(g,mx+mw-41,footY,34,29,5,hasNext?accent:DIM,
+            hasNext?0xFF314B5B:0xFF1B2B37);
         center(g,"<",mx+24,footY+10,hasPrev?TEXT:DIM);
         center(g,">",mx+mw-24,footY+10,hasNext?TEXT:DIM);
         center(g,"PAGINA "+(page+1)+" / "+pageStarts.size(),

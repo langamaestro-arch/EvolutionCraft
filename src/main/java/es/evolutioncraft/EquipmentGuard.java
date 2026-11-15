@@ -3,6 +3,8 @@ package es.evolutioncraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
@@ -23,7 +25,20 @@ public final class EquipmentGuard {
     }
     @SubscribeEvent
     public static void useBlock(PlayerInteractEvent.RightClickBlock event){
-        if(event.getEntity() instanceof ServerPlayer p&&blocked(p,event.getItemStack()))event.setCanceled(true);
+        if(!(event.getEntity() instanceof ServerPlayer p))return;
+        // Arsenal Forge modifica armas vanilla mediante componentes, no registra nuevas armas.
+        // Su mesa de mejoras se desbloquea cuando el jugador alcanza Hierro.
+        String block=BuiltInRegistries.BLOCK.getKey(event.getLevel()
+            .getBlockState(event.getPos()).getBlock()).toString();
+        if(block.equals("arsenalforge:arsenal_forge") && ProgressStore.get(p).era()<3){
+            event.setCanceled(true);
+            event.setCancellationResult(InteractionResult.FAIL);
+            if(p.tickCount%20==0)
+                p.sendSystemMessage(Component.literal(
+                    "§c[EvolutionCraft] Forja de Arsenal bloqueada: requiere Era de Hierro."),true);
+            return;
+        }
+        if(blocked(p,event.getItemStack()))event.setCanceled(true);
     }
     @SubscribeEvent
     public static void useItem(PlayerInteractEvent.RightClickItem event){

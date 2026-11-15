@@ -187,7 +187,7 @@ public final class Progress {
                 "_shovel","_hoe","_helmet","_chestplate","_leggings","_boots"})
                 .anyMatch(name::endsWith)
             : namespace.equals("toniweaponry")
-                ? name.matches("(?:wooden|stone|copper|iron|golden|gold|diamond|netherite)_.+")
+                ? name.matches("(?:wooden|stone|copper|iron|golden|gold|diamond|netherite)_(?:dagger|rapier|sabre|katana|cutlass|longsword|greatsword|battleaxe|warhammer|flanged_mace|morning_star|halberd|spear|scythe)")
                 : (name.matches("(?:wooden|stone|copper|iron|golden|gold|diamond|netherite)_.+")
                    && java.util.Arrays.stream(new String[]{"_sword","_axe","_pickaxe",
                        "_hoe","_shovel","_helmet","_chestplate","_leggings","_boots",

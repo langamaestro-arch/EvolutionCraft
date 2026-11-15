@@ -151,17 +151,56 @@ public final class Progress {
         return canNether() && fishingLevel() == 5 && explorationLevel() >= 5 && alchemyLevel() >= 3 && bossKills.contains("minecraft:wither") &&
                agricultureLevel() >= 5 && husbandryLevel() >= 5 && advancements.size() >= 70 && advancements.contains("minecraft:nether/explore_nether");
     }
+    /**
+     * Clasificacion por identificador de registro. Funciona sin depender de los JAR
+     * externos y conserva el comportamiento original para las herramientas vanilla.
+     *
+     * toniweaponry: armas con prefijo de material. Sus escudos y municion
+     * no tienen un material inequívoco y por ahora no se restringen.
+     * nicktaleepicdungeons: armaduras de jefes y siete armas únicas.
+     * elitemobs: solo agrega polvos; no introduce equipamiento bloqueable.
+     */
     public static int requiredEra(String item) {
-        if (!item.startsWith("minecraft:")) return 0;
-        String s = item.substring("minecraft:".length());
-        for (String suffix : new String[]{"_pickaxe", "_axe", "_sword", "_shovel", "_hoe", "_helmet", "_chestplate", "_leggings", "_boots"}) {
-            if (!s.endsWith(suffix)) continue;
-            if (s.startsWith("netherite_")) return 5;
-            if (s.startsWith("diamond_")) return 4;
-            if (s.startsWith("iron_") || s.startsWith("golden_")) return 3;
-            if (s.startsWith("copper_")) return 2;
-            if (s.startsWith("stone_") || s.startsWith("leather_")) return 1;
+        if(item==null)return 0;
+        int colon=item.indexOf(':');
+        if(colon<1 || colon==item.length()-1)return 0;
+        String namespace=item.substring(0,colon);
+        String name=item.substring(colon+1);
+        if(namespace.equals("nicktaleepicdungeons")) {
+            boolean armor=name.endsWith("_helmet") || name.endsWith("_chestplate") ||
+                name.endsWith("_leggings") || name.endsWith("_boots");
+            boolean weapon=java.util.Set.of("black_knight_runeblade","blueflame_axe",
+                "buried_great_axe","cinderhorn_tail_blade","rune_greataxe",
+                "shattered_spear","voidborne_scythe").contains(name);
+            if(!armor && !weapon)return 0;
+            // Equipo de jefes: requiere Diamante; los enemigos finales, Netherita.
+            if(name.startsWith("voidborne_") || name.startsWith("eclipse_colossus_") ||
+               name.startsWith("runebound_colossus_") || name.startsWith("abyssal_shagbeast_") ||
+               name.startsWith("cerberus_") || name.startsWith("cinderhorn_demon_") ||
+               name.startsWith("sultan_eternal_sands_") || name.startsWith("blueflame_elder_") ||
+               name.equals("voidborne_scythe") || name.equals("blueflame_axe") ||
+               name.equals("cinderhorn_tail_blade")) return 5;
+            return 4;
         }
+        boolean equipment=namespace.equals("minecraft")
+            ? java.util.Arrays.stream(new String[]{"_pickaxe","_axe","_sword",
+                "_shovel","_hoe","_helmet","_chestplate","_leggings","_boots"})
+                .anyMatch(name::endsWith)
+            : namespace.equals("toniweaponry")
+                ? name.matches("(?:wooden|stone|copper|iron|golden|gold|diamond|netherite)_.+")
+                : (name.matches("(?:wooden|stone|copper|iron|golden|gold|diamond|netherite)_.+")
+                   && java.util.Arrays.stream(new String[]{"_sword","_axe","_pickaxe",
+                       "_hoe","_shovel","_helmet","_chestplate","_leggings","_boots",
+                       "_dagger","_rapier","_sabre","_katana","_cutlass","_longsword",
+                       "_greatsword","_battleaxe","_warhammer","_mace","_morning_star",
+                       "_halberd","_spear","_scythe","_blade"})
+                       .anyMatch(name::endsWith));
+        if(!equipment)return 0;
+        if(name.startsWith("netherite_"))return 5;
+        if(name.startsWith("diamond_"))return 4;
+        if(name.startsWith("iron_") || name.startsWith("golden_") || name.startsWith("gold_"))return 3;
+        if(name.startsWith("copper_"))return 2;
+        if(name.startsWith("stone_") || name.startsWith("leather_"))return 1;
         return 0;
     }
 }

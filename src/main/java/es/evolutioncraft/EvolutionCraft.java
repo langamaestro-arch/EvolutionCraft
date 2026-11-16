@@ -142,15 +142,16 @@ public final class EvolutionCraft {
     public void dimensionTravel(EntityTravelToDimensionEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         Progress progress = ProgressStore.get(player);
-        boolean netherDenied = event.getDimension() == Level.NETHER && !progress.canNether();
-        boolean endDenied = event.getDimension() == Level.END && !progress.canEnd();
+        EvolutionConfig config=EvolutionConfig.get(player);
+        boolean netherDenied = event.getDimension() == Level.NETHER && !progress.canNether(config);
+        boolean endDenied = event.getDimension() == Level.END && !progress.canEnd(config);
         if (!netherDenied && !endDenied) return;
         event.setCanceled(true);
         // Evita saturar el chat si el jugador permanece dentro de un portal.
         if (player.tickCount % 40 == 0) {
             player.sendSystemMessage(Component.literal(netherDenied
-                    ? "§c[Evolution Craft] Nether bloqueado: Diamante, 20 biomas, 40 avances, habilidades III y Warden."
-                    : "§c[Evolution Craft] End bloqueado: 70 avances, Exploracion V, Alquimia III y Wither."));
+                    ? "§c[Evolution Craft] Nether bloqueado: Diamante, "+config.netherBiomes+" biomas, "+config.netherAdvancements+" avances, habilidades III y Warden."
+                    : "§c[Evolution Craft] End bloqueado: "+config.endAdvancements+" avances, Exploracion V, Alquimia III y Wither."));
         }
     }
 
@@ -159,6 +160,7 @@ public final class EvolutionCraft {
     public void tick(PlayerTickEvent.Post event) {
         ServerPlayer player = server(event.getEntity());
         if (player == null || player.tickCount % 5 != 0) return;
+        if(!EvolutionConfig.get(player).equipmentRestrictions)return;
         Progress progress = ProgressStore.get(player);
         for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
                 EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {

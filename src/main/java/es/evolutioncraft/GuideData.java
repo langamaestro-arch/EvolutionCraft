@@ -223,6 +223,29 @@ public final class GuideData {
             p.secretChallenges.size()+p.completedMissions.stream().filter(s->
             java.util.Set.of("wood","stone","copper","iron","nether","netherite").contains(s)).count())
             /56));
+        JsonObject rewards=group(root,"rewardGoals","Recompensas del aventurero");
+        if(p.claimedRewards==null)p.claimedRewards=new java.util.HashSet<>();
+        for(Rewards.Prize prize:Rewards.available(p)){
+            JsonObject reward=new JsonObject();
+            reward.addProperty("id",prize.id());
+            reward.addProperty("text",prize.title());
+            reward.addProperty("done",p.claimedRewards.contains(prize.id()));
+            reward.addProperty("ready",p.era()>=prize.minEra() &&
+                !p.claimedRewards.contains(prize.id()));
+            reward.addProperty("xp",prize.xp());
+            reward.addProperty("minEra",prize.minEra());
+            StringBuilder contents=new StringBuilder();
+            for(var stack:prize.items()){
+                if(!contents.isEmpty())contents.append(" + ");
+                contents.append(stack.getCount()).append("x ")
+                    .append(stack.getHoverName().getString());
+            }
+            reward.addProperty("items",contents.toString());
+            rewards.getAsJsonArray("goals").add(reward);
+        }
+        root.addProperty("pendingRewards",Rewards.available(p).stream()
+            .filter(prize->!p.claimedRewards.contains(prize.id()) &&
+                p.era()>=prize.minEra()).count());
         return root.toString();
     }
 }

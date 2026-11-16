@@ -25,7 +25,10 @@ public final class GuideKey {
     @SubscribeEvent
     public static void registerPackets(RegisterClientPayloadHandlersEvent event) {
         event.register(GuidePayload.TYPE, (payload, context) -> {
-            Minecraft.getInstance().gui.setScreen(new ProgressScreen(payload.json()));
+            Minecraft minecraft=Minecraft.getInstance();
+            int previousSection=minecraft.gui.screen() instanceof ProgressScreen previous
+                ? previous.getSection():0;
+            minecraft.gui.setScreen(new ProgressScreen(payload.json(),previousSection));
         });
     }
 

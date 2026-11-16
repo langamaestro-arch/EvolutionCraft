@@ -135,16 +135,20 @@ public final class Rewards {
         Progress p=ProgressStore.get(player);
         if(p.notifiedRewards==null)p.notifiedRewards=new HashSet<>();
         if(p.claimedRewards==null)p.claimedRewards=new HashSet<>();
-        boolean changed=false;
+        int count=0;
+        String first="";
         for(Prize prize:available(p)){
             if(prize.minEra()>p.era()||p.claimedRewards.contains(prize.id()))continue;
             if(p.notifiedRewards.add(prize.id())){
-                changed=true;
-                player.sendSystemMessage(Component.literal(
-                    "§6✦ [EvolutionCraft] Nueva recompensa: §f"+prize.title()+
-                    " §e· Pulsa P para reclamarla"),true);
+                if(count==0)first=prize.title();
+                count++;
             }
         }
-        if(changed)ProgressStore.save(player);
+        if(count>0){
+            ProgressStore.save(player);
+            player.sendSystemMessage(Component.literal(count==1
+                ?"§6✦ [EvolutionCraft] Recompensa disponible: §f"+first+" §e· Pulsa P"
+                :"§6✦ [EvolutionCraft] "+count+" recompensas disponibles. §ePulsa P para reclamarlas."),true);
+        }
     }
 }

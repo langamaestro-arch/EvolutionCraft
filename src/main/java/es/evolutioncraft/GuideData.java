@@ -35,6 +35,7 @@ public final class GuideData {
     }
     public static String snapshot(ServerPlayer player) {
         Progress p=ProgressStore.get(player);
+        EvolutionConfig config=EvolutionConfig.get(player);
         JsonObject root=new JsonObject();
         root.addProperty("era",p.era());
         root.addProperty("fishing",p.fishingLevel());
@@ -43,8 +44,8 @@ public final class GuideData {
         root.addProperty("alchemy",p.alchemyLevel());
         root.addProperty("agriculture",p.agricultureLevel());
         root.addProperty("husbandry",p.husbandryLevel());
-        root.addProperty("nether",p.canNether());
-        root.addProperty("end",p.canEnd());
+        root.addProperty("nether",p.canNether(config));
+        root.addProperty("end",p.canEnd(config));
         root.addProperty("advancements",p.advancements.size());
         root.addProperty("fish",p.fish);
         JsonObject eras=group(root,"eras","Progreso de eras");
@@ -129,7 +130,7 @@ public final class GuideData {
         goal(explore,"Nivel II: descubrir una aldea",p.visitedVillage);
         goal(explore,"Nivel III: 15 biomas ("+p.overworldBiomes.size()+"/15)",p.overworldBiomes.size()>=15);
         goal(explore,"Nivel III: 2 estructuras ("+p.visitedStructures.size()+"/2)",p.visitedStructures.size()>=2);
-        goal(explore,"Nivel IV: 20 biomas ("+p.overworldBiomes.size()+"/20)",p.overworldBiomes.size()>=20);
+        goal(explore,"Nivel IV: 20 biomas ("+p.overworldBiomes.size()+"/20)",p.overworldBiomes.size()>=config.netherBiomes);
         goal(explore,"Nivel IV: 4 estructuras ("+p.visitedStructures.size()+"/4)",p.visitedStructures.size()>=4);
         goal(explore,"Nivel V: 30 biomas ("+p.overworldBiomes.size()+"/30)",p.overworldBiomes.size()>=30);
         goal(explore,"Nivel V: 6 estructuras ("+p.visitedStructures.size()+"/6)",p.visitedStructures.size()>=6);
@@ -161,18 +162,18 @@ public final class GuideData {
         goal(nether,"Agricultura nivel III",p.agricultureLevel()>=3);
         goal(nether,"Ganadería nivel III",p.husbandryLevel()>=3);
         goal(nether,"Derrotar al Warden",p.bossKills.contains("minecraft:warden"));
-        goal(nether,"Avances originales ("+p.advancements.size()+"/40)",p.advancements.size()>=40);
-        goal(nether,"Biomas del Overworld ("+p.overworldBiomes.size()+"/20)",p.overworldBiomes.size()>=20);
+        goal(nether,"Avances originales ("+p.advancements.size()+"/"+config.netherAdvancements+")",p.advancements.size()>=config.netherAdvancements);
+        goal(nether,"Biomas del Overworld ("+p.overworldBiomes.size()+"/"+config.netherBiomes+")",p.overworldBiomes.size()>=20);
         goal(nether,"Exploracion nivel IV",p.explorationLevel()>=4);
         JsonObject end=group(root,"endGoals","Desbloquear End");
-        goal(end,"Desbloquear el Nether",p.canNether());
+        goal(end,"Desbloquear el Nether",p.canNether(config));
         goal(end,"Pesca nivel V",p.fishingLevel()==5);
         goal(end,"Exploracion nivel V",p.explorationLevel()>=5);
         goal(end,"Alquimia nivel III",p.alchemyLevel()>=3);
         goal(end,"Agricultura nivel V",p.agricultureLevel()>=5);
         goal(end,"Ganadería nivel V",p.husbandryLevel()>=5);
         goal(end,"Derrotar al Wither",p.bossKills.contains("minecraft:wither"));
-        goal(end,"Avances originales ("+p.advancements.size()+"/70)",p.advancements.size()>=70);
+        goal(end,"Avances originales ("+p.advancements.size()+"/"+config.endAdvancements+")",p.advancements.size()>=config.endAdvancements);
         goal(end,"Explorar los biomas del Nether",p.advancements.contains("minecraft:nether/explore_nether"));
         JsonObject missions=group(root,"missionGoals","Misiones especiales");
         goal(missions,"Madera: sobrevivir la primera noche y hacer una hoguera",p.completedMissions.contains("wood"));
@@ -224,6 +225,10 @@ public final class GuideData {
             java.util.Set.of("wood","stone","copper","iron","nether","netherite").contains(s)).count())
             /56));
         JsonObject rewards=group(root,"rewardGoals","Recompensas del aventurero");
+        if(!config.rewardsEnabled){
+            root.addProperty("pendingRewards",0);
+            return root.toString();
+        }
         if(p.claimedRewards==null)p.claimedRewards=new java.util.HashSet<>();
         for(Rewards.Prize prize:Rewards.available(p)){
             JsonObject reward=new JsonObject();

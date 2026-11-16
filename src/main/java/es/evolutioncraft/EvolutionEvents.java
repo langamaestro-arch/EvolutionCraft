@@ -86,7 +86,17 @@ public final class EvolutionEvents {
                 if(key==null)continue;
                 String id=key.toString();
                 changed|=p.visitedStructures.add(id);
-                if(id.contains("village")) p.visitedVillage=true;
+                // Hearthstead reemplaza y amplía las aldeas vanilla con villages,
+                // towns, hamlets y walled towns. Excluimos sus ruins porque no son aldeas.
+                boolean village=id.contains("village") ||
+                    (id.startsWith("hearthstead:") &&
+                        (id.substring("hearthstead:".length()).startsWith("town_") ||
+                         id.substring("hearthstead:".length()).startsWith("hamlet_") ||
+                         id.substring("hearthstead:".length()).startsWith("walled_")));
+                if(village && !p.visitedVillage){
+                    p.visitedVillage=true;
+                    changed=true; // Guardar incluso si la estructura ya estaba registrada.
+                }
                 if(id.contains("ancient_city") || id.contains("trial_chambers")) changed|=p.completedMissions.add("deep_structure");
             }
         }

@@ -15,6 +15,10 @@ public final class Progress {
     public int fish;
     public int tradeCount;
     public String selectedBadge="";
+    /** Canjes definitivos por mundo y UUID; nunca reiniciar estos conjuntos. */
+    public Set<String> claimedRewards = new HashSet<>();
+    /** Impide notificaciones repetidas después de reconectar. */
+    public Set<String> notifiedRewards = new HashSet<>();
     public int cleanNights;
     public int harvestStreak;
     public int treasuresCaught;

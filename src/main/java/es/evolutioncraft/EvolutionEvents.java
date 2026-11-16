@@ -11,11 +11,16 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerWakeUpEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
+import net.minecraft.core.BlockPos;
 
 /** Telemetria autoritativa por jugador para la progresion 2.0. */
 @EventBusSubscriber(modid=EvolutionCraft.ID)
 public final class EvolutionEvents {
     private EvolutionEvents() {}
+    // Cache de la última posición revisada para no consultar estructuras sin movimiento.
+    private static final Map<UUID,String> LAST_STRUCTURE_SCAN=new HashMap<>();
 
     @SubscribeEvent
     public static void placed(BlockEvent.EntityPlaceEvent event){
@@ -70,7 +75,9 @@ public final class EvolutionEvents {
 
     @SubscribeEvent
     public static void scan(PlayerTickEvent.Post event) {
-        if(!(event.getEntity() instanceof ServerPlayer player) || player.tickCount%80!=0)return;
+        if(!(event.getEntity() instanceof ServerPlayer player))return;
+        int interval=EvolutionConfig.get(player).explorationInterval;
+        if(player.tickCount%interval!=0)return;
         Progress p=ProgressStore.get(player);
         boolean changed=false;
         if(player.level().dimension()==Level.OVERWORLD || player.level().dimension()==Level.NETHER) {
@@ -80,6 +87,9 @@ public final class EvolutionEvents {
                 if(player.level().dimension()==Level.OVERWORLD) changed|=p.overworldBiomes.add(biome);
                 else changed|=p.netherBiomes.add(biome);
             }
+            String scanKey=player.level().dimension().identifier().toString()+":"+player.blockPosition();
+            String previous=LAST_STRUCTURE_SCAN.put(player.getUUID(),scanKey);
+            if(!scanKey.equals(previous)){
             var structures=player.level().structureManager().getAllStructuresAt(player.blockPosition());
             for(var structure:structures.keySet()){
                 var key=player.level().registryAccess().lookupOrThrow(Registries.STRUCTURE).getKey(structure);
@@ -99,6 +109,7 @@ public final class EvolutionEvents {
                 }
                 if(id.contains("ancient_city") || id.contains("trial_chambers")) changed|=p.completedMissions.add("deep_structure");
             }
+            }
         }
         long time=player.level().getOverworldClockTime();
         long day=time/24000L;
@@ -110,7 +121,7 @@ public final class EvolutionEvents {
                     p.lastNightIndex=day;
                     p.nightTicksObserved=0;
                 }
-                p.nightTicksObserved=Math.min(10000,p.nightTicksObserved+80);
+                p.nightTicksObserved=Math.min(10000,p.nightTicksObserved+interval);
                 changed=true;
             }
             if(phase<1200 && p.lastNightIndex==day-1) {

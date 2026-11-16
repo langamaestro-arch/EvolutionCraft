@@ -17,6 +17,18 @@ public final class ProgressGuide {
 
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("ecreclamar")
+            .then(Commands.argument("id",StringArgumentType.word()).executes(ctx -> {
+                ServerPlayer player=ctx.getSource().getPlayerOrException();
+                String rewardId=StringArgumentType.getString(ctx,"id");
+                if(!Rewards.claim(player,rewardId)) {
+                    player.sendSystemMessage(Component.literal(
+                        "§c[EvolutionCraft] Recompensa no disponible, bloqueada o ya reclamada."),true);
+                }
+                PacketDistributor.sendToPlayer(player,new GuidePayload(GuideData.snapshot(player)));
+                return Command.SINGLE_SUCCESS;
+            })));
+
         event.getDispatcher().register(Commands.literal("ecprogreso").executes(ctx -> {
             PacketDistributor.sendToPlayer(ctx.getSource().getPlayerOrException(),
                     new GuidePayload(GuideData.snapshot(ctx.getSource().getPlayerOrException())));

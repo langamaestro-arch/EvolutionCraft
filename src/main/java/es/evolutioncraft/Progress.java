@@ -148,12 +148,24 @@ public final class Progress {
         return 5;
     }
     public boolean canNether() {
+        return canNether(40,20);
+    }
+    public boolean canNether(EvolutionConfig config) {
+        return canNether(config.netherAdvancements,config.netherBiomes);
+    }
+    private boolean canNether(int achievements,int biomeCount){
         return era() >= 4 && fishingLevel() >= 3 && bossKills.contains("minecraft:warden") &&
-               agricultureLevel() >= 3 && husbandryLevel() >= 3 && advancements.size() >= 40 && overworldBiomes.size() >= 20 && explorationLevel() >= 4;
+               agricultureLevel() >= 3 && husbandryLevel() >= 3 && advancements.size() >= achievements && overworldBiomes.size() >= biomeCount && explorationLevel() >= 4;
     }
     public boolean canEnd() {
-        return canNether() && fishingLevel() == 5 && explorationLevel() >= 5 && alchemyLevel() >= 3 && bossKills.contains("minecraft:wither") &&
-               agricultureLevel() >= 5 && husbandryLevel() >= 5 && advancements.size() >= 70 && advancements.contains("minecraft:nether/explore_nether");
+        return canEnd(70,40,20);
+    }
+    public boolean canEnd(EvolutionConfig config) {
+        return canEnd(config.endAdvancements,config.netherAdvancements,config.netherBiomes);
+    }
+    private boolean canEnd(int endAdvancements,int netherAdvancements,int netherBiomes){
+        return canNether(netherAdvancements,netherBiomes) && fishingLevel() == 5 && explorationLevel() >= 5 && alchemyLevel() >= 3 && bossKills.contains("minecraft:wither") &&
+               agricultureLevel() >= 5 && husbandryLevel() >= 5 && advancements.size() >= endAdvancements && advancements.contains("minecraft:nether/explore_nether");
     }
     /**
      * Clasificacion por identificador de registro. Funciona sin depender de los JAR

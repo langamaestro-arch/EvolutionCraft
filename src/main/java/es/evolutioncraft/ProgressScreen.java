@@ -39,12 +39,16 @@ public final class ProgressScreen extends Screen {
     private String badge="";
     private final List<Integer> pageStarts=new ArrayList<>();
 
-    public ProgressScreen(String json){
+    public ProgressScreen(String json){this(json,0);}
+    public ProgressScreen(String json,int sectionToOpen){
         super(Component.literal("EvolutionCraft - Diario del aventurero"));
         this.data=JsonParser.parseString(json).getAsJsonObject();
         this.stage=Math.min(4,Math.max(0,getInt("era")));
+        this.section=Math.max(0,Math.min(SECTION_TABS.length-1,sectionToOpen));
+        this.tab=SECTION_TABS[this.section][0];
         if(data.has("selectedBadge")) badge=data.get("selectedBadge").getAsString();
     }
+    public int getSection(){return section;}
     private int getInt(String key){return data.has(key)?data.get(key).getAsInt():0;}
     private boolean getBool(String key){return data.has(key)&&data.get(key).getAsBoolean();}
     private int panelW(){return Math.min(635,width-12);}

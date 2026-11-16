@@ -116,9 +116,7 @@ public final class Rewards {
             stack.set(DataComponents.STORED_ENCHANTMENTS,ench.toImmutable());
         }
         if(rewardId.equals("secret_elixir") && stack.is(Items.POTION)){
-            stack=PotionContents.createItemStack(Items.POTION,
-                player.registryAccess().lookupOrThrow(Registries.POTION)
-                    .getOrThrow(Potions.REGENERATION));
+            stack=PotionContents.createItemStack(Items.POTION,Potions.REGENERATION);
         }
         return stack;
     }

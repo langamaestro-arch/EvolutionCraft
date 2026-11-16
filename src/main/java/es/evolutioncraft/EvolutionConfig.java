@@ -19,7 +19,6 @@ import java.util.Properties;
  * Solo se crean claves ausentes; nunca se sobrescriben los ajustes del usuario.
  */
 public final class EvolutionConfig {
-    private EvolutionConfig(){}
     private static final Map<Path, EvolutionConfig> CONFIGS=new HashMap<>();
     public final int netherAdvancements;
     public final int endAdvancements;

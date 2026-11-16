@@ -121,6 +121,7 @@ public final class Rewards {
         return stack;
     }
     public static boolean claim(ServerPlayer player,String id){
+        if(!EvolutionConfig.get(player).rewardsEnabled)return false;
         Progress p=ProgressStore.get(player);
         if(p.claimedRewards==null)p.claimedRewards=new HashSet<>();
         if(p.claimedRewards.contains(id))return false;
@@ -152,6 +153,7 @@ public final class Rewards {
     @SubscribeEvent
     public static void scan(PlayerTickEvent.Post event){
         if(!(event.getEntity() instanceof ServerPlayer player)||player.tickCount%100!=0)return;
+        if(!EvolutionConfig.get(player).rewardsEnabled)return;
         Progress p=ProgressStore.get(player);
         if(p.notifiedRewards==null)p.notifiedRewards=new HashSet<>();
         if(p.claimedRewards==null)p.claimedRewards=new HashSet<>();

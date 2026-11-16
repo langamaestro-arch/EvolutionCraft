@@ -21,7 +21,8 @@ public final class EquipmentGuard {
         return Math.max(Progress.requiredEra(id), RecipeEraRules.requiredEra(id));
     }
     private static boolean blocked(ServerPlayer p,ItemStack stack){
-        return required(stack)>ProgressStore.get(p).era();
+        return EvolutionConfig.get(p).equipmentRestrictions &&
+            required(stack)>ProgressStore.get(p).era();
     }
     private static void warning(ServerPlayer p,int needed){
         if(p.tickCount%20==0){
@@ -41,7 +42,8 @@ public final class EquipmentGuard {
         // Su mesa de mejoras se desbloquea cuando el jugador alcanza Hierro.
         String block=BuiltInRegistries.BLOCK.getKey(event.getLevel()
             .getBlockState(event.getPos()).getBlock()).toString();
-        if(block.equals("arsenalforge:arsenal_forge") && ProgressStore.get(p).era()<3){
+        if(block.equals("arsenalforge:arsenal_forge") && EvolutionConfig.get(p).arsenalForgeRestrictions &&
+                ProgressStore.get(p).era()<3){
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.FAIL);
             if(p.tickCount%20==0)
@@ -52,7 +54,8 @@ public final class EquipmentGuard {
         // Las mochilas colocadas se abren usando el bloque, aunque las manos estén vacías.
         int blockEra=RecipeEraRules.requiredEra(block);
         if(block.startsWith("sophisticatedbackpacks:") &&
-                block.endsWith("_backpack") && blockEra>ProgressStore.get(p).era()){
+                block.endsWith("_backpack") && EvolutionConfig.get(p).equipmentRestrictions &&
+                blockEra>ProgressStore.get(p).era()){
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.FAIL);
             warning(p,blockEra);

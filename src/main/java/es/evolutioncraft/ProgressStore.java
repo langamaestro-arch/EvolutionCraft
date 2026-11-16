@@ -7,6 +7,8 @@ import net.minecraft.world.level.storage.LevelResource;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -39,7 +41,16 @@ public final class ProgressStore {
             Files.createDirectories(path.getParent());
             WorldFile file = new WorldFile();
             file.players = world(path);
-            Files.writeString(path, GSON.toJson(file));
+            // Nunca truncar directamente el guardado principal.
+            // Un cierre entre escrituras no debe dejar JSON incompleto.
+            Path temporary=path.resolveSibling(path.getFileName()+".tmp");
+            Files.writeString(temporary,GSON.toJson(file));
+            try {
+                Files.move(temporary,path,StandardCopyOption.REPLACE_EXISTING,
+                    StandardCopyOption.ATOMIC_MOVE);
+            } catch(AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporary,path,StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException ex) {
             EvolutionCraftLogger.warn("No se ha podido guardar Evolution Craft: " + ex.getMessage());
         }

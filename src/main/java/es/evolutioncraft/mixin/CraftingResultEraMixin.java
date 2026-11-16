@@ -1,6 +1,7 @@
 package es.evolutioncraft.mixin;
 
 import es.evolutioncraft.Progress;
+import es.evolutioncraft.EvolutionConfig;
 import es.evolutioncraft.ProgressStore;
 import es.evolutioncraft.RecipeEraRules;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,6 +24,7 @@ public abstract class CraftingResultEraMixin {
         if(!((Object)this instanceof ResultSlot))return;
         if(!(player instanceof ServerPlayer sp))return;
         if(player.getAbilities().instabuild)return;
+        if(!EvolutionConfig.get(sp).craftingRestrictions)return;
         int needed=RecipeEraRules.requiredEra(((Slot)(Object)this).getItem());
         if(needed>ProgressStore.get(sp).era()){
             cir.setReturnValue(false);

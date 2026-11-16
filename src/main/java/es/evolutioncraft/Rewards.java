@@ -5,6 +5,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -87,7 +93,7 @@ public final class Rewards {
         if(done.contains("arcano"))result.add(prize("secret_arcano","Poder arcano",0,3,
             stack(Items.ENCHANTED_BOOK,1)));
         if(done.contains("elixir"))result.add(prize("secret_elixir","Elixir de la vida",0,0,
-            stack(Items.POTION,3)));
+            stack(Items.POTION,1),stack(Items.POTION,1),stack(Items.POTION,1)));
         if(done.contains("terror"))result.add(prize("secret_terror","El terror tiene miedo",2000,0,
             stack(Items.ENCHANTED_GOLDEN_APPLE,1)));
         if(done.contains("infierno"))result.add(prize("secret_infierno","Infierno dominado",2000,4,
@@ -99,6 +105,22 @@ public final class Rewards {
         if(done.contains("evolucion"))result.add(prize("secret_evolucion","La evolucion definitiva",5000,5,
             stack(Items.TOTEM_OF_UNDYING,1)));
         return result;
+    }
+
+    private static ItemStack preparePrize(ServerPlayer player,String rewardId,ItemStack original){
+        ItemStack stack=original.copy();
+        if(rewardId.equals("secret_arcano") && stack.is(Items.ENCHANTED_BOOK)){
+            ItemEnchantments.Mutable ench=new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+            ench.set(player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+                .getOrThrow(Enchantments.UNBREAKING),3);
+            stack.set(DataComponents.STORED_ENCHANTMENTS,ench.toImmutable());
+        }
+        if(rewardId.equals("secret_elixir") && stack.is(Items.POTION)){
+            stack=PotionContents.createItemStack(Items.POTION,
+                player.registryAccess().lookupOrThrow(Registries.POTION)
+                    .getOrThrow(Potions.REGENERATION));
+        }
+        return stack;
     }
     public static boolean claim(ServerPlayer player,String id){
         Progress p=ProgressStore.get(player);
@@ -119,7 +141,7 @@ public final class Rewards {
         p.claimedRewards.add(found.id());
         ProgressStore.save(player);
         for(ItemStack stack:found.items()){
-            if(!player.getInventory().add(stack.copy())){
+            if(!player.getInventory().add(preparePrize(player,found.id(),stack))){
                 player.sendSystemMessage(Component.literal(
                     "§c[EvolutionCraft] Inventario lleno al entregar el premio; contacta con un administrador."));
             }

@@ -39,7 +39,7 @@ public final class ProgressScreen extends Screen {
     private int section=0,tab=0,stage=0,page=0;
     private String badge="";
     private int offerFilter=0;
-    private static final String[] OFFER_FILTERS={"TODAS","PESCA","RECOLECCION","COMBATE","EXPLORACION"};
+    private static final String[] OFFER_FILTERS={"TODAS","PESCA","RECOLECCION","COMBATE","MINERIA"};
     private final List<Integer> pageStarts=new ArrayList<>();
 
     public ProgressScreen(String json){this(json,0);}

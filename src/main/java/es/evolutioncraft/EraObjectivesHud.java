@@ -61,7 +61,7 @@ public final class EraObjectivesHud {
 
     private static void render(GuiGraphicsExtractor g,net.minecraft.client.DeltaTracker unused){
         Minecraft mc=Minecraft.getInstance();
-        if(mc.player==null || mc.gui.screen()!=null || mc.options.hideGui || state==null)return;
+        if(mc.player==null || mc.gui.screen()!=null || state==null)return;
         if(g.guiWidth()<300 || g.guiHeight()<165)return;
 
         int era=state.get("era").getAsInt();

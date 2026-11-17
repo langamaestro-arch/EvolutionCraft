@@ -26,9 +26,15 @@ public final class GuideKey {
     public static void registerPackets(RegisterClientPayloadHandlersEvent event) {
         event.register(GuidePayload.TYPE, (payload, context) -> {
             Minecraft minecraft=Minecraft.getInstance();
-            int previousSection=minecraft.gui.screen() instanceof ProgressScreen previous
-                ? previous.getSection():0;
-            minecraft.gui.setScreen(new ProgressScreen(payload.json(),previousSection));
+            boolean contracts=com.google.gson.JsonParser.parseString(payload.json())
+                .getAsJsonObject().has("openContracts");
+            int previousSection=contracts?7:
+                minecraft.gui.screen() instanceof ProgressScreen previous?previous.getSection():0;
+            int previousTab=minecraft.gui.screen() instanceof ProgressScreen previous
+                ? previous.getTab():-1;
+            ProgressScreen screen=new ProgressScreen(payload.json(),previousSection);
+            if(contracts && previousTab>=19 && previousTab<=21)screen.selectTab(previousTab);
+            minecraft.gui.setScreen(screen);
         });
     }
 

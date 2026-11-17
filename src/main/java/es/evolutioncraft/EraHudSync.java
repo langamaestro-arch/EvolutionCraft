@@ -21,6 +21,6 @@ public final class EraHudSync {
         if(p.tickCount%40!=0)return;
         String state=EraHudData.snapshot(p);
         String old=LAST.put(p.getUUID(),state);
-        if(!state.equals(old))PacketDistributor.sendToPlayer(p,new EraHudPayload(state));
+        if(p.tickCount<=40 || !state.equals(old))PacketDistributor.sendToPlayer(p,new EraHudPayload(state));
     }
 }

@@ -94,11 +94,11 @@ public final class EvolutionEvents {
                 if(fresh){
                     changed=true;
                     DiscoveryJournal.record(p,player,"biome",biome);
-                    if(player.level().dimension()==Level.NETHER)
-                        AdventureContracts.onAction(player,"nether_biome",biome,1);
-                    else
-                        AdventureContracts.onAction(player,"biome",biome,1);
                 }
+                // Repetibles: visitar un bioma conocido cuenta si el contrato
+                // se aceptó antes de la visita. El contrato evita duplicados.
+                AdventureContracts.onAction(player,player.level().dimension()==Level.NETHER
+                    ?"nether_biome":"biome",biome,1);
             }
             String scanKey=player.level().dimension().identifier().toString()+":"+player.blockPosition();
             String previous=LAST_STRUCTURE_SCAN.put(player.getUUID(),scanKey);
@@ -111,8 +111,8 @@ public final class EvolutionEvents {
                 if(p.visitedStructures.add(id)){
                     changed=true;
                     DiscoveryJournal.record(p,player,"structure",id);
-                    AdventureContracts.onAction(player,"structure",id,1);
                 }
+                AdventureContracts.onAction(player,"structure",id,1);
                 // Hearthstead reemplaza y amplía las aldeas vanilla con villages,
                 // towns, hamlets y walled towns. Excluimos sus ruins porque no son aldeas.
                 boolean village=id.contains("village") ||

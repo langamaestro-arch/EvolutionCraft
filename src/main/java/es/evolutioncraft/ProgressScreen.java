@@ -50,6 +50,15 @@ public final class ProgressScreen extends Screen {
         if(data.has("selectedBadge")) badge=data.get("selectedBadge").getAsString();
     }
     public int getSection(){return section;}
+    public int getTab(){return tab;}
+    public void selectTab(int next){
+        if(next>=19 && next<=21){
+            this.section=7;
+            this.tab=next;
+            this.page=0;
+            // init() calculará la paginación al abrir la pantalla.
+        }
+    }
     private int getInt(String key){return data.has(key)?data.get(key).getAsInt():0;}
     private boolean getBool(String key){return data.has(key)&&data.get(key).getAsBoolean();}
     private int panelW(){return Math.min(635,width-12);}

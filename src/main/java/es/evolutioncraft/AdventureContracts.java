@@ -61,14 +61,14 @@ public final class AdventureContracts {
         new Contract("blaze_10","Cazador del Nether","COMBATE","ORO","Derrota 10 blazes","kill","minecraft:blaze",10,4,32,1000),
         new Contract("wither_skeleton_5","Huesos de la fortaleza","COMBATE","ORO","Derrota 5 esqueletos wither","kill","minecraft:wither_skeleton",5,4,32,1000),
 
-        new Contract("explore_2","Explorador de ruinas","EXPLORACION","PLATA","Descubre 2 estructuras nuevas","structure","*",2,0,16,400),
-        new Contract("explore_3","Cronista de caminos","EXPLORACION","PLATA","Descubre 3 estructuras nuevas","structure","*",3,0,20,450),
-        new Contract("explore_biome_2","Huellas en el mapa","EXPLORACION","BRONCE","Descubre 2 biomas nuevos del Overworld","biome","*",2,0,8,180),
-        new Contract("explore_biome_3","Senderos desconocidos","EXPLORACION","BRONCE","Descubre 3 biomas nuevos del Overworld","biome","*",3,0,10,220),
-        new Contract("explore_biome_4","El atlas del aventurero","EXPLORACION","PLATA","Descubre 4 biomas nuevos del Overworld","biome","*",4,0,16,380),
-        new Contract("explore_biome_5","Exploración sin fronteras","EXPLORACION","PLATA","Descubre 5 biomas nuevos del Overworld","biome","*",5,0,20,480),
-        new Contract("explore_4","Tras las antiguas piedras","EXPLORACION","PLATA","Descubre 4 estructuras nuevas","structure","*",4,1,24,600),
-        new Contract("nether_biomes","Cartógrafo infernal","EXPLORACION","ORO","Descubre 3 biomas nuevos del Nether","nether_biome","*",3,4,32,1000)
+        new Contract("explore_2","Explorador de ruinas","EXPLORACION","PLATA","Visita 2 estructuras distintas","structure","*",2,0,16,400),
+        new Contract("explore_3","Cronista de caminos","EXPLORACION","PLATA","Visita 3 estructuras distintas","structure","*",3,0,20,450),
+        new Contract("explore_biome_2","Huellas en el mapa","EXPLORACION","BRONCE","Visita 2 biomas distintos del Overworld","biome","*",2,0,8,180),
+        new Contract("explore_biome_3","Senderos desconocidos","EXPLORACION","BRONCE","Visita 3 biomas distintos del Overworld","biome","*",3,0,10,220),
+        new Contract("explore_biome_4","El atlas del aventurero","EXPLORACION","PLATA","Visita 4 biomas distintos del Overworld","biome","*",4,0,16,380),
+        new Contract("explore_biome_5","Exploración sin fronteras","EXPLORACION","PLATA","Visita 5 biomas distintos del Overworld","biome","*",5,0,20,480),
+        new Contract("explore_4","Tras las antiguas piedras","EXPLORACION","PLATA","Visita 4 estructuras distintas","structure","*",4,1,24,600),
+        new Contract("nether_biomes","Cartógrafo infernal","EXPLORACION","ORO","Visita 3 biomas distintos del Nether","nether_biome","*",3,4,32,1000)
     );
 
     private static void init(Progress p){
@@ -77,6 +77,7 @@ public final class AdventureContracts {
         if(p.contractProgress==null)p.contractProgress=new HashMap<>();
         if(p.contractOffers==null)p.contractOffers=new HashMap<>();
         if(p.contractRecentTemplates==null)p.contractRecentTemplates=new HashMap<>();
+        if(p.contractExplorationSeen==null)p.contractExplorationSeen=new HashMap<>();
     }
     public static Contract byId(String id){
         for(Contract c:CATALOG)if(c.id().equals(id))return c;
@@ -103,6 +104,14 @@ public final class AdventureContracts {
         for(String id:p.activeContracts)inUse.add(templateId(id));
         for(Contract c:CATALOG)if(c.category().equals(category)&&c.minEra()<=era&&!inUse.contains(c.id()))
             pool.add(c);
+        if(pool.isEmpty()){
+            // Mantener siempre tres ofertas incluso con tres activos de una era
+            // temprana: permitimos repetir plantilla en activos, nunca en ofertas.
+            inUse.clear();
+            for(String id:p.contractOffers.values())inUse.add(templateId(id));
+            for(Contract c:CATALOG)if(c.category().equals(category)&&c.minEra()<=era
+                &&!inUse.contains(c.id()))pool.add(c);
+        }
         if(pool.isEmpty())return null;
         List<String> recent=p.contractRecentTemplates.computeIfAbsent(category,k->new ArrayList<>());
         List<Contract> filtered=new ArrayList<>();
@@ -144,6 +153,7 @@ public final class AdventureContracts {
             !p.contractOffers.containsValue(id))return false;
         p.activeContracts.add(id);
         p.contractProgress.put(id,0);
+        p.contractExplorationSeen.put(id,new HashSet<>());
         p.contractOffers.values().removeIf(v->v.equals(id));
         fillOffers(p,p.era());  // El hueco queda repuesto inmediatamente.
         ProgressStore.save(player);
@@ -155,6 +165,7 @@ public final class AdventureContracts {
         Progress p=ProgressStore.get(player);init(p);
         if(!p.activeContracts.remove(id))return false;
         p.contractProgress.remove(id);
+        p.contractExplorationSeen.remove(id);
         // No devolver el mismo contrato a las ofertas; renovar una oferta del tipo.
         Contract old=instance(id);
         if(old!=null)rotateOne(p,old.category(),p.era());
@@ -177,6 +188,12 @@ public final class AdventureContracts {
             if(c==null||!c.kind().equals(kind))continue;
             if(!c.target().equals("*")&&!c.target().equals(target))continue;
             int before=p.contractProgress.getOrDefault(id,0);
+            if(kind.equals("biome")||kind.equals("nether_biome")||kind.equals("structure")){
+                // Sólo una vez por tipo de lugar y contrato. Revisitas posteriores
+                // a aceptar cuentan incluso si el diario ya conocía el lugar.
+                if(!p.contractExplorationSeen.computeIfAbsent(id,k->new HashSet<>()).add(kind+":"+target))
+                    continue;
+            }
             int after=Math.min(c.quantity(),before+amount);
             if(after!=before){
                 p.contractProgress.put(id,after);
@@ -207,6 +224,7 @@ public final class AdventureContracts {
         p.claimedContracts.add(id);
         p.activeContracts.remove(id);
         p.contractProgress.remove(id);
+        p.contractExplorationSeen.remove(id);
         rotateOne(p,c.category(),p.era());
         ProgressStore.save(player);
         player.getInventory().add(emeralds);

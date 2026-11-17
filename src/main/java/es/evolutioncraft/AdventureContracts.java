@@ -188,6 +188,7 @@ public final class AdventureContracts {
             if(c==null||!c.kind().equals(kind))continue;
             if(!c.target().equals("*")&&!c.target().equals(target))continue;
             int before=p.contractProgress.getOrDefault(id,0);
+            if(before>=c.quantity())continue;
             if(kind.equals("biome")||kind.equals("nether_biome")||kind.equals("structure")){
                 // Sólo una vez por tipo de lugar y contrato. Revisitas posteriores
                 // a aceptar cuentan incluso si el diario ya conocía el lugar.

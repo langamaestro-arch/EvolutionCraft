@@ -91,6 +91,8 @@ public final class EvolutionEvents {
                 if(fresh){
                     changed=true;
                     DiscoveryJournal.record(p,player,"biome",biome);
+                    if(player.level().dimension()==Level.NETHER)
+                        AdventureContracts.onAction(player,"nether_biome",biome,1);
                 }
             }
             String scanKey=player.level().dimension().identifier().toString()+":"+player.blockPosition();

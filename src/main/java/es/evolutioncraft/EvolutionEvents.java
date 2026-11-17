@@ -84,8 +84,12 @@ public final class EvolutionEvents {
             String biome=player.level().getBiome(player.blockPosition()).unwrapKey()
                 .map(k->k.identifier().toString()).orElse("");
             if(!biome.isEmpty()) {
-                if(player.level().dimension()==Level.OVERWORLD) changed|=p.overworldBiomes.add(biome);
-                else changed|=p.netherBiomes.add(biome);
+                boolean fresh=player.level().dimension()==Level.OVERWORLD
+                    ?p.overworldBiomes.add(biome):p.netherBiomes.add(biome);
+                if(fresh){
+                    changed=true;
+                    DiscoveryJournal.record(p,player,"biome",biome);
+                }
             }
             String scanKey=player.level().dimension().identifier().toString()+":"+player.blockPosition();
             String previous=LAST_STRUCTURE_SCAN.put(player.getUUID(),scanKey);
@@ -95,7 +99,10 @@ public final class EvolutionEvents {
                 var key=player.level().registryAccess().lookupOrThrow(Registries.STRUCTURE).getKey(structure);
                 if(key==null)continue;
                 String id=key.toString();
-                changed|=p.visitedStructures.add(id);
+                if(p.visitedStructures.add(id)){
+                    changed=true;
+                    DiscoveryJournal.record(p,player,"structure",id);
+                }
                 // Hearthstead reemplaza y amplía las aldeas vanilla con villages,
                 // towns, hamlets y walled towns. Excluimos sus ruins porque no son aldeas.
                 boolean village=id.contains("village") ||

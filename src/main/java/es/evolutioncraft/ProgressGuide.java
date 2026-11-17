@@ -36,7 +36,11 @@ public final class ProgressGuide {
             .then(Commands.literal("reclamar")
                 .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->
                     contractAction(ctx.getSource().getPlayerOrException(),
-                        "reclamar",StringArgumentType.getString(ctx,"id"))))));
+                        "reclamar",StringArgumentType.getString(ctx,"id")))))
+            .then(Commands.literal("entregar")
+                .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->
+                    contractAction(ctx.getSource().getPlayerOrException(),
+                        "entregar",StringArgumentType.getString(ctx,"id"))))));
 
         event.getDispatcher().register(Commands.literal("ecreclamar")
             .then(Commands.argument("id",StringArgumentType.word()).executes(ctx -> {
@@ -80,6 +84,7 @@ public final class ProgressGuide {
             case "aceptar" -> AdventureContracts.accept(player,id);
             case "abandonar" -> AdventureContracts.abandon(player,id);
             case "reclamar" -> AdventureContracts.claim(player,id);
+            case "entregar" -> AdventureContracts.deliver(player,id);
             default -> false;
         };
         if(!ok)player.sendSystemMessage(Component.literal(

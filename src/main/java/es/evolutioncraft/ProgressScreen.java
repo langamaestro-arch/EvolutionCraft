@@ -24,15 +24,16 @@ public final class ProgressScreen extends Screen {
     private static final int CARD=0xFF223441, CARD2=0xFF1B2C3A, MUTED=0xFFA7BAC8;
     private static final int TEXT=0xFFF2F1E7, GOLD=0xFFF4CE82, GREEN=0xFF7BD9A4;
     private static final int RED=0xFFE78B83, DIM=0xFF526979, EDGE=0xFF896C45;
-    private static final String[] SECTIONS={"EVOLUCION","HABILIDADES","DIMENSIONES","LOGROS","SECRETOS","RECOMPENSAS"};
+    private static final String[] SECTIONS={"EVOLUCION","HABILIDADES","DIMENSIONES","LOGROS","SECRETOS","RECOMPENSAS","DESCUBRIMIENTOS"};
     private static final Item[] SECTION_ICONS={Items.DIAMOND_PICKAXE,Items.ENCHANTED_BOOK,
-        Items.ENDER_EYE,Items.BOOK,Items.NETHER_STAR,Items.CHEST};
-    private static final int[][] SECTION_TABS={{0,10},{1,2,3,4,5,6},{7,8},{11},{9},{12}};
+        Items.ENDER_EYE,Items.BOOK,Items.NETHER_STAR,Items.CHEST,Items.COMPASS};
+    private static final int[][] SECTION_TABS={{0,10},{1,2,3,4,5,6},{7,8},{11},{9},{12},{13,14,15,16,17,18}};
     private static final String[] TITLES={"ERAS","PESCA","AGRICULTURA","GANADERIA",
-        "EXPLORACION","HERRAMIENTAS","ALQUIMIA","NETHER","END","SECRETOS","MISIONES","RESUMEN","PREMIOS"};
+        "EXPLORACION","HERRAMIENTAS","ALQUIMIA","NETHER","END","SECRETOS","MISIONES","RESUMEN","PREMIOS","OVERWORLD","NETHER","ESTRUCTURAS","JEFES","ESTADISTICAS","HISTORIAL"};
     private static final Item[] ICONS={Items.IRON_PICKAXE,Items.FISHING_ROD,Items.WHEAT,
         Items.WHEAT,Items.COMPASS,Items.DIAMOND_PICKAXE,Items.BREWING_STAND,
-        Items.OBSIDIAN,Items.ENDER_EYE,Items.NETHER_STAR,Items.BOOK,Items.NETHER_STAR,Items.CHEST};
+        Items.OBSIDIAN,Items.ENDER_EYE,Items.NETHER_STAR,Items.BOOK,Items.NETHER_STAR,Items.CHEST,
+        Items.GRASS_BLOCK,Items.NETHERRACK,Items.COMPASS,Items.WITHER_SKELETON_SKULL,Items.WRITABLE_BOOK,Items.CLOCK};
 
     private final JsonObject data;
     private int section=0,tab=0,stage=0,page=0;
@@ -61,9 +62,22 @@ public final class ProgressScreen extends Screen {
     private int contentY(){return y()+208;}
     private int contentBottom(){return y()+panelH()-57;}
     private int navY(){return y()+91;}
+    private int navStep(){return 36;}
+    private int navHeight(){return 32;}
     private int tabsY(){return y()+112;}
 
     private JsonArray goals(){
+        if(tab>=13 && tab<=18){
+            String key=switch(tab){
+                case 13 -> "overworld";
+                case 14 -> "nether";
+                case 15 -> "structures";
+                case 16 -> "bosses";
+                case 17 -> "statistics";
+                default -> "recent";
+            };
+            return data.getAsJsonObject("discoveries").getAsJsonArray(key);
+        }
         if(tab==12)return data.getAsJsonObject("rewardGoals").getAsJsonArray("goals");
         if(tab==0)return data.getAsJsonObject("eras").getAsJsonArray("goals")
             .get(stage).getAsJsonObject().getAsJsonArray("goals");
@@ -132,6 +146,11 @@ public final class ProgressScreen extends Screen {
         };
     }
     private int rowHeight(JsonObject o){
+        if(o.has("detail")){
+            int nameLines=wrap(o.get("text").getAsString(),Math.max(60,mainW()-100)).size();
+            int details=wrap(o.get("detail").getAsString(),Math.max(60,mainW()-100)).size();
+            return Math.max(43,10+11*(nameLines+details)+7);
+        }
         if(tab==12 && o.has("xp")){
             return Math.max(48,31+11*wrap(o.get("items").getAsString(),Math.max(70,mainW()-126)).size());
         }
@@ -178,8 +197,8 @@ public final class ProgressScreen extends Screen {
         double mx=event.x(),my=event.y();
         int xx=x(),yy=y(),ww=panelW(),hh=panelH();
         if(inside(mx,my,xx+ww-34,yy+10,23,22)){onClose();return true;}
-        for(int s=0;s<6;s++){
-            if(inside(mx,my,xx+12,navY()+s*43,sidebarW()-8,37)){
+        for(int s=0;s<SECTIONS.length;s++){
+            if(inside(mx,my,xx+12,navY()+s*navStep(),sidebarW()-8,navHeight())){
                 switchSection(s);return true;
             }
         }
@@ -290,6 +309,12 @@ public final class ProgressScreen extends Screen {
             case 9 -> "DESAFIOS OCULTOS";
             case 10 -> "MISIONES DE AVENTURA";
             case 12 -> "RECOMPENSAS DEL AVENTURERO";
+            case 13 -> "BIOMAS DEL OVERWORLD";
+            case 14 -> "BIOMAS DEL NETHER";
+            case 15 -> "ESTRUCTURAS DESCUBIERTAS";
+            case 16 -> "JEFES DERROTADOS";
+            case 17 -> "ESTADISTICAS DE AVENTURA";
+            case 18 -> "ULTIMOS DESCUBRIMIENTOS";
             default -> "TU EVOLUCION";
         };
     }
@@ -307,6 +332,12 @@ public final class ProgressScreen extends Screen {
             case 9 -> getInt("secretCount")+" / 15 secretos";
             case 10 -> "6 misiones de era";
             case 12 -> getInt("pendingRewards")+" premios por reclamar";
+            case 13 -> goals().size()+" biomas registrados";
+            case 14 -> goals().size()+" biomas registrados";
+            case 15 -> goals().size()+" estructuras registradas";
+            case 16 -> goals().size()+" jefes registrados";
+            case 17 -> "Tu aventura en numeros";
+            case 18 -> goals().size()+" registros recientes";
             default -> getInt("overallPercent")+"% completado";
         };
     }
@@ -360,7 +391,8 @@ public final class ProgressScreen extends Screen {
             case 2 -> "Dos mundos esperan tu conquista";
             case 3 -> "Cada paso forma parte de tu historia";
             case 4 -> "El misterio recompensa a los valientes";
-            default -> "Tus hazañas merecen una recompensa";
+            case 5 -> "Tus hazañas merecen una recompensa";
+            default -> "Cada lugar descubierto cuenta tu historia";
         };
     }
     /** Pixel-art rounded rectangles: no external textures or render APIs required. */
@@ -419,15 +451,15 @@ public final class ProgressScreen extends Screen {
         fill(g,sx+sw+4,yy+60,sx+sw+5,yy+hh-11,0xFF334656);
         text(g,"SECCIONES",sx+13,yy+70,GOLD);
         fill(g,sx+13,yy+84,sx+sw-13,yy+85,0xFF445C67);
-        for(int i=0;i<6;i++){
-            int ny=navY()+i*43;
-            boolean selected=section==i,hover=inside(mouseX,mouseY,xx+12,ny,sw-8,37);
+        for(int i=0;i<SECTIONS.length;i++){
+            int ny=navY()+i*navStep();
+            boolean selected=section==i,hover=inside(mouseX,mouseY,xx+12,ny,sw-8,navHeight());
             int navColor=selected?0xFF314A59:hover?0xFF253B4D:0xFF172938;
-            roundedBorder(g,xx+12,ny,sw-8,37,6,
+            roundedBorder(g,xx+12,ny,sw-8,navHeight(),6,
                 selected?accent:hover?0xFF567184:0xFF284253,navColor);
-            if(selected)fill(g,xx+14,ny+7,xx+17,ny+30,accent);
-            item(g,SECTION_ICONS[i],xx+19,ny+10);
-            text(g,SECTIONS[i],xx+40,ny+14,selected?TEXT:MUTED);
+            if(selected)fill(g,xx+14,ny+6,xx+17,ny+navHeight()-6,accent);
+            item(g,SECTION_ICONS[i],xx+19,ny+7);
+            text(g,SECTIONS[i],xx+40,ny+11,selected?TEXT:MUTED);
         }
         int base=yy+hh-94;
         text(g,"PROGRESO GLOBAL",sx+10,base,GOLD);
@@ -481,7 +513,7 @@ public final class ProgressScreen extends Screen {
         int done=completed(list),total=list.size();
         fill(g,mx+8,yy+183,mx+mw-8,yy+191,0xFF0A151D);
         if(total>0)fill(g,mx+9,yy+184,mx+9+(mw-18)*done/total,yy+190,GREEN);
-        text(g,done+" / "+total+" objetivos",mx+9,yy+195,MUTED);
+        text(g,tab>=13?"Registros: "+total:done+" / "+total+" objetivos",mx+9,yy+195,MUTED);
         String side=tab==9?"Distintivo: "+badgeLabel():tab==11?"Progreso de todas las habilidades":"";
         if(!side.isEmpty()&&font.width(side)<mw-150)
             text(g,side,mx+mw-9-font.width(side),yy+195,GOLD);
@@ -494,7 +526,21 @@ public final class ProgressScreen extends Screen {
             boolean ok=objective.get("done").getAsBoolean();
             String label=objective.get("text").getAsString();
             int height=rowHeight(objective),left=mx+11,cardW=mw-22;
-            if(tab==12 && objective.has("xp")){
+            if(objective.has("detail")){
+                roundedBorder(g,left,cy,cardW,height-3,5,0xFF3C5261,i%2==0?CARD:CARD2);
+                fill(g,left+2,cy+7,left+5,cy+height-10,GOLD);
+                item(g,ICONS[tab],left+10,cy+Math.max(5,(height-17)/2));
+                int yyRow=cy+7;
+                for(String line:wrap(label,Math.max(60,mw-100))){
+                    text(g,line,left+31,yyRow,TEXT);
+                    yyRow+=11;
+                }
+                yyRow+=2;
+                for(String line:wrap(objective.get("detail").getAsString(),Math.max(60,mw-100))){
+                    text(g,line,left+31,yyRow,MUTED);
+                    yyRow+=11;
+                }
+            } else if(tab==12 && objective.has("xp")){
                 boolean ready=objective.get("ready").getAsBoolean();
                 int border=ok?GREEN:ready?GOLD:DIM;
                 boolean hover=inside(mouseX,mouseY,left,cy,cardW,height-3);

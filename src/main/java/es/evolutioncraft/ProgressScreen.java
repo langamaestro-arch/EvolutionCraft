@@ -235,7 +235,7 @@ public final class ProgressScreen extends Screen {
             for(int i=begin;i<end;i++){
                 JsonObject contract=contracts.get(i).getAsJsonObject();
                 int h=rowHeight(contract);
-                if(inside(mx,my,mainX()+11,cy,mainW()-22,h-3)){
+                if(inside(mx,my,mainX()+mainW()-111,cy+4,100,19)){
                     String action=tab==19?"aceptar":tab==20?
                         contract.get("ready").getAsBoolean()?"reclamar":"abandonar":"";
                     if(!action.isEmpty() && (tab!=19||contract.get("canAccept").getAsBoolean())){
@@ -582,7 +582,8 @@ public final class ProgressScreen extends Screen {
                 String action=tab==21?"RECLAMADO":tab==19?
                     (objective.get("canAccept").getAsBoolean()?"ACEPTAR":"BLOQUEADO"):
                     (objective.get("ready").getAsBoolean()?"RECLAMAR":"ABANDONAR");
-                text(g,action,left+cardW-8-font.width(action),cy+7,tierColor);
+                roundedBorder(g,left+cardW-103,cy+3,96,19,4,tierColor,0xFF182B37);
+                text(g,action,left+cardW-8-font.width(action),cy+8,tierColor);
                 String description=objective.get("description").getAsString();
                 int detailY=cy+21;
                 for(String line:wrap(description,Math.max(65,mw-96))){

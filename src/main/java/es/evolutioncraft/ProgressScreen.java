@@ -38,6 +38,8 @@ public final class ProgressScreen extends Screen {
     private final JsonObject data;
     private int section=0,tab=0,stage=0,page=0;
     private String badge="";
+    private int offerFilter=0;
+    private static final String[] OFFER_FILTERS={"TODAS","PESCA","RECOLECCION","COMBATE","EXPLORACION"};
     private final List<Integer> pageStarts=new ArrayList<>();
 
     public ProgressScreen(String json){this(json,0);}
@@ -51,6 +53,8 @@ public final class ProgressScreen extends Screen {
     }
     public int getSection(){return section;}
     public int getTab(){return tab;}
+    public int getOfferFilter(){return offerFilter;}
+    public void setOfferFilter(int filter){offerFilter=Math.floorMod(filter,OFFER_FILTERS.length);page=0;}
     public void selectTab(int next){
         if(next>=19 && next<=21){
             this.section=7;
@@ -78,7 +82,15 @@ public final class ProgressScreen extends Screen {
     private JsonArray goals(){
         if(tab>=19 && tab<=21){
             String key=tab==19?"available":tab==20?"active":"completed";
-            return data.getAsJsonObject("contracts").getAsJsonArray(key);
+            JsonArray all=data.getAsJsonObject("contracts").getAsJsonArray(key);
+            if(tab!=19||offerFilter==0)return all;
+            JsonArray filtered=new JsonArray();
+            for(var obj:all){
+                var row=obj.getAsJsonObject();
+                if(row.has("category")&&row.get("category").getAsString().equals(OFFER_FILTERS[offerFilter]))
+                    filtered.add(row);
+            }
+            return filtered;
         }
         if(tab>=13 && tab<=18){
             String key=switch(tab){
@@ -226,6 +238,12 @@ public final class ProgressScreen extends Screen {
             if(inside(mx,my,tx,ty,gridW(cols),24)){
                 switchTab(subs[i]);return true;
             }
+        }
+        if(tab==19 && inside(mx,my,mainX()+8,y()+157,mainW()-16,25)){
+            offerFilter=(offerFilter+1)%OFFER_FILTERS.length;
+            page=0;
+            paginate();
+            return true;
         }
         if(tab>=19 && tab<=21 && data.getAsJsonObject("contracts").get("enabled").getAsBoolean()){
             JsonArray contracts=goals();
@@ -544,9 +562,10 @@ public final class ProgressScreen extends Screen {
             text(g,TITLES[target],tx+26,ty+8,selected?TEXT:MUTED);
         }
         if(tab!=0){
-            String phrase=motto();
+            String phrase=tab==19?"FILTRO: "+OFFER_FILTERS[offerFilter]+"  < Cambiar >":motto();
+            if(tab==19)rounded(g,mx+8,yy+158,mw-16,23,4,0xFF1A2C3A);
             if(font.width(phrase)<mw-30)
-                center(g,phrase,mx+mw/2,yy+169,0xFF8FAAA9);
+                center(g,phrase,mx+mw/2,yy+169,tab==19?GOLD:0xFF8FAAA9);
         }
         if(tab==0){
             rounded(g,mx+8,yy+159,mw-16,23,4,0xFF1A2C3A);

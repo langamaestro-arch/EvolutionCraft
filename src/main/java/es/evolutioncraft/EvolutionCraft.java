@@ -115,6 +115,17 @@ public final class EvolutionCraft {
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         String entity = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).toString();
         update(player, p -> {
+            boolean journalBoss=java.util.Set.of("minecraft:warden","minecraft:wither",
+                "minecraft:ender_dragon","minecraft:elder_guardian").contains(entity)
+                || (entity.startsWith("nicktaleepicdungeons:") &&
+                    (entity.contains("boss") || entity.contains("colossus") ||
+                     entity.contains("demon") || entity.contains("cerberus") ||
+                     entity.contains("sultan") || entity.contains("voidborne") ||
+                     entity.contains("elder") || entity.contains("knight")));
+            if(journalBoss){
+                if(p.discoveredBosses==null)p.discoveredBosses=new java.util.HashSet<>();
+                if(p.discoveredBosses.add(entity))DiscoveryJournal.record(p,player,"boss",entity);
+            }
             if(entity.equals("minecraft:warden") || entity.equals("minecraft:wither"))p.bossKills.add(entity);
             if(entity.equals("minecraft:elder_guardian"))p.elderGuardianKills++;
             if(entity.equals("minecraft:ender_dragon"))

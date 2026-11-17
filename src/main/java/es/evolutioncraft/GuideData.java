@@ -48,6 +48,7 @@ public final class GuideData {
         root.addProperty("end",p.canEnd(config));
         root.addProperty("advancements",p.advancements.size());
         root.addProperty("fish",p.fish);
+        root.add("discoveries",DiscoveryJournal.snapshot(p));
         JsonObject eras=group(root,"eras","Progreso de eras");
         String[] mats={"wooden","stone","copper","iron","diamond"};
         String[] labels={"madera","piedra","cobre","hierro","diamante"};

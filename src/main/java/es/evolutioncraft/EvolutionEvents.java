@@ -106,6 +106,7 @@ public final class EvolutionEvents {
                 if(p.visitedStructures.add(id)){
                     changed=true;
                     DiscoveryJournal.record(p,player,"structure",id);
+                    AdventureContracts.onAction(player,"structure",id,1);
                 }
                 // Hearthstead reemplaza y amplía las aldeas vanilla con villages,
                 // towns, hamlets y walled towns. Excluimos sus ruins porque no son aldeas.

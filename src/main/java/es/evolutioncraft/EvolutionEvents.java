@@ -71,6 +71,8 @@ public final class EvolutionEvents {
             changed=true;
         }
         if(changed) ProgressStore.save(player);
+        if(block.equals("minecraft:copper_ore") || block.equals("minecraft:deepslate_copper_ore"))
+            AdventureContracts.onAction(player,"mine","minecraft:copper_ore",1);
     }
 
     @SubscribeEvent

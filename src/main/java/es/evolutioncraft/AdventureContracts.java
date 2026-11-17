@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class AdventureContracts {
     private AdventureContracts(){}
-    public static final List<String> CATEGORIES=List.of("PESCA","RECOLECCION","COMBATE","EXPLORACION");
+    public static final List<String> CATEGORIES=List.of("PESCA","RECOLECCION","COMBATE","MINERIA");
     private static final int OFFERS_PER_CATEGORY=3;
     private static final int ACTIVE_LIMIT=3;
     private static final int RECENT_LIMIT=4;
@@ -61,14 +61,27 @@ public final class AdventureContracts {
         new Contract("blaze_10","Cazador del Nether","COMBATE","ORO","Derrota 10 blazes","kill","minecraft:blaze",10,4,32,1000),
         new Contract("wither_skeleton_5","Huesos de la fortaleza","COMBATE","ORO","Derrota 5 esqueletos wither","kill","minecraft:wither_skeleton",5,4,32,1000),
 
-        new Contract("explore_2","Explorador de ruinas","EXPLORACION","PLATA","Visita 2 estructuras distintas","structure","*",2,0,16,400),
-        new Contract("explore_3","Cronista de caminos","EXPLORACION","PLATA","Visita 3 estructuras distintas","structure","*",3,0,20,450),
-        new Contract("explore_biome_2","Huellas en el mapa","EXPLORACION","BRONCE","Visita 2 biomas distintos del Overworld","biome","*",2,0,8,180),
-        new Contract("explore_biome_3","Senderos desconocidos","EXPLORACION","BRONCE","Visita 3 biomas distintos del Overworld","biome","*",3,0,10,220),
-        new Contract("explore_biome_4","El atlas del aventurero","EXPLORACION","PLATA","Visita 4 biomas distintos del Overworld","biome","*",4,0,16,380),
-        new Contract("explore_biome_5","Exploración sin fronteras","EXPLORACION","PLATA","Visita 5 biomas distintos del Overworld","biome","*",5,0,20,480),
-        new Contract("explore_4","Tras las antiguas piedras","EXPLORACION","PLATA","Visita 4 estructuras distintas","structure","*",4,1,24,600),
-        new Contract("nether_biomes","Cartógrafo infernal","EXPLORACION","ORO","Visita 3 biomas distintos del Nether","nether_biome","*",3,4,32,1000)
+
+        new Contract("deliver_cobble_64","Piedra para construir","MINERIA","BRONCE","Entrega 64 bloques de adoquín","deliver","minecraft:cobblestone",64,0,9,180),
+        new Contract("deliver_granite_48","Granito para el cantero","MINERIA","BRONCE","Entrega 48 bloques de granito","deliver","minecraft:granite",48,0,10,200),
+        new Contract("deliver_diorite_48","El blanco de la cantera","MINERIA","BRONCE","Entrega 48 bloques de diorita","deliver","minecraft:diorite",48,0,10,200),
+        new Contract("deliver_andesite_48","Piedra de la montaña","MINERIA","BRONCE","Entrega 48 bloques de andesita","deliver","minecraft:andesite",48,0,10,200),
+        new Contract("deliver_cobble_128","La muralla del pueblo","MINERIA","PLATA","Entrega 128 bloques de adoquín","deliver","minecraft:cobblestone",128,0,18,400),
+        new Contract("deliver_granite_96","Columnas de granito","MINERIA","PLATA","Entrega 96 bloques de granito","deliver","minecraft:granite",96,0,18,400),
+        new Contract("deliver_stone_64","Bloques tallados","MINERIA","PLATA","Entrega 64 bloques de piedra","deliver","minecraft:stone",64,2,16,400),
+        new Contract("deliver_copper_32","Fundición de cobre","MINERIA","PLATA","Entrega 32 unidades de cobre en bruto","deliver","minecraft:raw_copper",32,2,18,420),
+        new Contract("deliver_iron_24","Hierro para el herrero","MINERIA","PLATA","Entrega 24 unidades de hierro en bruto","deliver","minecraft:raw_iron",24,3,22,550),
+        new Contract("deliver_deepslate_96","Excavador profundo","MINERIA","PLATA","Entrega 96 bloques de pizarra profunda","deliver","minecraft:cobbled_deepslate",96,3,22,500),
+        new Contract("deliver_gold_16","Mineral preciado","MINERIA","ORO","Entrega 16 unidades de oro en bruto","deliver","minecraft:raw_gold",16,3,28,750),
+        new Contract("deliver_diamond_4","Gemas para el joyero","MINERIA","ORO","Entrega 4 diamantes","deliver","minecraft:diamond",4,4,36,1100),
+        new Contract("explore_2","Explorador de ruinas","LEGACY_EXPLORACION","PLATA","Visita 2 estructuras distintas","structure","*",2,0,16,400),
+        new Contract("explore_3","Cronista de caminos","LEGACY_EXPLORACION","PLATA","Visita 3 estructuras distintas","structure","*",3,0,20,450),
+        new Contract("explore_biome_2","Huellas en el mapa","LEGACY_EXPLORACION","BRONCE","Visita 2 biomas distintos del Overworld","biome","*",2,0,8,180),
+        new Contract("explore_biome_3","Senderos desconocidos","LEGACY_EXPLORACION","BRONCE","Visita 3 biomas distintos del Overworld","biome","*",3,0,10,220),
+        new Contract("explore_biome_4","El atlas del aventurero","LEGACY_EXPLORACION","PLATA","Visita 4 biomas distintos del Overworld","biome","*",4,0,16,380),
+        new Contract("explore_biome_5","Exploración sin fronteras","LEGACY_EXPLORACION","PLATA","Visita 5 biomas distintos del Overworld","biome","*",5,0,20,480),
+        new Contract("explore_4","Tras las antiguas piedras","LEGACY_EXPLORACION","PLATA","Visita 4 estructuras distintas","structure","*",4,1,24,600),
+        new Contract("nether_biomes","Cartógrafo infernal","LEGACY_EXPLORACION","ORO","Visita 3 biomas distintos del Nether","nether_biome","*",3,4,32,1000)
     );
 
     private static void init(Progress p){
@@ -125,7 +138,7 @@ public final class AdventureContracts {
         return "c"+(++p.contractSequence)+"_"+chosen.id();
     }
     private static boolean fillOffers(Progress p,int era){
-        boolean changed=false;
+        boolean changed=p.contractOffers.keySet().removeIf(k->k.startsWith("EXPLORACION:"));
         // Depurar referencias obsoletas sin invalidar contratos activos de Beta 1.
         for(String category:CATEGORIES){
             for(int i=0;i<OFFERS_PER_CATEGORY;i++){
@@ -179,6 +192,40 @@ public final class AdventureContracts {
         p.contractOffers.remove(slot(category,index));
         fillOffers(p,era);
     }
+    /** Entrega completa y segura: no consume nada si falta un solo material. */
+    public static boolean deliver(ServerPlayer player,String id){
+        if(!EvolutionConfig.get(player).contractsEnabled)return false;
+        Progress p=ProgressStore.get(player);init(p);
+        Contract c=instance(id);
+        if(c==null||!c.kind().equals("deliver")||!p.activeContracts.contains(id)||
+            p.claimedContracts.contains(id)||p.era()<c.minEra())return false;
+        if(p.contractProgress.getOrDefault(id,0)>=c.quantity())return false;
+        int total=0;
+        for(int i=0;i<36;i++){
+            ItemStack stack=player.getInventory().getItem(i);
+            if(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString().equals(c.target()))
+                total+=stack.getCount();
+        }
+        if(total<c.quantity()){
+            player.sendSystemMessage(Component.literal("§e[EvolutionCraft] Materiales insuficientes: "+
+                total+"/"+c.quantity()+" ("+c.description()+")."),true);
+            return false;
+        }
+        int remaining=c.quantity();
+        for(int i=0;i<36 && remaining>0;i++){
+            ItemStack stack=player.getInventory().getItem(i);
+            if(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString().equals(c.target())){
+                int take=Math.min(remaining,stack.getCount());
+                stack.shrink(take);
+                remaining-=take;
+            }
+        }
+        p.contractProgress.put(id,c.quantity());
+        ProgressStore.save(player);
+        player.sendSystemMessage(Component.literal("§a[EvolutionCraft] Materiales entregados. ¡Contrato completado! Pulsa P para reclamar."),true);
+        return true;
+    }
+
     public static void onAction(ServerPlayer player,String kind,String target,int amount){
         if(amount<=0||!EvolutionConfig.get(player).contractsEnabled)return;
         Progress p=ProgressStore.get(player);init(p);
@@ -248,6 +295,7 @@ public final class AdventureContracts {
         result.addProperty("minEra",c.minEra());
         result.addProperty("reward",c.emeralds()+" esmeraldas + "+c.xp()+" XP");
         result.addProperty("ready",on&&current>=c.quantity());
+        result.addProperty("delivery",c.kind().equals("deliver"));
         result.addProperty("canAccept",offered&&era>=c.minEra()&&p.activeContracts.size()<ACTIVE_LIMIT);
         result.addProperty("done",claimed);
         return result;

@@ -43,6 +43,7 @@ public final class FarmingEvents {
             || id.equals("minecraft:melon") || id.equals("minecraft:pumpkin");
         if (!mature) return;
         record(player, p -> { p.harvests++; p.harvestStreak++; if (id.equals("minecraft:wheat")) p.wheatHarvests++; p.harvested.add(id); });
+        AdventureContracts.onAction(player,"harvest",id,1);
     }
 
     @SubscribeEvent

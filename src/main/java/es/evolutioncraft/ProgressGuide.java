@@ -17,6 +17,27 @@ public final class ProgressGuide {
 
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("eccontratos").executes(ctx->{
+            ServerPlayer player=ctx.getSource().getPlayerOrException();
+            var json=com.google.gson.JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject();
+            json.addProperty("openContracts",true);
+            PacketDistributor.sendToPlayer(player,new GuidePayload(json.toString()));
+            return Command.SINGLE_SUCCESS;
+        }));
+        event.getDispatcher().register(Commands.literal("eccontrato")
+            .then(Commands.literal("aceptar")
+                .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->
+                    contractAction(ctx.getSource().getPlayerOrException(),
+                        "aceptar",StringArgumentType.getString(ctx,"id")))))
+            .then(Commands.literal("abandonar")
+                .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->
+                    contractAction(ctx.getSource().getPlayerOrException(),
+                        "abandonar",StringArgumentType.getString(ctx,"id")))))
+            .then(Commands.literal("reclamar")
+                .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->
+                    contractAction(ctx.getSource().getPlayerOrException(),
+                        "reclamar",StringArgumentType.getString(ctx,"id"))))));
+
         event.getDispatcher().register(Commands.literal("ecreclamar")
             .then(Commands.argument("id",StringArgumentType.word()).executes(ctx -> {
                 ServerPlayer player=ctx.getSource().getPlayerOrException();
@@ -52,6 +73,21 @@ public final class ProgressGuide {
             show(ctx.getSource().getPlayerOrException());
             return Command.SINGLE_SUCCESS;
         }));
+    }
+
+    private static int contractAction(ServerPlayer player,String action,String id){
+        boolean ok=switch(action){
+            case "aceptar" -> AdventureContracts.accept(player,id);
+            case "abandonar" -> AdventureContracts.abandon(player,id);
+            case "reclamar" -> AdventureContracts.claim(player,id);
+            default -> false;
+        };
+        if(!ok)player.sendSystemMessage(Component.literal(
+            "§c[EvolutionCraft] Contrato no disponible o no cumple los requisitos."),true);
+        var json=com.google.gson.JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject();
+        json.addProperty("openContracts",true);
+        PacketDistributor.sendToPlayer(player,new GuidePayload(json.toString()));
+        return ok?Command.SINGLE_SUCCESS:0;
     }
 
     // Compatibilidad: /ecprogresochat conserva el listado textual.

@@ -57,6 +57,8 @@ public final class Progress {
     /** Tres ofertas persistentes por categoria. Los IDs son instancias únicas. */
     public java.util.Map<String,String> contractOffers=new java.util.HashMap<>();
     public java.util.Map<String,java.util.List<String>> contractRecentTemplates=new java.util.HashMap<>();
+    /** Tipos de biomas y estructuras visitados desde la aceptación de cada contrato. */
+    public java.util.Map<String,java.util.Set<String>> contractExplorationSeen=new java.util.HashMap<>();
     public long contractSequence=0L;
 
 

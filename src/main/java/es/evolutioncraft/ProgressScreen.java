@@ -380,7 +380,7 @@ public final class ProgressScreen extends Screen {
             case 16 -> goals().size()+" jefes registrados";
             case 17 -> "Tu aventura en numeros";
             case 18 -> goals().size()+" registros recientes";
-            case 19 -> "Ofertas: "+goals().size()+" · Maximo 3 activos";
+            case 19 -> "12 ofertas · 3 por categoria · 3 activos max.";
             case 20 -> "Activos: "+goals().size()+" / 3";
             case 21 -> "Reclamados: "+goals().size();
             default -> getInt("overallPercent")+"% completado";
@@ -591,7 +591,8 @@ public final class ProgressScreen extends Screen {
                 }
                 String reward=objective.get("reward").getAsString();
                 int count=objective.get("progress").getAsInt(),required=objective.get("target").getAsInt();
-                String footer=tier+" · "+Math.min(count,required)+"/"+required+" · "+reward;
+                String category=objective.has("category")?objective.get("category").getAsString():"";
+                String footer=category+" · "+tier+" · "+Math.min(count,required)+"/"+required+" · "+reward;
                 text(g,footer,left+31,detailY+2,tierColor);
             } else if(objective.has("detail")){
                 roundedBorder(g,left,cy,cardW,height-3,5,0xFF3C5261,i%2==0?CARD:CARD2);

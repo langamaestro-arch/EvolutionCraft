@@ -71,8 +71,11 @@ public final class EvolutionEvents {
             changed=true;
         }
         if(changed) ProgressStore.save(player);
+        // El evento ya excluye bloques colocados por jugadores: minería natural.
         if(block.equals("minecraft:copper_ore") || block.equals("minecraft:deepslate_copper_ore"))
             AdventureContracts.onAction(player,"mine","minecraft:copper_ore",1);
+        if(block.equals("minecraft:diamond_ore") || block.equals("minecraft:deepslate_diamond_ore"))
+            AdventureContracts.onAction(player,"mine","minecraft:diamond_ore",1);
     }
 
     @SubscribeEvent
@@ -93,6 +96,8 @@ public final class EvolutionEvents {
                     DiscoveryJournal.record(p,player,"biome",biome);
                     if(player.level().dimension()==Level.NETHER)
                         AdventureContracts.onAction(player,"nether_biome",biome,1);
+                    else
+                        AdventureContracts.onAction(player,"biome",biome,1);
                 }
             }
             String scanKey=player.level().dimension().identifier().toString()+":"+player.blockPosition();

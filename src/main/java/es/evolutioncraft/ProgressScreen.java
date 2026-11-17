@@ -173,7 +173,8 @@ public final class ProgressScreen extends Screen {
     private int rowHeight(JsonObject o){
         if(o.has("tier") && o.has("progress")){
             int desc=wrap(o.get("description").getAsString(),Math.max(65,mainW()-96)).size();
-            return Math.max(56,46+desc*11);
+            return Math.max(tab==20 && o.has("delivery") &&
+                o.get("delivery").getAsBoolean()?79:56,46+desc*11);
         }
         if(o.has("detail")){
             int nameLines=wrap(o.get("text").getAsString(),Math.max(60,mainW()-100)).size();
@@ -253,9 +254,13 @@ public final class ProgressScreen extends Screen {
             for(int i=begin;i<end;i++){
                 JsonObject contract=contracts.get(i).getAsJsonObject();
                 int h=rowHeight(contract);
-                if(inside(mx,my,mainX()+mainW()-111,cy+4,100,19)){
-                    String action=tab==19?"aceptar":tab==20?
-                        contract.get("ready").getAsBoolean()?"reclamar":"abandonar":"";
+                boolean isDelivery=contract.has("delivery")&&contract.get("delivery").getAsBoolean();
+                boolean abandonButton=tab==20&&isDelivery&&
+                    inside(mx,my,mainX()+mainW()-111,cy+27,100,19);
+                if(abandonButton||inside(mx,my,mainX()+mainW()-111,cy+4,100,19)){
+                    String action=abandonButton?"abandonar":tab==19?"aceptar":tab==20?
+                        contract.get("ready").getAsBoolean()?"reclamar":
+                        isDelivery?"entregar":"abandonar":"";
                     if(!action.isEmpty() && (tab!=19||contract.get("canAccept").getAsBoolean())){
                         var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
                         if(connection!=null)connection.sendCommand(
@@ -600,9 +605,16 @@ public final class ProgressScreen extends Screen {
                 text(g,label,left+31,cy+7,TEXT);
                 String action=tab==21?"RECLAMADO":tab==19?
                     (objective.get("canAccept").getAsBoolean()?"ACEPTAR":"BLOQUEADO"):
-                    (objective.get("ready").getAsBoolean()?"RECLAMAR":"ABANDONAR");
+                    (objective.get("ready").getAsBoolean()?"RECLAMAR":
+                    objective.has("delivery")&&objective.get("delivery").getAsBoolean()
+                        ?"ENTREGAR":"ABANDONAR");
                 roundedBorder(g,left+cardW-103,cy+3,96,19,4,tierColor,0xFF182B37);
                 text(g,action,left+cardW-8-font.width(action),cy+8,tierColor);
+                if(tab==20 && objective.has("delivery") && objective.get("delivery").getAsBoolean()){
+                    roundedBorder(g,left+cardW-103,cy+26,96,19,4,MUTED,0xFF182B37);
+                    String leave="ABANDONAR";
+                    text(g,leave,left+cardW-8-font.width(leave),cy+31,MUTED);
+                }
                 String description=objective.get("description").getAsString();
                 int detailY=cy+21;
                 for(String line:wrap(description,Math.max(65,mw-96))){

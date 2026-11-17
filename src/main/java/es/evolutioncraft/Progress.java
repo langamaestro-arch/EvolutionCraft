@@ -42,6 +42,11 @@ public final class Progress {
     public Set<String> overworldBiomes = new HashSet<>();
     public Set<String> netherBiomes = new HashSet<>();
     public Set<String> visitedStructures = new HashSet<>();
+    /** Sólo los descubrimientos hechos desde Alpha 2 tienen fecha y coordenadas. */
+    public java.util.Map<String,String> discoveryDetails=new java.util.HashMap<>();
+    /** Registro de jefes conocidos sin alterar los requisitos de progresión. */
+    public Set<String> discoveredBosses=new HashSet<>();
+
     /** Registros de la futura maestria, misiones y alquimia. */
     public Set<String> completedMissions = new HashSet<>();
     public Set<String> secretChallenges = new HashSet<>();

@@ -32,8 +32,13 @@ public final class GuideKey {
                 minecraft.gui.screen() instanceof ProgressScreen previous?previous.getSection():0;
             int previousTab=minecraft.gui.screen() instanceof ProgressScreen previous
                 ? previous.getTab():-1;
+            int previousFilter=minecraft.gui.screen() instanceof ProgressScreen prevFilter
+                ? prevFilter.getOfferFilter():0;
             ProgressScreen screen=new ProgressScreen(payload.json(),previousSection);
-            if(contracts && previousTab>=19 && previousTab<=21)screen.selectTab(previousTab);
+            if(contracts && previousTab>=19 && previousTab<=21){
+                screen.selectTab(previousTab);
+                screen.setOfferFilter(previousFilter);
+            }
             minecraft.gui.setScreen(screen);
         });
     }

@@ -97,6 +97,15 @@ public final class EvolutionCraft {
                 }
             }
         });
+        // Sólo capturas posteriores a aceptar el contrato.
+        int caught=0;
+        for(ItemStack stack:event.getDrops()){
+            String key=id(stack);
+            if(key.equals("minecraft:cod")||key.equals("minecraft:salmon")||
+                key.equals("minecraft:pufferfish")||key.equals("minecraft:tropical_fish"))
+                caught+=stack.getCount();
+        }
+        AdventureContracts.onAction(player,"fish","*",caught);
     }
 
     @SubscribeEvent
@@ -114,6 +123,7 @@ public final class EvolutionCraft {
         }
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         String entity = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).toString();
+        AdventureContracts.onAction(player,"kill",entity,1);
         update(player, p -> {
             boolean journalBoss=java.util.Set.of("minecraft:warden","minecraft:wither",
                 "minecraft:ender_dragon","minecraft:elder_guardian").contains(entity)

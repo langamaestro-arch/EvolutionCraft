@@ -50,6 +50,11 @@ public final class Progress {
     /** Registros de la futura maestria, misiones y alquimia. */
     public Set<String> completedMissions = new HashSet<>();
     public Set<String> secretChallenges = new HashSet<>();
+    /** Contratos opcionales: progreso empieza al aceptar, separado de las eras. */
+    public java.util.Map<String,Integer> contractProgress=new java.util.HashMap<>();
+    public Set<String> activeContracts=new HashSet<>();
+    public Set<String> claimedContracts=new HashSet<>();
+
     public Set<String> potionEffects = new HashSet<>();
     public Set<String> potionTechniques = new HashSet<>();
     public int brewingBatches;

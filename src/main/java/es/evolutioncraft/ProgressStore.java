@@ -35,6 +35,13 @@ public final class ProgressStore {
     public static Progress get(ServerPlayer player) {
         Progress progress=world(path(player)).computeIfAbsent(player.getUUID(), id -> new Progress());
         ThoridropTribute.sync(player,progress);
+        if(!progress.exigentMigrated){
+            // Capture the ERA ACTUALLY reached on the old rules, after Thoridrop
+            // is synchronized. Do not reset or delete any player achievements.
+            progress.exigentGrandfatherEra=progress.era();
+            progress.exigentMigrated=true;
+            save(player);
+        }
         return progress;
     }
     public static void save(ServerPlayer player) {

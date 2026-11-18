@@ -67,6 +67,7 @@ public final class EvolutionEvents {
             changed=true;
         }
         if(block.equals("minecraft:ancient_debris")){
+            p.naturalAncientDebris++;
             p.completedMissions.add("ancient_debris");
             changed=true;
         }

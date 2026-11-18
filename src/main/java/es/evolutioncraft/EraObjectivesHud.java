@@ -25,12 +25,15 @@ import java.util.List;
 @EventBusSubscriber(modid=EvolutionCraft.ID,value=Dist.CLIENT)
 public final class EraObjectivesHud {
     private static JsonObject state;
-    private static final int WIDTH=212;
+    private static final int WIDTH=186;
     private static final int GOLD=0xFFFFD36B;
     private static final int WHITE=FantasySkin.INK;
     private static final int MUTED=FantasySkin.MUTED;
     private static final int GREEN=FantasySkin.GREEN;
     private static boolean contractsVisible=true;
+    private static boolean eraVisible=true;
+    private static final KeyMapping TOGGLE_ERA=new KeyMapping(
+        "key.evolutioncraft.toggle_era_hud",InputConstants.KEY_J,KeyMapping.Category.MISC);
     private static final KeyMapping TOGGLE_CONTRACTS=new KeyMapping(
         "key.evolutioncraft.toggle_contract_hud",InputConstants.KEY_K,KeyMapping.Category.MISC);
     private EraObjectivesHud(){}
@@ -38,12 +41,14 @@ public final class EraObjectivesHud {
     @SubscribeEvent
     public static void registerKey(RegisterKeyMappingsEvent event){
         event.register(TOGGLE_CONTRACTS);
+        event.register(TOGGLE_ERA);
     }
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event){
         if(Minecraft.getInstance().gui.screen()!=null)return;
         while(TOGGLE_CONTRACTS.consumeClick())contractsVisible=!contractsVisible;
+        while(TOGGLE_ERA.consumeClick())eraVisible=!eraVisible;
     }
 
     @SubscribeEvent
@@ -91,20 +96,25 @@ public final class EraObjectivesHud {
         int bottom=g.guiHeight()-51;  // No invadir barra de acceso rápido
         JsonArray contracts=state.has("contracts")?state.getAsJsonArray("contracts"):new JsonArray();
         boolean showContracts=contractsVisible && contracts.size()>0;
+        if(!eraVisible){
+            // El jugador puede esconder objetivos de era sin esconder contratos.
+            if(showContracts)renderContracts(g,mc,contracts,x,y,width,bottom);
+            return;
+        }
         int reserve=showContracts?Math.min(128,Math.max(0,bottom-y-74)):0;
         List<List<String>> rows=new ArrayList<>();
         int requested=state.has("maxObjectives")?state.get("maxObjectives").getAsInt():24;
         int used=0,limit=Math.min(entries.size(),Math.clamp(requested,4,24));
         for(int i=0;i<limit;i++){
             List<String> row=lines(mc,entries.get(i).getAsString(),width-26);
-            int needed=Math.max(16,row.size()*11+6);
-            if(y+45+used+needed>bottom-20-reserve)break;
+            int needed=Math.max(13,row.size()*10+4);
+            if(y+43+used+needed>bottom-20-reserve)break;
             rows.add(row);
             used+=needed;
         }
         int hidden=entries.size()-rows.size();
-        int h=47+used+(hidden>0?15:0);
-        if(era==5)h=58;
+        int h=45+used+(hidden>0?14:0);
+        if(era==5)h=55;
         h=Math.min(h,bottom-y-reserve);
         FantasySkin.fortressFrame(g,x-7,y-7,width+14,h+14);
         FantasySkin.panel(g,x,y,width,h);
@@ -118,14 +128,14 @@ public final class EraObjectivesHud {
             if(showContracts)renderContracts(g,mc,contracts,x,y+h+7,width,bottom);
             return;
         }
-        int lineY=y+41;
+        int lineY=y+39;
         for(List<String> row:rows){
             g.text(mc.font,"✦",x+12,lineY,0xFFB66A2E,false);
             for(String s:row){
                 g.text(mc.font,s,x+27,lineY,WHITE,false);
-                lineY+=11;
+                lineY+=10;
             }
-            lineY+=6;
+            lineY+=4;
         }
         if(hidden>0){
             g.text(mc.font,"+"+hidden+" objetivos · Pulsa P",x+16,lineY,MUTED,false);

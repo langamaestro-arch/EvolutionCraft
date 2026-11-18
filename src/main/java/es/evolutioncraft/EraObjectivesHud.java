@@ -93,7 +93,8 @@ public final class EraObjectivesHud {
         boolean showContracts=contractsVisible && contracts.size()>0;
         int reserve=showContracts?Math.min(128,Math.max(0,bottom-y-74)):0;
         List<List<String>> rows=new ArrayList<>();
-        int used=0,limit=Math.min(entries.size(),24);
+        int requested=state.has("maxObjectives")?state.get("maxObjectives").getAsInt():24;
+        int used=0,limit=Math.min(entries.size(),Math.clamp(requested,4,24));
         for(int i=0;i<limit;i++){
             List<String> row=lines(mc,entries.get(i).getAsString(),width-26);
             int needed=Math.max(16,row.size()*11+6);

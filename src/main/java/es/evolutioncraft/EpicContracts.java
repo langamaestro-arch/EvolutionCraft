@@ -121,6 +121,19 @@ public final class EpicContracts {
         weapon.set(DataComponents.ENCHANTMENTS,ench.toImmutable());
         return weapon;
     }
+    private static ItemStack armor(ServerPlayer player,Progress p,BossQuest q){
+        int era=p.era();
+        Item item=era>=5?Items.NETHERITE_CHESTPLATE:era>=4?Items.DIAMOND_CHESTPLATE:
+            era>=3?Items.IRON_CHESTPLATE:era>=2?Items.COPPER_CHESTPLATE:Items.LEATHER_CHESTPLATE;
+        ItemStack piece=new ItemStack(item);
+        ItemEnchantments.Mutable ench=new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        var access=player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        int protection=q.tier().equals("LEGENDARIO")?4:q.tier().equals("HEROICO")?3:2;
+        ench.set(access.getOrThrow(Enchantments.PROTECTION),protection);
+        ench.set(access.getOrThrow(Enchantments.UNBREAKING),3);
+        piece.set(DataComponents.ENCHANTMENTS,ench.toImmutable());
+        return piece;
+    }
     public static boolean claim(ServerPlayer player,String id){
         if(!EvolutionConfig.get(player).contractsEnabled)return false;
         Progress p=ProgressStore.get(player);init(p);
@@ -130,18 +143,20 @@ public final class EpicContracts {
         // Require two free slots: no dropped rewards or items lost on a full inventory.
         int empty=0;
         for(int i=0;i<36;i++)if(player.getInventory().getItem(i).isEmpty())empty++;
-        if(empty<2){
-            player.sendSystemMessage(Component.literal("§c[EvolutionCraft] Necesitas 2 huecos libres para el premio épico."),true);
+        if(empty<3){
+            player.sendSystemMessage(Component.literal("§c[EvolutionCraft] Necesitas 3 huecos libres para el premio épico."),true);
             return false;
         }
         ItemStack sword=equipment(player,p,q);
+        ItemStack chestplate=armor(player,p,q);
         ItemStack emeralds=new ItemStack(Items.EMERALD,q.emeralds());
         p.epicClaimed.add(id);p.epicActive.remove(id);p.epicProgress.remove(id);
         fill(p);ProgressStore.save(player);
         player.getInventory().add(sword);
+        player.getInventory().add(chestplate);
         player.getInventory().add(emeralds);
         player.giveExperiencePoints(q.xp());
-        player.sendSystemMessage(Component.literal("§6[EvolutionCraft] Premio épico: arma encantada de tu era, "+
+        player.sendSystemMessage(Component.literal("§6[EvolutionCraft] Premio épico: arma y armadura encantadas de tu era, "+
             q.emeralds()+" esmeraldas y "+q.xp()+" XP."),true);
         return true;
     }
@@ -157,7 +172,7 @@ public final class EpicContracts {
         o.addProperty("ready",status.equals("active")&&p.epicProgress.getOrDefault(id,0)>=1);
         o.addProperty("done",status.equals("claimed"));
         o.addProperty("canAccept",status.equals("offer")&&p.epicActive.isEmpty()&&eligible(p,q));
-        o.addProperty("reward",q.emeralds()+" esmeraldas + "+q.xp()+" XP + arma encantada");
+        o.addProperty("reward",q.emeralds()+" esmeraldas + "+q.xp()+" XP + equipo encantado");
         o.addProperty("epicStatus",status);
         return o;
     }

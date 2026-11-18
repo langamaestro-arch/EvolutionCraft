@@ -228,6 +228,11 @@ public final class Progress {
      */
     public static int requiredEra(String item) {
         if(item==null)return 0;
+        // La cota de malla se obtiene por botines/intercambios y no sigue
+        // el patron "iron_*", pero debe exigir exactamente la Era de Hierro.
+        if(item.startsWith("minecraft:chainmail_") &&
+            (item.endsWith("_helmet") || item.endsWith("_chestplate") ||
+             item.endsWith("_leggings") || item.endsWith("_boots")))return 3;
         int colon=item.indexOf(':');
         if(colon<1 || colon==item.length()-1)return 0;
         String namespace=item.substring(0,colon);

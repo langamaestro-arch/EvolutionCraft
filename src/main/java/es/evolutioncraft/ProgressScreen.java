@@ -24,16 +24,16 @@ public final class ProgressScreen extends Screen {
     private static final int CARD=0xFF223441, CARD2=0xFF1B2C3A, MUTED=0xFFA7BAC8;
     private static final int TEXT=0xFFF2F1E7, GOLD=0xFFF4CE82, GREEN=0xFF7BD9A4;
     private static final int RED=0xFFE78B83, DIM=0xFF526979, EDGE=0xFF896C45;
-    private static final String[] SECTIONS={"EVOLUCION","HABILIDADES","DIMENSIONES","LOGROS","SECRETOS","RECOMPENSAS","DESCUBRIMIENTOS","CONTRATOS"};
+    private static final String[] SECTIONS={"EVOLUCION","HABILIDADES","DIMENSIONES","LOGROS","SECRETOS","RECOMPENSAS","DESCUBRIMIENTOS","CONTRATOS","REPUTACION"};
     private static final Item[] SECTION_ICONS={Items.DIAMOND_PICKAXE,Items.ENCHANTED_BOOK,
-        Items.ENDER_EYE,Items.BOOK,Items.NETHER_STAR,Items.CHEST,Items.COMPASS,Items.LECTERN};
-    private static final int[][] SECTION_TABS={{0,10},{1,2,3,4,5,6},{7,8},{11},{9},{12},{13,14,15,16,17,18},{19,20,21}};
+        Items.ENDER_EYE,Items.BOOK,Items.NETHER_STAR,Items.CHEST,Items.COMPASS,Items.LECTERN,Items.NETHER_STAR};
+    private static final int[][] SECTION_TABS={{0,10},{1,2,3,4,5,6},{7,8},{11},{9},{12},{13,14,15,16,17,18},{19,20,21},{22}};
     private static final String[] TITLES={"ERAS","PESCA","AGRICULTURA","GANADERIA",
-        "EXPLORACION","HERRAMIENTAS","ALQUIMIA","NETHER","END","SECRETOS","MISIONES","RESUMEN","PREMIOS","OVERWORLD","NETHER","ESTRUCTURAS","JEFES","ESTADISTICAS","HISTORIAL","OFERTAS","ACTIVOS","COMPLETADOS"};
+        "EXPLORACION","HERRAMIENTAS","ALQUIMIA","NETHER","END","SECRETOS","MISIONES","RESUMEN","PREMIOS","OVERWORLD","NETHER","ESTRUCTURAS","JEFES","ESTADISTICAS","HISTORIAL","OFERTAS","ACTIVOS","COMPLETADOS","RANGOS"};
     private static final Item[] ICONS={Items.IRON_PICKAXE,Items.FISHING_ROD,Items.WHEAT,
         Items.WHEAT,Items.COMPASS,Items.DIAMOND_PICKAXE,Items.BREWING_STAND,
         Items.OBSIDIAN,Items.ENDER_EYE,Items.NETHER_STAR,Items.BOOK,Items.NETHER_STAR,Items.CHEST,
-        Items.GRASS_BLOCK,Items.NETHERRACK,Items.COMPASS,Items.WITHER_SKELETON_SKULL,Items.WRITABLE_BOOK,Items.CLOCK,Items.PAPER,Items.WRITABLE_BOOK,Items.EMERALD};
+        Items.GRASS_BLOCK,Items.NETHERRACK,Items.COMPASS,Items.WITHER_SKELETON_SKULL,Items.WRITABLE_BOOK,Items.CLOCK,Items.PAPER,Items.WRITABLE_BOOK,Items.EMERALD,Items.NETHER_STAR};
 
     private final JsonObject data;
     private int section=0,tab=0,stage=0,page=0;
@@ -75,11 +75,12 @@ public final class ProgressScreen extends Screen {
     private int contentY(){return y()+208;}
     private int contentBottom(){return y()+panelH()-57;}
     private int navY(){return y()+91;}
-    private int navStep(){return 31;}
-    private int navHeight(){return 28;}
+    private int navStep(){return 28;}
+    private int navHeight(){return 25;}
     private int tabsY(){return y()+112;}
 
     private JsonArray goals(){
+        if(tab==22)return data.getAsJsonObject("reputation").getAsJsonArray("goals");
         if(tab>=19 && tab<=21){
             String key=tab==19?"available":tab==20?"active":"completed";
             JsonArray all=data.getAsJsonObject("contracts").getAsJsonArray(key);
@@ -171,6 +172,7 @@ public final class ProgressScreen extends Screen {
         };
     }
     private int rowHeight(JsonObject o){
+        if(o.has("threshold"))return 60;
         if(o.has("tier") && o.has("progress")){
             int desc=wrap(o.get("description").getAsString(),Math.max(65,mainW()-96)).size();
             return Math.max(tab==20 && o.has("delivery") &&
@@ -238,6 +240,22 @@ public final class ProgressScreen extends Screen {
             int tx=gridX(i%cols,cols),ty=tabsY()+(i/cols)*27;
             if(inside(mx,my,tx,ty,gridW(cols),24)){
                 switchTab(subs[i]);return true;
+            }
+        }
+        if(tab==22){
+            JsonArray ranks=goals();
+            int begin=pageStarts.get(page),end=page+1<pageStarts.size()?pageStarts.get(page+1):ranks.size();
+            int cy=contentY()+4;
+            for(int i=begin;i<end;i++){
+                JsonObject rank=ranks.get(i).getAsJsonObject();
+                int h=rowHeight(rank);
+                if(rank.get("ready").getAsBoolean()&&
+                    inside(mx,my,mainX()+mainW()-111,cy+4,100,19)){
+                    var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
+                    if(connection!=null)connection.sendCommand("ecrango "+rank.get("id").getAsString());
+                    return true;
+                }
+                cy+=h;
             }
         }
         if(tab==19 && inside(mx,my,mainX()+8,y()+157,mainW()-16,25)){
@@ -354,6 +372,7 @@ public final class ProgressScreen extends Screen {
             case 7 -> 0xFFF18B68;
             case 8 -> 0xFFD6A4F5;
             case 19,20,21 -> 0xFFF1CD87;
+            case 22 -> 0xFFD8B8F4;
             default -> GOLD;
         };
     }
@@ -380,6 +399,7 @@ public final class ProgressScreen extends Screen {
             case 19 -> "TABLON DE CONTRATOS";
             case 20 -> "CONTRATOS ACTIVOS";
             case 21 -> "CONTRATOS COMPLETADOS";
+            case 22 -> "REPUTACION DEL AVENTURERO";
             default -> "TU EVOLUCION";
         };
     }
@@ -406,6 +426,8 @@ public final class ProgressScreen extends Screen {
             case 19 -> "12 ofertas · 3 por categoria · 3 activos max.";
             case 20 -> "Activos: "+goals().size()+" / 3";
             case 21 -> "Reclamados: "+goals().size();
+            case 22 -> data.getAsJsonObject("reputation").get("rank").getAsString()+" · "+
+                data.getAsJsonObject("reputation").get("points").getAsInt()+" puntos";
             default -> getInt("overallPercent")+"% completado";
         };
     }
@@ -461,7 +483,8 @@ public final class ProgressScreen extends Screen {
             case 4 -> "El misterio recompensa a los valientes";
             case 5 -> "Tus hazañas merecen una recompensa";
             case 6 -> "Cada lugar descubierto cuenta tu historia";
-            default -> "Acepta contratos y recibe recompensas";
+            case 7 -> "Acepta contratos y recibe recompensas";
+            default -> "Tu leyenda crece con cada contrato";
         };
     }
     /** Pixel-art rounded rectangles: no external textures or render APIs required. */
@@ -566,7 +589,20 @@ public final class ProgressScreen extends Screen {
             item(g,ICONS[target],tx+7,ty+4);
             text(g,TITLES[target],tx+26,ty+8,selected?TEXT:MUTED);
         }
-        if(tab!=0){
+        if(tab==22){
+            JsonObject rep=data.getAsJsonObject("reputation");
+            int points=rep.get("points").getAsInt(),lower=rep.get("lower").getAsInt();
+            int next=rep.get("next").getAsInt();
+            int trackX=mx+18,trackY=yy+160,trackWidth=mw-36;
+            fill(g,trackX,trackY,trackX+trackWidth,trackY+9,0xFF0C1823);
+            int progress=rep.get("maxRank").getAsBoolean()?trackWidth:
+                (int)(trackWidth*((double)Math.max(0,points-lower)/Math.max(1,next-lower)));
+            fill(g,trackX,trackY,trackX+Math.min(trackWidth,progress),trackY+9,GOLD);
+            center(g,rep.get("rank").getAsString()+" · "+points+
+                (rep.get("maxRank").getAsBoolean()?" · rango maximo":" / "+next+" REP"),
+                mx+mw/2,yy+174,MUTED);
+        }
+        if(tab!=0 && tab!=22){
             String phrase=tab==19?"FILTRO: "+OFFER_FILTERS[offerFilter]+"  < Cambiar >":motto();
             if(tab==19)rounded(g,mx+8,yy+158,mw-16,23,4,0xFF1A2C3A);
             if(font.width(phrase)<mw-30)
@@ -596,7 +632,21 @@ public final class ProgressScreen extends Screen {
             boolean ok=objective.get("done").getAsBoolean();
             String label=objective.get("text").getAsString();
             int height=rowHeight(objective),left=mx+11,cardW=mw-22;
-            if(objective.has("tier")&&objective.has("progress")){
+            if(objective.has("threshold")){
+                boolean unlocked=objective.get("unlocked").getAsBoolean();
+                boolean ready=objective.get("ready").getAsBoolean();
+                int color=ok?GREEN:ready?GOLD:unlocked?TEXT:MUTED;
+                roundedBorder(g,left,cy,cardW,height-3,5,color,i%2==0?CARD:CARD2);
+                fill(g,left+2,cy+7,left+5,cy+height-10,color);
+                item(g,Items.NETHER_STAR,left+10,cy+11);
+                text(g,label.toUpperCase(Locale.ROOT),left+31,cy+7,color);
+                String action=ok?"RECLAMADO":ready?"RECLAMAR":"BLOQUEADO";
+                roundedBorder(g,left+cardW-103,cy+3,96,19,4,color,0xFF182B37);
+                text(g,action,left+cardW-8-font.width(action),cy+8,color);
+                text(g,"Requiere "+objective.get("threshold").getAsInt()+" puntos",left+31,cy+23,MUTED);
+                for(String line:wrap(objective.get("reward").getAsString(),Math.max(65,mw-114)))
+                    {text(g,line,left+31,cy+38,unlocked?GREEN:MUTED);break;}
+            } else if(objective.has("tier")&&objective.has("progress")){
                 String tier=objective.get("tier").getAsString();
                 int tierColor=tier.equals("ORO")?GOLD:tier.equals("PLATA")?0xFFC3D2DE:0xFFD59D6B;
                 roundedBorder(g,left,cy,cardW,height-3,5,tierColor,i%2==0?CARD:CARD2);

@@ -95,6 +95,9 @@ public final class GuideData {
                     goal(tmp,"Maestria herramientas V",p.toolLevel()>=5);
                 }
             }
+            // Same server-side demanding rules used by Progress.era(): never display
+            // a completed goal that cannot actually unlock its target era.
+            if(era>=2)ExigentEraRules.addGoals(tmp,p,era+1);
             if(era>=2){
                 int target=era+1;
                 JsonObject trib=ThoridropTribute.stage(player,p,target);

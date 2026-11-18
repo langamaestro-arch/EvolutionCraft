@@ -86,6 +86,10 @@ public final class Progress {
     public int toolWood, toolStone, toolCopper, toolIron, toolDiamond;
     public Set<String> toolTypes = new HashSet<>();
     public int naturalCopperOre, naturalDiamondOre;
+    public int naturalAncientDebris;
+    /** One-time migration: older saves retain the era earned before hard-mode gates. */
+    public boolean exigentMigrated=false;
+    public int exigentGrandfatherEra=0;
     public int nightsSurvived;
     public int nightTicksObserved;
     public long lastNightIndex = -1;
@@ -172,21 +176,32 @@ public final class Progress {
                 !completedMissions.contains("ancient_debris")) return 4;
         return 5;
     }
-    /** El tributo se aplica sólo a las nuevas transiciones, no retrocede eras. */
+    /** Both integrations are additive, independent and never revoke previously earned eras. */
     public int era() {
         int unlocked=legacyEra();
-        if(!thoridropGateActive)return unlocked;
+        if(thoridropGateActive){
+            int result=Math.min(unlocked,2);
+            for(int target=3;target<=unlocked;target++){
+                if(target<=thoridropGrandfatherEra ||
+                   (thoridropTributes!=null&&thoridropTributes.contains(target) &&
+                    switch(target){case 3 -> thoridropNormalWins>=2;
+                                   case 4 -> thoridropMythicWins>=1;
+                                   case 5 -> thoridropLegendaryWins>=1;
+                                   default -> true;}))result=target;
+                else break;
+            }
+            unlocked=Math.max(result,Math.min(thoridropGrandfatherEra,unlocked));
+        }
+        // First read after the update snapshots the prior unlocked era.
+        // Historical eras stay unlocked even when new objectives are pending.
+        if(!exigentMigrated)return unlocked;
         int result=Math.min(unlocked,2);
         for(int target=3;target<=unlocked;target++){
-            if(target<=thoridropGrandfatherEra ||
-               (thoridropTributes!=null&&thoridropTributes.contains(target) &&
-                switch(target){case 3 -> thoridropNormalWins>=2;
-                               case 4 -> thoridropMythicWins>=1;
-                               case 5 -> thoridropLegendaryWins>=1;
-                               default -> true;}))result=target;
+            if(target<=exigentGrandfatherEra || ExigentEraRules.ready(this,target))
+                result=target;
             else break;
         }
-        return Math.max(result,Math.min(thoridropGrandfatherEra,unlocked));
+        return Math.max(result,Math.min(exigentGrandfatherEra,unlocked));
     }
     /** Cinco niveles acumulativos; todos los peces proceden de la pesca registrada. */
     public int fishingLevel() {

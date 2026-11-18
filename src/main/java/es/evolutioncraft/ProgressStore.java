@@ -33,7 +33,9 @@ public final class ProgressStore {
         });
     }
     public static Progress get(ServerPlayer player) {
-        return world(path(player)).computeIfAbsent(player.getUUID(), id -> new Progress());
+        Progress progress=world(path(player)).computeIfAbsent(player.getUUID(), id -> new Progress());
+        ThoridropTribute.sync(player,progress);
+        return progress;
     }
     public static void save(ServerPlayer player) {
         Path path = path(player);

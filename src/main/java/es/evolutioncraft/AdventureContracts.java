@@ -220,6 +220,7 @@ public final class AdventureContracts {
                 remaining-=take;
             }
         }
+        player.getInventory().setChanged();
         p.contractProgress.put(id,c.quantity());
         ProgressStore.save(player);
         player.sendSystemMessage(Component.literal("§a[EvolutionCraft] Materiales entregados. ¡Contrato completado! Pulsa P para reclamar."),true);
@@ -300,6 +301,43 @@ public final class AdventureContracts {
         result.addProperty("done",claimed);
         return result;
     }
+    /**
+     * Vista compacta para el HUD. No genera ofertas ni modifica datos.
+     * Los encargos de entrega muestran los materiales en el inventario.
+     */
+    public static JsonArray hud(ServerPlayer player){
+        JsonArray result=new JsonArray();
+        if(!EvolutionConfig.get(player).contractsEnabled)return result;
+        Progress p=ProgressStore.get(player);
+        init(p);
+        p.activeContracts.stream().sorted().limit(ACTIVE_LIMIT).forEach(id->{
+            Contract c=instance(id);
+            if(c==null)return;
+            int progress=p.contractProgress.getOrDefault(id,0);
+            boolean completed=progress>=c.quantity();
+            int current=progress;
+            if(c.kind().equals("deliver")&&!completed){
+                int inventoryCount=0;
+                for(int i=0;i<36;i++){
+                    ItemStack stack=player.getInventory().getItem(i);
+                    if(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem())
+                        .toString().equals(c.target()))
+                        inventoryCount+=stack.getCount();
+                }
+                current=Math.min(inventoryCount,c.quantity());
+            }
+            JsonObject row=new JsonObject();
+            row.addProperty("title",c.title());
+            row.addProperty("category",c.category());
+            row.addProperty("current",current);
+            row.addProperty("required",c.quantity());
+            row.addProperty("ready",completed);
+            row.addProperty("delivery",c.kind().equals("deliver"));
+            result.add(row);
+        });
+        return result;
+    }
+
     public static JsonObject snapshot(ServerPlayer player){
         Progress p=ProgressStore.get(player);init(p);
         boolean enabled=EvolutionConfig.get(player).contractsEnabled;

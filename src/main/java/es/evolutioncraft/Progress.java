@@ -12,6 +12,12 @@ public final class Progress {
     public Set<String> fishSpecies = new HashSet<>();
     public Set<String> fishingTreasures = new HashSet<>();
     public Set<String> bossKills = new HashSet<>();
+    /** Distinct Nicktale bosses defeated personally, persisted per-player. */
+    public Set<String> nicktaleEraBossKills=new HashSet<>();
+    /** Preserves already unlocked eras when introducing the new boss gates. */
+    public boolean nicktaleBossMigrated=false;
+    public int nicktaleBossGrandfatherEra=0;
+    public transient boolean nicktaleBossGateActive=false;
     public int fish;
     public int tradeCount;
     public String selectedBadge="";
@@ -201,7 +207,15 @@ public final class Progress {
                 result=target;
             else break;
         }
-        return Math.max(result,Math.min(exigentGrandfatherEra,unlocked));
+        unlocked=Math.max(result,Math.min(exigentGrandfatherEra,unlocked));
+        if(!nicktaleBossGateActive || !nicktaleBossMigrated)return unlocked;
+        result=Math.min(unlocked,2);
+        for(int target=3;target<=unlocked;target++){
+            if(target<=nicktaleBossGrandfatherEra ||
+                NicktaleBossGate.defeated(this,target))result=target;
+            else break;
+        }
+        return Math.max(result,Math.min(nicktaleBossGrandfatherEra,unlocked));
     }
     /** Cinco niveles acumulativos; todos los peces proceden de la pesca registrada. */
     public int fishingLevel() {

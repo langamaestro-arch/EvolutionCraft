@@ -30,6 +30,16 @@ public final class ProgressGuide {
                 return Command.SINGLE_SUCCESS;
             })));
 
+        event.getDispatcher().register(Commands.literal("ecepico")
+            .then(Commands.literal("aceptar")
+                .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->
+                    epicAction(ctx.getSource().getPlayerOrException(),"aceptar",StringArgumentType.getString(ctx,"id")))))
+            .then(Commands.literal("abandonar")
+                .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->
+                    epicAction(ctx.getSource().getPlayerOrException(),"abandonar",StringArgumentType.getString(ctx,"id")))))
+            .then(Commands.literal("reclamar")
+                .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->
+                    epicAction(ctx.getSource().getPlayerOrException(),"reclamar",StringArgumentType.getString(ctx,"id"))))));
         event.getDispatcher().register(Commands.literal("eccontratos").executes(ctx->{
             ServerPlayer player=ctx.getSource().getPlayerOrException();
             var json=com.google.gson.JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject();
@@ -92,6 +102,20 @@ public final class ProgressGuide {
         }));
     }
 
+    private static int epicAction(ServerPlayer player,String action,String id){
+        boolean ok=switch(action){
+            case "aceptar" -> EpicContracts.accept(player,id);
+            case "abandonar" -> EpicContracts.abandon(player,id);
+            case "reclamar" -> EpicContracts.claim(player,id);
+            default -> false;
+        };
+        if(!ok)player.sendSystemMessage(Component.literal(
+            "§c[EvolutionCraft] Contrato épico no disponible o no cumple requisitos."),true);
+        var json=com.google.gson.JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject();
+        json.addProperty("openContracts",true);
+        PacketDistributor.sendToPlayer(player,new GuidePayload(json.toString()));
+        return ok?Command.SINGLE_SUCCESS:0;
+    }
     private static int contractAction(ServerPlayer player,String action,String id){
         boolean ok=switch(action){
             case "aceptar" -> AdventureContracts.accept(player,id);

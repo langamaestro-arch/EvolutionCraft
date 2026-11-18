@@ -499,8 +499,8 @@ public final class ProgressScreen extends Screen {
     private void outline(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int c){
         if(ww>2&&hh>2)g.outline(xx,yy,ww,hh,c);
     }
-    private void text(GuiGraphicsExtractor g,String s,int xx,int yy,int c){g.text(font,s,xx,yy,c);}
-    private void center(GuiGraphicsExtractor g,String s,int xx,int yy,int c){g.centeredText(font,s,xx,yy,c);}
+    private void text(GuiGraphicsExtractor g,String s,int xx,int yy,int c){g.text(font,s,xx,yy,c,false);}
+    private void center(GuiGraphicsExtractor g,String s,int xx,int yy,int c){g.text(font,s,xx-font.width(s)/2,yy,c,false);}
     private void item(GuiGraphicsExtractor g,Item i,int xx,int yy){g.item(new ItemStack(i),xx,yy);}
 
     @Override public void extractRenderState(GuiGraphicsExtractor g,int mouseX,int mouseY,float delta){

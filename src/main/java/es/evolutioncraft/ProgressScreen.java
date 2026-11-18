@@ -174,7 +174,7 @@ public final class ProgressScreen extends Screen {
         if(o.has("tier") && o.has("progress")){
             int desc=wrap(o.get("description").getAsString(),Math.max(65,mainW()-96)).size();
             return Math.max(tab==20 && o.has("delivery") &&
-                o.get("delivery").getAsBoolean()?79:56,46+desc*11);
+                o.get("delivery").getAsBoolean()?90:56,46+desc*11);
         }
         if(o.has("detail")){
             int nameLines=wrap(o.get("text").getAsString(),Math.max(60,mainW()-100)).size();
@@ -619,6 +619,15 @@ public final class ProgressScreen extends Screen {
                 int detailY=cy+21;
                 for(String line:wrap(description,Math.max(65,mw-96))){
                     text(g,line,left+31,detailY,MUTED);detailY+=11;
+                }
+                if(tab==20 && objective.has("inventory") && objective.has("missing")){
+                    int owned=objective.get("inventory").getAsInt();
+                    int missing=objective.get("missing").getAsInt();
+                    String info=objective.get("ready").getAsBoolean()
+                        ?"Materiales entregados · recompensa disponible"
+                        :"Disponibles: "+owned+" · faltan "+missing;
+                    text(g,info,left+31,detailY+2,missing==0?GREEN:MUTED);
+                    detailY+=12;
                 }
                 String reward=objective.get("reward").getAsString();
                 int count=objective.get("progress").getAsInt(),required=objective.get("target").getAsInt();

@@ -42,6 +42,19 @@ public final class ProgressStore {
             progress.exigentMigrated=true;
             save(player);
         }
+        // Optional compatibility: when Nicktale is absent, no impossible boss gates.
+        // Snapshot old unlocked era before enabling the new requirements.
+        progress.nicktaleBossGateActive=
+            net.neoforged.fml.ModList.get().isLoaded("nicktaleepicdungeons");
+        if(progress.nicktaleBossGateActive && !progress.nicktaleBossMigrated){
+            progress.nicktaleBossGateActive=false;
+            progress.nicktaleBossGrandfatherEra=progress.era();
+            progress.nicktaleBossMigrated=true;
+            progress.nicktaleBossGateActive=true;
+            if(progress.nicktaleEraBossKills==null)
+                progress.nicktaleEraBossKills=new java.util.HashSet<>();
+            save(player);
+        }
         return progress;
     }
     public static void save(ServerPlayer player) {

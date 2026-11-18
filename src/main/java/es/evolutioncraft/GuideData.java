@@ -50,6 +50,7 @@ public final class GuideData {
         root.addProperty("fish",p.fish);
         root.add("discoveries",DiscoveryJournal.snapshot(p));
         root.add("contracts",AdventureContracts.snapshot(player));
+        root.add("reputation",AdventurerReputation.snapshot(p));
         JsonObject eras=group(root,"eras","Progreso de eras");
         String[] mats={"wooden","stone","copper","iron","diamond"};
         String[] labels={"madera","piedra","cobre","hierro","diamante"};

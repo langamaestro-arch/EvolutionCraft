@@ -108,25 +108,25 @@ public final class EraObjectivesHud {
         FantasySkin.panel(g,x,y,width,h);
         FantasySkin.ribbon(g,x+5,y+3,width-10,20);
         FantasySkin.decorations(g,x,y,width,h);
-        g.text(mc.font,"EVOLUTIONCRAFT",x+29,y+9,0xFF5C2A1A);
+        g.text(mc.font,"EVOLUTIONCRAFT",x+29,y+9,0xFF5C2A1A,false);
         String subtitle=era==5?"Todas las eras completadas":"ERA: "+eraName.toUpperCase(java.util.Locale.ROOT);
-        g.text(mc.font,subtitle,x+13,y+26,WHITE);
+        g.text(mc.font,subtitle,x+13,y+26,WHITE,false);
         if(era==5){
-            g.text(mc.font,"¡Progreso de eras completo!",x+15,y+40,WHITE);
+            g.text(mc.font,"¡Progreso de eras completo!",x+15,y+40,WHITE,false);
             if(showContracts)renderContracts(g,mc,contracts,x,y+h+7,width,bottom);
             return;
         }
         int lineY=y+41;
         for(List<String> row:rows){
-            g.text(mc.font,"✦",x+12,lineY,0xFFB66A2E);
+            g.text(mc.font,"✦",x+12,lineY,0xFFB66A2E,false);
             for(String s:row){
-                g.text(mc.font,s,x+27,lineY,WHITE);
+                g.text(mc.font,s,x+27,lineY,WHITE,false);
                 lineY+=11;
             }
             lineY+=6;
         }
         if(hidden>0){
-            g.text(mc.font,"+"+hidden+" objetivos · Pulsa P",x+16,lineY,MUTED);
+            g.text(mc.font,"+"+hidden+" objetivos · Pulsa P",x+16,lineY,MUTED,false);
         }
         if(showContracts)renderContracts(g,mc,contracts,x,y+h+7,width,bottom);
     }
@@ -141,8 +141,8 @@ public final class EraObjectivesHud {
         FantasySkin.panel(g,x,y,width,panelH);
         FantasySkin.ribbon(g,x+5,y+3,width-10,20);
         FantasySkin.decorations(g,x,y,width,panelH);
-        g.text(mc.font,"CONTRATOS ACTIVOS",x+22,y+9,0xFF592C1D);
-        g.text(mc.font,"K: ocultar · P: gestionar",x+13,y+26,MUTED);
+        g.text(mc.font,"CONTRATOS ACTIVOS",x+22,y+9,0xFF592C1D,false);
+        g.text(mc.font,"K: ocultar · P: gestionar",x+13,y+26,MUTED,false);
         int yy=y+39;
         for(int i=0;i<count;i++){
             JsonObject contract=contracts.get(i).getAsJsonObject();
@@ -154,8 +154,8 @@ public final class EraObjectivesHud {
             int color=ready?GREEN:WHITE;
             List<String> names=lines(mc,name,width-26);
             String shortName=names.isEmpty()?name:names.get(0);
-            g.text(mc.font,shortName,x+17,yy,color);
-            g.text(mc.font,progress,x+width-16-mc.font.width(progress),yy+11,ready?GREEN:FantasySkin.INK);
+            g.text(mc.font,shortName,x+17,yy,color,false);
+            g.text(mc.font,progress,x+width-16-mc.font.width(progress),yy+11,ready?GREEN:FantasySkin.INK,false);
             int barLeft=x+17,barRight=x+width-16;
             int barY=yy+13;
             int barMax=barRight-barLeft-52;

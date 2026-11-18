@@ -43,7 +43,12 @@ public final class ContractMaterials {
     }
     private static ItemStack get(Object inv,int slot){
         try{
-            Object result=inv.getClass().getMethod("getStackInSlot",int.class).invoke(inv,slot);
+            Object result;
+            try {
+                result=inv.getClass().getMethod("getStackInSlot",int.class).invoke(inv,slot);
+            } catch(NoSuchMethodException missingLegacyMethod){
+                result=inv.getClass().getMethod("getSlotStack",int.class).invoke(inv,slot);
+            }
             return result instanceof ItemStack stack?stack:ItemStack.EMPTY;
         }catch(ReflectiveOperationException | LinkageError | SecurityException e){
             return ItemStack.EMPTY;
@@ -78,7 +83,13 @@ public final class ContractMaterials {
                 ItemStack stack=get(inv,slot);
                 if(stack.isEmpty()||!itemId(stack).equals(target))continue;
                 int count=stack.getCount();
-                if(count>0)found.add(new Source(i,slot,count,inv));
+                if(count>0){
+                    // Only count content from handlers that support real extraction.
+                    // Do not display phantom materials from readonly/filter slots.
+                    ItemStack sample=extract(inv,slot,Math.min(count,stack.getMaxStackSize()),true);
+                    if(!sample.isEmpty() && itemId(sample).equals(target))
+                        found.add(new Source(i,slot,count,inv));
+                }
             }
         }
         return found;

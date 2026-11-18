@@ -15,6 +15,7 @@ public final class EraHudData {
         JsonObject result=new JsonObject();
         result.addProperty("era",era);
         result.addProperty("eraName",Progress.ERA_NAMES[era]);
+        result.addProperty("maxObjectives",EvolutionConfig.get(player).hudMaxObjectives);
         JsonArray pending=new JsonArray();
         if(era<5){
             // Fuente de verdad compartida con el diario RPG: mismos requisitos.

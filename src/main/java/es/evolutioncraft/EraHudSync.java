@@ -4,6 +4,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,9 +19,16 @@ public final class EraHudSync {
     @SubscribeEvent
     public static void tick(PlayerTickEvent.Post event){
         if(!(event.getEntity() instanceof ServerPlayer p))return;
-        if(p.tickCount%40!=0)return;
+        int interval=EvolutionConfig.get(p).hudSyncInterval;
+        if(p.tickCount%interval!=0)return;
         String state=EraHudData.snapshot(p);
         String old=LAST.put(p.getUUID(),state);
-        if(p.tickCount<=40 || !state.equals(old))PacketDistributor.sendToPlayer(p,new EraHudPayload(state));
+        if(p.tickCount<=interval || !state.equals(old))
+            PacketDistributor.sendToPlayer(p,new EraHudPayload(state));
+    }
+
+    @SubscribeEvent
+    public static void logout(PlayerEvent.PlayerLoggedOutEvent event){
+        if(event.getEntity() instanceof ServerPlayer p)LAST.remove(p.getUUID());
     }
 }

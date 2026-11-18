@@ -56,6 +56,13 @@ public final class Progress {
     public Set<String> claimedContracts=new HashSet<>();
     /** Recompensas de reputación reclamadas. Los puntos se derivan de contratos históricos. */
     public Set<String> claimedReputationRanks=new HashSet<>();
+    /** Contratos épicos independientes: nunca se borran los contratos normales. */
+    public java.util.Set<String> epicActive=new java.util.HashSet<>();
+    public java.util.Set<String> epicClaimed=new java.util.HashSet<>();
+    public java.util.Map<String,String> epicOffers=new java.util.HashMap<>();
+    public java.util.Map<String,Integer> epicProgress=new java.util.HashMap<>();
+    public long epicSequence=0L;
+
     /** Tres ofertas persistentes por categoria. Los IDs son instancias únicas. */
     public java.util.Map<String,String> contractOffers=new java.util.HashMap<>();
     public java.util.Map<String,java.util.List<String>> contractRecentTemplates=new java.util.HashMap<>();

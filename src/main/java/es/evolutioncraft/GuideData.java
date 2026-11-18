@@ -111,7 +111,13 @@ public final class GuideData {
                     delivery.addProperty("done",paid);
                     delivery.addProperty("tribute",target);
                     delivery.addProperty("canDeliver",ready);
-                    delivery.addProperty("description","Fragmentos para desbloquear "+Progress.ERA_NAMES[target]);
+                    boolean prior=trib.get("needsPriorEra").getAsBoolean();
+                    delivery.addProperty("needsPriorEra",prior);
+                    delivery.addProperty("priorEra",trib.get("priorEra").getAsString());
+                    delivery.addProperty("description",prior?
+                        "Primero desbloquea "+trib.get("priorEra").getAsString():
+                        paid?"Tributo entregado para "+Progress.ERA_NAMES[target]:
+                        "Fragmentos para desbloquear "+Progress.ERA_NAMES[target]);
                     goals.add(delivery);
                 }
             }

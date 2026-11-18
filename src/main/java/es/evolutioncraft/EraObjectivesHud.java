@@ -105,6 +105,7 @@ public final class EraObjectivesHud {
         int h=47+used+(hidden>0?15:0);
         if(era==5)h=58;
         h=Math.min(h,bottom-y-reserve);
+        FantasySkin.fortressFrame(g,x-7,y-7,width+14,h+14);
         FantasySkin.panel(g,x,y,width,h);
         FantasySkin.ribbon(g,x+5,y+3,width-10,20);
         FantasySkin.decorations(g,x,y,width,h);
@@ -138,6 +139,7 @@ public final class EraObjectivesHud {
         int count=Math.min(3,Math.min(contracts.size(),Math.max(0,(available-36)/27)));
         int panelH=35+count*27;
         if(panelH>available)return;
+        FantasySkin.fortressFrame(g,x-7,y-7,width+14,panelH+14);
         FantasySkin.panel(g,x,y,width,panelH);
         FantasySkin.ribbon(g,x+5,y+3,width-10,20);
         FantasySkin.decorations(g,x,y,width,panelH);

@@ -175,6 +175,7 @@ public final class ProgressScreen extends Screen {
     private int rowHeight(JsonObject o){
         if(o.has("threshold"))return 60;
         if(o.has("tier") && o.has("progress")){
+            if(tab==23)return 78;
             int desc=wrap(o.get("description").getAsString(),Math.max(65,mainW()-96)).size();
             return Math.max(tab==20 && o.has("delivery") &&
                 o.get("delivery").getAsBoolean()?90:56,46+desc*11);
@@ -653,13 +654,14 @@ public final class ProgressScreen extends Screen {
                     {text(g,line,left+31,cy+38,unlocked?GREEN:MUTED);break;}
             } else if(objective.has("tier")&&objective.has("progress")){
                 String tier=objective.get("tier").getAsString();
-                int tierColor=tab==23?0xFFC4483E:tier.equals("ORO")?GOLD:tier.equals("PLATA")?0xFFC3D2DE:0xFFD59D6B;
+                int tierColor=tab==23?0xFFA63D34:tier.equals("ORO")?0xFF95601E:tier.equals("PLATA")?0xFF556B7C:0xFF985224;
                 roundedBorder(g,left,cy,cardW,height-3,5,tierColor,i%2==0?CARD:CARD2);
                 fill(g,left+2,cy+8,left+5,cy+height-11,tierColor);
                 item(g,Items.PAPER,left+9,cy+10);
                 text(g,label,left+31,cy+7,TEXT);
                 String action=tab==23?
                     (objective.get("epicStatus").getAsString().equals("claimed")?"RECLAMADO":
+                     objective.get("epicStatus").getAsString().equals("locked")?"BLOQUEADO":
                      objective.get("epicStatus").getAsString().equals("offer")?
                      (objective.get("canAccept").getAsBoolean()?"ACEPTAR":"BLOQUEADO"):
                      objective.get("ready").getAsBoolean()?"RECLAMAR":"ABANDONAR"):
@@ -692,8 +694,19 @@ public final class ProgressScreen extends Screen {
                 String reward=objective.get("reward").getAsString();
                 int count=objective.get("progress").getAsInt(),required=objective.get("target").getAsInt();
                 String category=objective.has("category")?objective.get("category").getAsString():"";
-                String footer=category+" · "+tier+" · "+Math.min(count,required)+"/"+required+" · "+reward;
-                text(g,footer,left+31,detailY+2,tierColor);
+                if(tab==23){
+                    String req=objective.get("requires").getAsString();
+                    boolean unlocked=objective.get("epicStatus").getAsString().equals("offer") ||
+                        objective.get("epicStatus").getAsString().equals("active") ||
+                        objective.get("epicStatus").getAsString().equals("claimed");
+                    text(g,req,left+31,detailY+1,unlocked?GREEN:0xFF95422E);
+                    text(g,tier+" · "+count+"/"+required+" · "+
+                        objective.get("origin").getAsString(),left+31,detailY+13,tierColor);
+                    text(g,reward,left+31,detailY+25,TEXT);
+                }else{
+                    String footer=category+" · "+tier+" · "+Math.min(count,required)+"/"+required+" · "+reward;
+                    text(g,footer,left+31,detailY+2,tierColor);
+                }
             } else if(objective.has("detail")){
                 roundedBorder(g,left,cy,cardW,height-3,5,0xFF3C5261,i%2==0?CARD:CARD2);
                 fill(g,left+2,cy+7,left+5,cy+height-10,GOLD);

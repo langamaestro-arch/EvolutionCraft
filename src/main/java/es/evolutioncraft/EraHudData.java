@@ -63,6 +63,7 @@ public final class EraHudData {
             }
         }
         result.add("pending",pending);
+        result.add("contracts",AdventureContracts.hud(player));
         return result.toString();
     }
 }

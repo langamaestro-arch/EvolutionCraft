@@ -3,6 +3,6 @@
   "minVersion": "0.8",
   "package": "es.evolutioncraft.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["CraftingResultEraMixin"],
+  "mixins": ["CraftingResultEraMixin", "ArmorEraClickMixin"],
   "injectors": {"defaultRequire": 1}
 }

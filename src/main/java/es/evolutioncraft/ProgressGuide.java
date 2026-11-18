@@ -17,6 +17,18 @@ public final class ProgressGuide {
 
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("ectributo")
+            .then(Commands.literal("entregar").executes(ctx->{
+                ServerPlayer player=ctx.getSource().getPlayerOrException();
+                int target=ProgressStore.get(player).era()+1;
+                boolean done=ThoridropTribute.deliver(player,target);
+                if(!done)player.sendSystemMessage(Component.literal(
+                    "§c[EvolutionCraft] Aun no puedes entregar el tributo de esta era."),true);
+                PacketDistributor.sendToPlayer(player,
+                    new GuidePayload(GuideData.snapshot(player)));
+                return done?Command.SINGLE_SUCCESS:0;
+            })));
+
         event.getDispatcher().register(Commands.literal("ecrango")
             .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->{
                 ServerPlayer player=ctx.getSource().getPlayerOrException();

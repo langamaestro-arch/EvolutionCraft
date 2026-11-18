@@ -200,27 +200,16 @@ public final class AdventureContracts {
         if(c==null||!c.kind().equals("deliver")||!p.activeContracts.contains(id)||
             p.claimedContracts.contains(id)||p.era()<c.minEra())return false;
         if(p.contractProgress.getOrDefault(id,0)>=c.quantity())return false;
-        int total=0;
-        for(int i=0;i<36;i++){
-            ItemStack stack=player.getInventory().getItem(i);
-            if(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString().equals(c.target()))
-                total+=stack.getCount();
-        }
+        int total=ContractMaterials.count(player,c.target());
         if(total<c.quantity()){
             player.sendSystemMessage(Component.literal("§e[EvolutionCraft] Materiales insuficientes: "+
-                total+"/"+c.quantity()+" ("+c.description()+")."),true);
+                total+"/"+c.quantity()+" (inventario y mochilas permitidas)."),true);
             return false;
         }
-        int remaining=c.quantity();
-        for(int i=0;i<36 && remaining>0;i++){
-            ItemStack stack=player.getInventory().getItem(i);
-            if(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString().equals(c.target())){
-                int take=Math.min(remaining,stack.getCount());
-                stack.shrink(take);
-                remaining-=take;
-            }
+        if(!ContractMaterials.take(player,c.target(),c.quantity())){
+            player.sendSystemMessage(Component.literal("§c[EvolutionCraft] No se ha podido completar la extracción. Comprueba el inventario."),true);
+            return false;
         }
-        player.getInventory().setChanged();
         p.contractProgress.put(id,c.quantity());
         ProgressStore.save(player);
         player.sendSystemMessage(Component.literal("§a[EvolutionCraft] Materiales entregados. ¡Contrato completado! Pulsa P para reclamar."),true);
@@ -297,6 +286,7 @@ public final class AdventureContracts {
         result.addProperty("reward",c.emeralds()+" esmeraldas + "+c.xp()+" XP");
         result.addProperty("ready",on&&current>=c.quantity());
         result.addProperty("delivery",c.kind().equals("deliver"));
+        // Materials available are supplied per-player in snapshot, not from saved progress.
         result.addProperty("canAccept",offered&&era>=c.minEra()&&p.activeContracts.size()<ACTIVE_LIMIT);
         result.addProperty("done",claimed);
         return result;
@@ -316,16 +306,8 @@ public final class AdventureContracts {
             int progress=p.contractProgress.getOrDefault(id,0);
             boolean completed=progress>=c.quantity();
             int current=progress;
-            if(c.kind().equals("deliver")&&!completed){
-                int inventoryCount=0;
-                for(int i=0;i<36;i++){
-                    ItemStack stack=player.getInventory().getItem(i);
-                    if(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem())
-                        .toString().equals(c.target()))
-                        inventoryCount+=stack.getCount();
-                }
-                current=Math.min(inventoryCount,c.quantity());
-            }
+            if(c.kind().equals("deliver")&&!completed)
+                current=Math.min(ContractMaterials.count(player,c.target()),c.quantity());
             JsonObject row=new JsonObject();
             row.addProperty("title",c.title());
             row.addProperty("category",c.category());
@@ -356,7 +338,16 @@ public final class AdventureContracts {
         }
         p.activeContracts.stream().sorted().forEach(id->{
             Contract c=instance(id);
-            if(c!=null)active.add(row(c,id,p,true,false,false,p.era()));
+            if(c!=null){
+                JsonObject card=row(c,id,p,true,false,false,p.era());
+                if(c.kind().equals("deliver")){
+                    int count=ContractMaterials.count(player,c.target());
+                    card.addProperty("inventory",count);
+                    card.addProperty("missing",Math.max(0,c.quantity()-count));
+                    card.addProperty("storage","Inventario + mochilas desbloqueadas");
+                }
+                active.add(card);
+            }
         });
         p.claimedContracts.stream().sorted(Comparator.reverseOrder()).limit(60).forEach(id->{
             Contract c=instance(id);

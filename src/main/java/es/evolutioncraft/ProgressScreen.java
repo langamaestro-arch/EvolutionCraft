@@ -660,7 +660,11 @@ public final class ProgressScreen extends Screen {
                 item(g,Items.AMETHYST_SHARD,left+11,cy+10);
                 text(g,label,left+31,cy+7,ok?GREEN:TEXT);
                 text(g,objective.get("description").getAsString(),left+31,cy+23,MUTED);
-                String action=ok?"ENTREGADO":ready?"ENTREGAR":"PENDIENTE";
+                boolean needsPriorEra=objective.has("needsPriorEra") &&
+                    objective.get("needsPriorEra").getAsBoolean();
+                String action=ok?"ENTREGADO":ready?"ENTREGAR":
+                    needsPriorEra?"ERA "+objective.get("priorEra").getAsString().toUpperCase(Locale.ROOT):
+                    "PENDIENTE";
                 roundedBorder(g,left+cardW-103,cy+3,96,19,4,color,CARD2);
                 text(g,action,left+cardW-8-font.width(action),cy+8,color);
             } else if(objective.has("threshold")){

@@ -39,6 +39,9 @@ public final class AdventurerReputation {
             AdventureContracts.Contract c=AdventureContracts.contractFor(id);
             if(c!=null)total+=pointsFor(c.tier());
         }
+        if(p.epicClaimed!=null){
+            for(String id:p.epicClaimed)total+=EpicContracts.reputationFor(id);
+        }
         return (int)Math.min(total,Integer.MAX_VALUE);
     }
     public static int rank(int points){

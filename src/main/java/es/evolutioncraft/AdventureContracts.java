@@ -96,6 +96,8 @@ public final class AdventureContracts {
         for(Contract c:CATALOG)if(c.id().equals(id))return c;
         return null;
     }
+    /** Include unique contracts and legacy Beta 1 templates. */
+    public static Contract contractFor(String id){return instance(id);}
     private static Contract instance(String instanceId){
         Contract legacy=byId(instanceId);
         if(legacy!=null)return legacy;
@@ -267,6 +269,10 @@ public final class AdventureContracts {
         ProgressStore.save(player);
         player.getInventory().add(emeralds);
         player.giveExperiencePoints(c.xp());
+        int rep=AdventurerReputation.points(p);
+        player.sendSystemMessage(Component.literal("§a[EvolutionCraft] +"+
+            AdventurerReputation.pointsFor(c.tier())+" reputacion · "+
+            AdventurerReputation.name(rep)+" ("+rep+" puntos)"),true);
         player.sendSystemMessage(Component.literal("§6[EvolutionCraft] Premio de contrato: "+
             c.emeralds()+" esmeraldas y "+c.xp()+" XP."),true);
         return true;
@@ -283,7 +289,8 @@ public final class AdventureContracts {
         result.addProperty("progress",current);
         result.addProperty("target",c.quantity());
         result.addProperty("minEra",c.minEra());
-        result.addProperty("reward",c.emeralds()+" esmeraldas + "+c.xp()+" XP");
+        result.addProperty("reward",c.emeralds()+" esmeraldas + "+c.xp()+
+            " XP + "+AdventurerReputation.pointsFor(c.tier())+" REP");
         result.addProperty("ready",on&&current>=c.quantity());
         result.addProperty("delivery",c.kind().equals("deliver"));
         // Materials available are supplied per-player in snapshot, not from saved progress.

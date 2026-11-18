@@ -20,10 +20,10 @@ import java.util.Locale;
  * Los requisitos y niveles proceden exclusivamente del servidor.
  */
 public final class ProgressScreen extends Screen {
-    private static final int BG=0xFF101924, PANEL=0xFF172634, SIDEBAR=0xFF101D2B;
-    private static final int CARD=0xFF223441, CARD2=0xFF1B2C3A, MUTED=0xFFA7BAC8;
-    private static final int TEXT=0xFFF2F1E7, GOLD=0xFFF4CE82, GREEN=0xFF7BD9A4;
-    private static final int RED=0xFFE78B83, DIM=0xFF526979, EDGE=0xFF896C45;
+    private static final int BG=FantasySkin.PARCHMENT, PANEL=FantasySkin.PARCHMENT, SIDEBAR=0xFFF1D6AE;
+    private static final int CARD=FantasySkin.CARD, CARD2=0xFFF3D8AF, MUTED=FantasySkin.MUTED;
+    private static final int TEXT=FantasySkin.INK, GOLD=0xFF9F5A20, GREEN=FantasySkin.GREEN;
+    private static final int RED=0xFFA64C3F, DIM=0xFFAE8B68, EDGE=FantasySkin.FRAME;
     private static final String[] SECTIONS={"EVOLUCION","HABILIDADES","DIMENSIONES","LOGROS","SECRETOS","RECOMPENSAS","DESCUBRIMIENTOS","CONTRATOS","REPUTACION"};
     private static final Item[] SECTION_ICONS={Items.DIAMOND_PICKAXE,Items.ENCHANTED_BOOK,
         Items.ENDER_EYE,Items.BOOK,Items.NETHER_STAR,Items.CHEST,Items.COMPASS,Items.LECTERN,Items.NETHER_STAR};
@@ -488,23 +488,13 @@ public final class ProgressScreen extends Screen {
         };
     }
     /** Pixel-art rounded rectangles: no external textures or render APIs required. */
+    /** La geometría de interacción permanece intacta; cambia sólo la apariencia. */
     private void rounded(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int radius,int color){
-        if(ww<=0||hh<=0)return;
-        int r=Math.min(radius,Math.min(ww/2,hh/2));
-        if(r<2){fill(g,xx,yy,xx+ww,yy+hh,color);return;}
-        fill(g,xx+r,yy,xx+ww-r,yy+hh,color);
-        fill(g,xx,yy+r,xx+ww,yy+hh-r,color);
-        for(int dy=0;dy<r;dy++){
-            double t=r-dy-0.5;
-            int inset=Math.max(0,(int)Math.ceil(r-Math.sqrt(r*r-t*t)));
-            fill(g,xx+inset,yy+dy,xx+ww-inset,yy+dy+1,color);
-            fill(g,xx+inset,yy+hh-dy-1,xx+ww-inset,yy+hh-dy,color);
-        }
+        FantasySkin.card(g,xx,yy,ww,hh,false);
     }
     private void roundedBorder(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,
                                int radius,int edge,int middle){
-        rounded(g,xx,yy,ww,hh,radius,edge);
-        rounded(g,xx+1,yy+1,ww-2,hh-2,Math.max(2,radius-1),middle);
+        FantasySkin.card(g,xx,yy,ww,hh,edge==GOLD || edge==GREEN || edge==0xFFE4A94A);
     }
     private void outline(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int c){
         if(ww>2&&hh>2)g.outline(xx,yy,ww,hh,c);
@@ -517,49 +507,39 @@ public final class ProgressScreen extends Screen {
         if(pageStarts.isEmpty())paginate();
         int xx=x(),yy=y(),ww=panelW(),hh=panelH(),sx=xx+10,sw=sidebarW(),mx=mainX(),mw=mainW();
         int accent=accent();
-        fill(g,0,0,width,height,0xC6000000);
-        fill(g,xx-5,yy-5,xx+ww+5,yy+hh+5,EDGE);
-        fill(g,xx-3,yy-3,xx+ww+3,yy+hh+3,0xFF080F18);
-        fill(g,xx,yy,xx+ww,yy+hh,BG);
-        // Ornamentos de esquina, doble marco y pequeños remaches de bronce.
-        corner(g,xx+5,yy+5,1,1,GOLD);
-        corner(g,xx+ww-6,yy+5,-1,1,GOLD);
-        corner(g,xx+5,yy+hh-6,1,-1,GOLD);
-        corner(g,xx+ww-6,yy+hh-6,-1,-1,GOLD);
-        fill(g,xx+9,yy+hh-6,xx+ww-9,yy+hh-5,0xFF435365);
-        fill(g,xx+5,yy+5,xx+ww-5,yy+49,0xFF263C39);
-        fill(g,xx+5,yy+47,xx+ww-5,yy+49,GOLD);
-        roundedBorder(g,xx+12,yy+10,32,32,6,0xFF88734E,0xFF172735);
-        item(g,Items.ENCHANTED_BOOK,xx+20,yy+18);
-        text(g,"✦  EVOLUTIONCRAFT  ✦",xx+52,yy+12,GOLD);
-        text(g,"C R O N I C A S    D E L    A V E N T U R E R O",xx+52,yy+29,MUTED);
-        fill(g,xx+ww-118,yy+21,xx+ww-46,yy+22,0xFF6D775E);
-        fill(g,xx+ww-120,yy+19,xx+ww-118,yy+24,GOLD);
-        rounded(g,xx+ww-35,yy+11,24,22,5,
-            inside(mouseX,mouseY,xx+ww-35,yy+11,24,22)?0xFFAD474A:0xFF432D34);
-        center(g,"X",xx+ww-23,yy+18,TEXT);
+        fill(g,0,0,width,height,0xB9000000);
+        // Decoración integral en pergamino, sin modificar posiciones de botones.
+        FantasySkin.panel(g,xx-5,yy-5,ww+10,hh+10);
+        FantasySkin.panel(g,sx,yy+58,sw,hh-70);
+        FantasySkin.panel(g,mx-4,yy+58,mw+8,hh-70);
+        FantasySkin.ribbon(g,xx+6,yy+5,ww-12,43);
+        FantasySkin.decorations(g,xx-5,yy-5,ww+10,hh+10);
+        FantasySkin.card(g,xx+13,yy+9,35,35,true);
+        item(g,Items.ENCHANTED_BOOK,xx+22,yy+18);
+        text(g,"✦  EVOLUTIONCRAFT  ✦",xx+55,yy+12,0xFF67331E);
+        text(g,"C R O N I C A S    D E L    A V E N T U R E R O",
+            xx+55,yy+28,0xFF814923);
+        FantasySkin.card(g,xx+ww-35,yy+11,24,22,
+            inside(mouseX,mouseY,xx+ww-35,yy+11,24,22));
+        center(g,"X",xx+ww-23,yy+18,RED);
 
-        fill(g,sx,yy+60,sx+sw,yy+hh-11,SIDEBAR);
-        fill(g,sx+sw+4,yy+60,sx+sw+5,yy+hh-11,0xFF334656);
-        text(g,"SECCIONES",sx+13,yy+70,GOLD);
-        fill(g,sx+13,yy+84,sx+sw-13,yy+85,0xFF445C67);
+        text(g,"SECCIONES",sx+17,yy+69,0xFF844623);
+        fill(g,sx+14,yy+82,sx+sw-13,yy+84,0xFFB67E45);
+        FantasySkin.diamond(g,sx+sw/2,yy+83,3,FantasySkin.PURPLE);
         for(int i=0;i<SECTIONS.length;i++){
             int ny=navY()+i*navStep();
-            boolean selected=section==i,hover=inside(mouseX,mouseY,xx+12,ny,sw-8,navHeight());
-            int navColor=selected?0xFF314A59:hover?0xFF253B4D:0xFF172938;
-            roundedBorder(g,xx+12,ny,sw-8,navHeight(),6,
-                selected?accent:hover?0xFF567184:0xFF284253,navColor);
-            if(selected)fill(g,xx+14,ny+6,xx+17,ny+navHeight()-6,accent);
+            boolean selected=section==i;
+            boolean hover=inside(mouseX,mouseY,xx+12,ny,sw-8,navHeight());
+            FantasySkin.nav(g,xx+12,ny,sw-8,navHeight(),selected||hover);
             item(g,SECTION_ICONS[i],xx+19,ny+5);
-            text(g,SECTIONS[i],xx+40,ny+9,selected?TEXT:MUTED);
+            text(g,SECTIONS[i],xx+40,ny+9,selected?0xFF65341C:TEXT);
         }
         int base=yy+hh-94;
         text(g,"PROGRESO GLOBAL",sx+10,base,GOLD);
-        fill(g,sx+10,base+16,sx+sw-9,base+25,0xFF080F15);
-        fill(g,sx+11,base+17,sx+11+(sw-20)*Math.min(100,getInt("overallPercent"))/100,
-            base+24,GREEN);
+        FantasySkin.progress(g,sx+10,base+16,sw-19,11,
+            Math.min(100,getInt("overallPercent")),100,0xFFE0A33A);
         text(g,getInt("overallPercent")+"% completado",sx+10,base+31,MUTED);
-        fill(g,sx+9,base-9,sx+sw-9,base-8,0xFF40505C);
+        fill(g,sx+9,base-9,sx+sw-9,base-8,0xFFBE8A59);
         if(section==4 && data.has("unlockedBadges")&&data.getAsJsonArray("unlockedBadges").size()>0){
             int by=yy+hh-58;
             roundedBorder(g,xx+12,by,sw-8,32,6,GOLD,
@@ -567,15 +547,14 @@ public final class ProgressScreen extends Screen {
             text(g,"CAMBIAR INSIGNIA",xx+18,by+10,GOLD);
         }
 
-        fill(g,mx-3,yy+60,mx+mw+3,yy+hh-11,PANEL);
-        roundedBorder(g,mx+5,yy+65,mw-10,35,5,0xFF415364,0xFF233746);
-        fill(g,mx+7,yy+72,mx+10,yy+93,accent);
-        rounded(g,mx+14,yy+73,19,19,4,0xFF142735);
-        item(g,ICONS[tab],mx+15,yy+74);
-        text(g,title(),mx+40,yy+72,accent);
+        FantasySkin.card(g,mx+5,yy+65,mw-10,35,false);
+        FantasySkin.ribbon(g,mx+10,yy+67,mw-20,14);
+        FantasySkin.diamond(g,mx+16,yy+86,3,FantasySkin.PURPLE);
+        item(g,ICONS[tab],mx+16,yy+72);
+        text(g,title(),mx+40,yy+70,0xFF67361F);
         text(g,detail(),mx+40,yy+86,MUTED);
         // Emblema derecho: cambia con la sección activa.
-        roundedBorder(g,mx+mw-38,yy+69,27,27,5,0xFF5D7180,0xFF162936);
+        FantasySkin.card(g,mx+mw-38,yy+69,27,27,false);
         item(g,SECTION_ICONS[section],mx+mw-32,yy+74);
         int[] subtabs=SECTION_TABS[section];
         int cols=Math.min(3,subtabs.length);
@@ -583,33 +562,32 @@ public final class ProgressScreen extends Screen {
             int target=subtabs[i],tx=gridX(i%cols,cols),ty=tabsY()+(i/cols)*27;
             int tw=gridW(cols);
             boolean selected=tab==target,hover=inside(mouseX,mouseY,tx,ty,tw,24);
-            int tabColor=selected?0xFF3B5262:hover?0xFF304557:0xFF192D3D;
-            roundedBorder(g,tx,ty,tw,24,5,selected?accent:0xFF354F60,tabColor);
-            if(selected)fill(g,tx+7,ty+21,tx+tw-7,ty+22,accent);
+            FantasySkin.nav(g,tx,ty,tw,24,selected||hover);
+            if(selected)fill(g,tx+7,ty+21,tx+tw-7,ty+22,0xFFE09B2E);
             item(g,ICONS[target],tx+7,ty+4);
-            text(g,TITLES[target],tx+26,ty+8,selected?TEXT:MUTED);
+            text(g,TITLES[target],tx+26,ty+8,selected?0xFF6D361C:MUTED);
         }
         if(tab==22){
             JsonObject rep=data.getAsJsonObject("reputation");
             int points=rep.get("points").getAsInt(),lower=rep.get("lower").getAsInt();
             int next=rep.get("next").getAsInt();
             int trackX=mx+18,trackY=yy+160,trackWidth=mw-36;
-            fill(g,trackX,trackY,trackX+trackWidth,trackY+9,0xFF0C1823);
+            FantasySkin.progress(g,trackX,trackY,trackWidth,9,points-lower,Math.max(1,next-lower),0xFFDDA43E);
             int progress=rep.get("maxRank").getAsBoolean()?trackWidth:
                 (int)(trackWidth*((double)Math.max(0,points-lower)/Math.max(1,next-lower)));
-            fill(g,trackX,trackY,trackX+Math.min(trackWidth,progress),trackY+9,GOLD);
+            // El relleno del pergamino ya representa este progreso.
             center(g,rep.get("rank").getAsString()+" · "+points+
                 (rep.get("maxRank").getAsBoolean()?" · rango maximo":" / "+next+" REP"),
                 mx+mw/2,yy+174,MUTED);
         }
         if(tab!=0 && tab!=22){
             String phrase=tab==19?"FILTRO: "+OFFER_FILTERS[offerFilter]+"  < Cambiar >":motto();
-            if(tab==19)rounded(g,mx+8,yy+158,mw-16,23,4,0xFF1A2C3A);
+            if(tab==19)FantasySkin.card(g,mx+8,yy+158,mw-16,23,true);
             if(font.width(phrase)<mw-30)
                 center(g,phrase,mx+mw/2,yy+169,tab==19?GOLD:0xFF8FAAA9);
         }
         if(tab==0){
-            rounded(g,mx+8,yy+159,mw-16,23,4,0xFF1A2C3A);
+            FantasySkin.card(g,mx+8,yy+159,mw-16,23,true);
             center(g,Progress.ERA_NAMES[stage+1].toUpperCase(Locale.ROOT),
                 mx+mw/2,yy+166,GOLD);
             if(stage>0)text(g,"<",mx+19,yy+165,TEXT);
@@ -617,14 +595,12 @@ public final class ProgressScreen extends Screen {
         }
         JsonArray list=goals();
         int done=completed(list),total=list.size();
-        fill(g,mx+8,yy+183,mx+mw-8,yy+191,0xFF0A151D);
-        if(total>0)fill(g,mx+9,yy+184,mx+9+(mw-18)*done/total,yy+190,GREEN);
+        FantasySkin.progress(g,mx+8,yy+183,mw-16,9,done,Math.max(1,total),0xFFE1A849);
         text(g,tab>=19?"Contratos: "+total:tab>=13?"Registros: "+total:done+" / "+total+" objetivos",mx+9,yy+195,MUTED);
         String side=tab==9?"Distintivo: "+badgeLabel():tab==11?"Progreso de todas las habilidades":"";
         if(!side.isEmpty()&&font.width(side)<mw-150)
             text(g,side,mx+mw-9-font.width(side),yy+195,GOLD);
-        roundedBorder(g,mx+7,contentY()-1,mw-14,contentBottom()-contentY()+3,
-            5,0xFF354656,0xFF101E2A);
+        FantasySkin.card(g,mx+7,contentY()-1,mw-14,contentBottom()-contentY()+3,false);
         int begin=pageStarts.get(Math.max(0,Math.min(page,pageStarts.size()-1))),end=page+1<pageStarts.size()?pageStarts.get(page+1):list.size();
         int cy=contentY()+4;
         for(int i=begin;i<end;i++){
@@ -760,6 +736,7 @@ public final class ProgressScreen extends Screen {
         center(g,">",mx+mw-24,footY+10,hasNext?TEXT:DIM);
         center(g,"PAGINA "+(page+1)+" / "+pageStarts.size(),
             mx+mw/2,footY+9,MUTED);
+        FantasySkin.diamond(g,mx+mw/2,footY+23,3,FantasySkin.PURPLE);
         super.extractRenderState(g,mouseX,mouseY,delta);
     }
     @Override public boolean isPauseScreen(){return false;}

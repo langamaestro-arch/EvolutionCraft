@@ -95,6 +95,26 @@ public final class GuideData {
                     goal(tmp,"Maestria herramientas V",p.toolLevel()>=5);
                 }
             }
+            if(era>=2){
+                int target=era+1;
+                JsonObject trib=ThoridropTribute.stage(player,p,target);
+                if(trib.get("enabled").getAsBoolean()){
+                    boolean paid=trib.get("paid").getAsBoolean();
+                    boolean ready=trib.get("canDeliver").getAsBoolean();
+                    int have=trib.get("have").getAsInt(),required=trib.get("required").getAsInt();
+                    int wins=trib.get("wins").getAsInt(),goalWins=trib.get("winGoal").getAsInt();
+                    goal(tmp,"Thoridrop: "+trib.get("kind").getAsString()+
+                        " ("+Math.min(wins,goalWins)+"/"+goalWins+")",wins>=goalWins);
+                    JsonObject delivery=new JsonObject();
+                    delivery.addProperty("text","Tributo: fragmentos de suministro "+
+                        (paid?"ENTREGADOS":have+"/"+required));
+                    delivery.addProperty("done",paid);
+                    delivery.addProperty("tribute",target);
+                    delivery.addProperty("canDeliver",ready);
+                    delivery.addProperty("description","Fragmentos para desbloquear "+Progress.ERA_NAMES[target]);
+                    goals.add(delivery);
+                }
+            }
             if (era>=1 && era<=3) {
                 goal(tmp,"Agricultura nivel "+era,p.agricultureLevel()>=era);
                 goal(tmp,"Ganadería nivel "+era,p.husbandryLevel()>=era);

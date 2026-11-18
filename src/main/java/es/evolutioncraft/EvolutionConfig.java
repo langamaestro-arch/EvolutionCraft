@@ -24,6 +24,9 @@ public final class EvolutionConfig {
     public final int endAdvancements;
     public final int netherBiomes;
     public final int explorationInterval;
+    public final int hudSyncInterval;
+    public final int hudMaxObjectives;
+    public final int thoridropSyncInterval;
     public final boolean rewardsEnabled;
     public final boolean contractsEnabled;
     public final boolean thoridropEnabled;
@@ -44,6 +47,9 @@ public final class EvolutionConfig {
         endAdvancements=bounded(p,"end.advancements",70,0,500);
         netherBiomes=bounded(p,"nether.overworld_biomes",20,0,100);
         explorationInterval=bounded(p,"performance.scan_interval_ticks",80,40,400);
+        hudSyncInterval=bounded(p,"performance.hud_sync_interval_ticks",40,20,200);
+        hudMaxObjectives=bounded(p,"hud.max_objectives",24,4,24);
+        thoridropSyncInterval=bounded(p,"performance.thoridrop_sync_interval_ticks",40,20,400);
         rewardsEnabled=booleanValue(p,"rewards.enabled",true);
         contractsEnabled=booleanValue(p,"contracts.enabled",true);
         thoridropEnabled=booleanValue(p,"thoridrop.era_requirements",true);
@@ -69,6 +75,9 @@ public final class EvolutionConfig {
         def(p,"end.advancements","70");
         def(p,"nether.overworld_biomes","20");
         def(p,"performance.scan_interval_ticks","80");
+        def(p,"performance.hud_sync_interval_ticks","40");
+        def(p,"performance.thoridrop_sync_interval_ticks","40");
+        def(p,"hud.max_objectives","24");
         def(p,"rewards.enabled","true");
         def(p,"contracts.enabled","true");
         def(p,"thoridrop.era_requirements","true");

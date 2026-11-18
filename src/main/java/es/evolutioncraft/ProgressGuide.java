@@ -17,6 +17,19 @@ public final class ProgressGuide {
 
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("ecrango")
+            .then(Commands.argument("id",StringArgumentType.word()).executes(ctx->{
+                ServerPlayer player=ctx.getSource().getPlayerOrException();
+                String id=StringArgumentType.getString(ctx,"id");
+                if(!AdventurerReputation.claim(player,id))
+                    player.sendSystemMessage(Component.literal(
+                        "§c[EvolutionCraft] Ascenso no desbloqueado o ya reclamado."),true);
+                var view=com.google.gson.JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject();
+                view.addProperty("openReputation",true);
+                PacketDistributor.sendToPlayer(player,new GuidePayload(view.toString()));
+                return Command.SINGLE_SUCCESS;
+            })));
+
         event.getDispatcher().register(Commands.literal("eccontratos").executes(ctx->{
             ServerPlayer player=ctx.getSource().getPlayerOrException();
             var json=com.google.gson.JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject();

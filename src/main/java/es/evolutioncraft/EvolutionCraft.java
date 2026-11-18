@@ -177,7 +177,7 @@ public final class EvolutionCraft {
         }
     }
 
-    // Al encontrar equipo superior, se devuelve al inventario, nunca se arroja al suelo.
+    // Retira equipo de eras superiores: al inventario o al suelo si está lleno.
     @SubscribeEvent
     public void tick(PlayerTickEvent.Post event) {
         ServerPlayer player = server(event.getEntity());
@@ -197,35 +197,32 @@ public final class EvolutionCraft {
                     if(i==inventory.getSelectedSlot())continue;
                     if(inventory.getItem(i).isEmpty()){free=i;break;}
                 }
-                // Barrier for dispenser, modded equip flows and state restored after relog.
-                // Item is NEVER allowed to remain equipped because storage is full.
+                // Seguridad adicional frente a dispensadores, otros mods y sesiones restauradas.
+                // No eliminar ni duplicar el stack cuando no exista espacio libre.
                 ItemStack kept=stack.copy();
                 if(free>=0){
                     player.setItemSlot(slot,ItemStack.EMPTY);
                     inventory.setItem(free,kept);
                 }else{
-                    var ender=player.getEnderChestInventory();
-                    int backup=-1;
-                    for(int i=0;i<ender.getContainerSize();i++)
-                        if(ender.getItem(i).isEmpty()){backup=i;break;}
-                    player.setItemSlot(slot,ItemStack.EMPTY);
-                    if(backup>=0){
-                        ender.setItem(backup,kept);
-                        ender.setChanged();
+                    // Inventario lleno: el objeto debe aparecer en el suelo, NO desaparecer
+                    // ni transferirse silenciosamente al cofre de Ender.
+                    var dropped=new net.minecraft.world.entity.item.ItemEntity(
+                        player.level(),player.getX(),player.getY()+0.3,player.getZ(),kept);
+                    dropped.setPickUpDelay(30);
+                    // Se retira de la ranura SOLO si el servidor confirma su aparición.
+                    // Si el chunk rechaza crear la entidad, permanece equipado y
+                    // se reintentará en el siguiente tick de comprobación.
+                    if(player.level().addFreshEntity(dropped)){
+                        player.setItemSlot(slot,ItemStack.EMPTY);
                     }else{
-                        // Exception-only fallback: cannot discard or silently delete rare items.
-                        // The server spawns the exact stack in front of its owner.
-                        var dropped=new net.minecraft.world.entity.item.ItemEntity(
-                            player.level(),player.getX(),player.getY()+0.4,player.getZ(),kept);
-                        player.level().addFreshEntity(dropped);
-                        dropped.setPickUpDelay(20);
+                        continue;
                     }
                 }
                 if(player.tickCount%40==0)
                     player.sendSystemMessage(Component.literal(
                         "§c[EvolutionCraft] Equipo de "+Progress.ERA_NAMES[requiredEra]+
                         " bloqueado. "+(free>=0?"Devuelto al inventario.":
-                        "Sin espacio: enviado al cofre de Ender (o soltado si estaba lleno).")),true);
+                        "Inventario lleno: objeto soltado a tus pies.")),true);
             }
         }
     }

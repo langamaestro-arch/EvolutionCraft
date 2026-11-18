@@ -67,7 +67,7 @@ public final class AdventurerReputation {
             row.addProperty("done",p.claimedReputationRanks.contains("rank_"+i));
             row.addProperty("ready",points>=THRESHOLDS[i]&&!row.get("done").getAsBoolean());
             row.addProperty("unlocked",points>=THRESHOLDS[i]);
-            row.addProperty("reward",COUNTS[i]+"x "+REWARDS[i].getDescription().getString()+" + "+XP[i]+" XP");
+            row.addProperty("reward",COUNTS[i]+"x "+new ItemStack(REWARDS[i]).getHoverName().getString()+" + "+XP[i]+" XP");
             row.addProperty("detail","Requiere "+THRESHOLDS[i]+" puntos de reputacion");
             goals.add(row);
         }

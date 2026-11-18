@@ -509,6 +509,7 @@ public final class ProgressScreen extends Screen {
         int accent=accent();
         fill(g,0,0,width,height,0xB9000000);
         // Decoración integral en pergamino, sin modificar posiciones de botones.
+        FantasySkin.fortressFrame(g,xx-12,yy-12,ww+24,hh+24);
         FantasySkin.panel(g,xx-5,yy-5,ww+10,hh+10);
         FantasySkin.panel(g,sx,yy+58,sw,hh-70);
         FantasySkin.panel(g,mx-4,yy+58,mw+8,hh-70);

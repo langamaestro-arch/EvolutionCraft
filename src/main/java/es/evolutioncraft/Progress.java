@@ -54,6 +54,8 @@ public final class Progress {
     public java.util.Map<String,Integer> contractProgress=new java.util.HashMap<>();
     public Set<String> activeContracts=new HashSet<>();
     public Set<String> claimedContracts=new HashSet<>();
+    /** Recompensas de reputación reclamadas. Los puntos se derivan de contratos históricos. */
+    public Set<String> claimedReputationRanks=new HashSet<>();
     /** Tres ofertas persistentes por categoria. Los IDs son instancias únicas. */
     public java.util.Map<String,String> contractOffers=new java.util.HashMap<>();
     public java.util.Map<String,java.util.List<String>> contractRecentTemplates=new java.util.HashMap<>();

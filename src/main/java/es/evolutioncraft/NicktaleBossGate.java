@@ -35,7 +35,7 @@ public final class NicktaleBossGate {
         if(id.isEmpty())return;
         JsonObject objective=new JsonObject();
         objective.addProperty("text","Jefe Nicktale: derrotar "+label(target));
-        objective.addProperty("done",defeated(p,target));
+        objective.addProperty("done",target<=p.nicktaleBossGrandfatherEra || defeated(p,target));
         group.getAsJsonArray("goals").add(objective);
     }
 }

@@ -173,6 +173,7 @@ public final class ProgressScreen extends Screen {
         };
     }
     private int rowHeight(JsonObject o){
+        if(o.has("tribute"))return 44;
         if(o.has("threshold"))return 60;
         if(o.has("tier") && o.has("progress")){
             if(tab==23)return 78;
@@ -333,6 +334,20 @@ public final class ProgressScreen extends Screen {
             }
         }
         if(tab==0){
+            JsonArray rows=goals();
+            int from=pageStarts.get(page);
+            int to=page+1<pageStarts.size()?pageStarts.get(page+1):rows.size();
+            int yyRow=contentY()+4;
+            for(int i=from;i<to;i++){
+                JsonObject row=rows.get(i).getAsJsonObject();
+                if(row.has("tribute")&&row.get("canDeliver").getAsBoolean()&&
+                    inside(mx,my,mainX()+mainW()-111,yyRow+4,100,19)){
+                    var conn=net.minecraft.client.Minecraft.getInstance().getConnection();
+                    if(conn!=null)conn.sendCommand("ectributo entregar");
+                    return true;
+                }
+                yyRow+=rowHeight(row);
+            }
             if(inside(mx,my,mainX()+10,y()+159,24,23)&&stage>0){
                 stage--;page=0;paginate();return true;
             }
@@ -638,7 +653,17 @@ public final class ProgressScreen extends Screen {
             boolean ok=objective.get("done").getAsBoolean();
             String label=objective.get("text").getAsString();
             int height=rowHeight(objective),left=mx+11,cardW=mw-22;
-            if(objective.has("threshold")){
+            if(objective.has("tribute")){
+                boolean ready=objective.get("canDeliver").getAsBoolean();
+                int color=ok?GREEN:ready?GOLD:0xFF95643A;
+                roundedBorder(g,left,cy,cardW,height-3,5,color,CARD);
+                item(g,Items.AMETHYST_SHARD,left+11,cy+10);
+                text(g,label,left+31,cy+7,ok?GREEN:TEXT);
+                text(g,objective.get("description").getAsString(),left+31,cy+23,MUTED);
+                String action=ok?"ENTREGADO":ready?"ENTREGAR":"PENDIENTE";
+                roundedBorder(g,left+cardW-103,cy+3,96,19,4,color,CARD2);
+                text(g,action,left+cardW-8-font.width(action),cy+8,color);
+            } else if(objective.has("threshold")){
                 boolean unlocked=objective.get("unlocked").getAsBoolean();
                 boolean ready=objective.get("ready").getAsBoolean();
                 int color=ok?GREEN:ready?GOLD:unlocked?TEXT:MUTED;

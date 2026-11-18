@@ -17,6 +17,20 @@ import java.util.UUID;
 public final class ThoridropTribute {
     private ThoridropTribute(){}
     public static final String FRAGMENT="thoridrop:supply_fragment";
+    // Resolve the optional Thoridrop method once, not for every stat read.
+    private static volatile Method statsMethod;
+    private static Method statsMethod(){
+        Method cached=statsMethod;
+        if(cached!=null)return cached;
+        try{
+            cached=Class.forName("com.langamaestro.thoridrop.DropStatistics")
+                .getMethod("value",UUID.class,String.class);
+            statsMethod=cached;
+            return cached;
+        }catch(ReflectiveOperationException|LinkageError|SecurityException e){
+            return null;
+        }
+    }
     public static int required(int target){
         return switch(target){case 3->5;case 4->20;case 5->50;default->0;};
     }
@@ -35,8 +49,8 @@ public final class ThoridropTribute {
     }
     private static int stat(UUID id,String field){
         try{
-            Class<?> stats=Class.forName("com.langamaestro.thoridrop.DropStatistics");
-            Method method=stats.getMethod("value",UUID.class,String.class);
+            Method method=statsMethod();
+            if(method==null)return 0;
             return Math.max(0,(Integer)method.invoke(null,id,field));
         }catch(ReflectiveOperationException|LinkageError|SecurityException e){
             return 0; // never trust fabricated victories
@@ -55,7 +69,7 @@ public final class ThoridropTribute {
         }
         long tick=player.level().getGameTime();
         if(p.thoridropLastRefresh<0 || tick<p.thoridropLastRefresh ||
-            tick-p.thoridropLastRefresh>=40){
+            tick-p.thoridropLastRefresh>=EvolutionConfig.get(player).thoridropSyncInterval){
             p.thoridropNormalWins=stat(player.getUUID(),"wins_common");
             p.thoridropMythicWins=stat(player.getUUID(),"wins_rare");
             p.thoridropLegendaryWins=stat(player.getUUID(),"wins_legendary");
@@ -82,7 +96,12 @@ public final class ThoridropTribute {
         if(target<=p.thoridropGrandfatherEra || p.thoridropTributes.contains(target))
             return false;
         // Do not allow prepaying later eras; only the next locked transition.
-        if(p.era()!=target-1)return false;
+        if(p.era()!=target-1){
+            player.sendSystemMessage(Component.literal("§e[EvolutionCraft] Para entregar el tributo de "+
+                Progress.ERA_NAMES[target]+" primero debes desbloquear "+
+                Progress.ERA_NAMES[target-1]+"."),true);
+            return false;
+        }
         int need=required(target);
         if(inventory(player)<need){
             player.sendSystemMessage(Component.literal("§c[EvolutionCraft] Fragmentos insuficientes: "+
@@ -123,6 +142,10 @@ public final class ThoridropTribute {
         result.addProperty("winGoal",winGoal);
         result.addProperty("done",fulfilled(p,target));
         result.addProperty("canDeliver",!paid&&p.era()==target-1&&have>=need);
+        result.addProperty("needsPriorEra",!paid&&p.era()<target-1);
+        result.addProperty("priorEra",Progress.ERA_NAMES[target-1]);
+        result.addProperty("needsFragments",!paid&&have<need);
+        result.addProperty("currentEra",p.era());
         result.addProperty("kind",target==3?"normales":target==4?"miticos":"legendarios");
         return result;
     }

@@ -66,6 +66,52 @@ public final class FantasySkin {
             f(g,x+dx,y+h-8,6,3,0xFFE9A23D);
         }
     }
+    /**
+     * Stone-and-crimson perimeter, limited to the outer seven pixels.
+     * Alternating cobbles and masonry joints stay behind all interactive UI.
+     */
+    public static void fortressFrame(GuiGraphicsExtractor g,int x,int y,int w,int h){
+        if(w<70||h<70)return;
+        // Dark burgundy outer binding, bright red painted inset and bronze seam.
+        f(g,x,y+3,w,h-6,0xFF581E20);
+        f(g,x+3,y,w-6,h,0xFF78252B);
+        f(g,x+3,y+3,w-6,h-6,0xFFB53D37);
+        f(g,x+5,y+5,w-10,h-10,0xFF5D2D31);
+        // Preserve the original parchment interior; only the perimeter remains.
+        f(g,x+7,y+7,w-14,h-14,PARCHMENT);
+        // Pixel-art cobblestone courses along the four outside edges.
+        int tile=14;
+        for(int px=x+8;px<x+w-12;px+=tile){
+            int span=Math.min(tile-2,x+w-11-px);
+            int topColor=((px-x)/tile)%3==0?0xFF9C9B94:
+                ((px-x)/tile)%3==1?0xFF777B7D:0xFFB2AAA0;
+            f(g,px,y+2,span,3,topColor);
+            f(g,px+2,y+2,Math.max(1,span-5),1,0xFFD1C8B4);
+            f(g,px,y+h-5,span,3,topColor);
+            f(g,px+1,y+h-3,Math.max(1,span-3),1,0xFF42474D);
+        }
+        for(int py=y+9;py<y+h-13;py+=tile){
+            int span=Math.min(tile-2,y+h-12-py);
+            int shade=((py-y)/tile)%2==0?0xFF90908D:0xFF71767B;
+            f(g,x+2,py,3,span,shade);
+            f(g,x+2,py+2,1,Math.max(1,span-4),0xFFD6CBBB);
+            f(g,x+w-5,py,3,span,shade);
+            f(g,x+w-3,py+1,1,Math.max(1,span-3),0xFF42474D);
+        }
+        // Interior red frame and light gold edging.
+        f(g,x+6,y+6,w-12,1,0xFFD75C4F);
+        f(g,x+6,y+h-7,w-12,1,0xFFD75C4F);
+        f(g,x+6,y+6,1,h-12,0xFFD75C4F);
+        f(g,x+w-7,y+6,1,h-12,0xFFD75C4F);
+        // Brass corner studs.
+        for(int dx:new int[]{3,w-9}){
+            for(int dy:new int[]{3,h-9}){
+                f(g,x+dx,y+dy,6,6,0xFF683A22);
+                f(g,x+dx+1,y+dy+1,4,4,0xFFE9B855);
+                f(g,x+dx+2,y+dy+2,2,2,0xFFFFE19A);
+            }
+        }
+    }
     /** Crimson/orange metallic title banner; used in main window and HUD. */
     public static void ribbon(GuiGraphicsExtractor g,int x,int y,int w,int h){
         if(w<24||h<10)return;

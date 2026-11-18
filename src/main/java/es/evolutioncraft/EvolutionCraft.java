@@ -189,7 +189,7 @@ public final class EvolutionCraft {
             ItemStack stack = player.getItemBySlot(slot);
             if (stack.isEmpty()) continue;
             String key = id(stack);
-            int requiredEra = Progress.requiredEra(key);
+            int requiredEra = Math.max(Progress.requiredEra(key),RecipeEraRules.requiredEra(key));
             if (requiredEra > progress.era()) {
                 var inventory = player.getInventory();
                 int free = -1;
@@ -197,15 +197,33 @@ public final class EvolutionCraft {
                     if(i==inventory.getSelectedSlot())continue;
                     if(inventory.getItem(i).isEmpty()){free=i;break;}
                 }
+                // Barrier for dispenser, modded equip flows and state restored after relog.
+                // Item is NEVER allowed to remain equipped because storage is full.
+                ItemStack kept=stack.copy();
                 if(free>=0){
-                    ItemStack kept=stack.copy();
                     player.setItemSlot(slot,ItemStack.EMPTY);
                     inventory.setItem(free,kept);
+                }else{
+                    var ender=player.getEnderChestInventory();
+                    int backup=-1;
+                    for(int i=0;i<ender.getContainerSize();i++)
+                        if(ender.getItem(i).isEmpty()){backup=i;break;}
+                    player.setItemSlot(slot,ItemStack.EMPTY);
+                    if(backup>=0){
+                        ender.setItem(backup,kept);
+                        ender.setChanged();
+                    }else{
+                        // Exception-only fallback: cannot discard or silently delete rare items.
+                        // The server spawns the exact stack in front of its owner.
+                        var dropped=player.drop(kept,false);
+                        if(dropped!=null)dropped.setPickUpDelay(20);
+                    }
                 }
                 if(player.tickCount%40==0)
                     player.sendSystemMessage(Component.literal(
                         "§c[EvolutionCraft] Equipo de "+Progress.ERA_NAMES[requiredEra]+
-                        " bloqueado. "+(free>=0?"Guardado en el inventario.":"Libera espacio en tu inventario.")),true);
+                        " bloqueado. "+(free>=0?"Devuelto al inventario.":
+                        "Sin espacio: enviado al cofre de Ender (o soltado si estaba lleno).")),true);
             }
         }
     }

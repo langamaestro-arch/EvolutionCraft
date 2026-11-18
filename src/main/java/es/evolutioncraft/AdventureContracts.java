@@ -74,6 +74,10 @@ public final class AdventureContracts {
         new Contract("deliver_deepslate_96","Excavador profundo","MINERIA","PLATA","Entrega 96 bloques de pizarra profunda","deliver","minecraft:cobbled_deepslate",96,3,22,500),
         new Contract("deliver_gold_16","Mineral preciado","MINERIA","ORO","Entrega 16 unidades de oro en bruto","deliver","minecraft:raw_gold",16,3,28,750),
         new Contract("deliver_diamond_4","Gemas para el joyero","MINERIA","ORO","Entrega 4 diamantes","deliver","minecraft:diamond",4,4,36,1100),
+        new Contract("rep_fish_180","Maestro de las mareas","PESCA","ORO","Captura 180 peces","fish","*",180,3,38,1250),
+        new Contract("rep_harvest_256","Proveedor real","RECOLECCION","ORO","Recoge 256 cultivos maduros","harvest","*",256,3,38,1250),
+        new Contract("rep_hunt_zombies_48","Defensor legendario","COMBATE","ORO","Derrota 48 zombis","kill","minecraft:zombie",48,3,40,1350),
+        new Contract("rep_deliver_gold_32","Tesoro de la fortaleza","MINERIA","ORO","Entrega 32 unidades de oro en bruto","deliver","minecraft:raw_gold",32,3,40,1350),
         new Contract("explore_2","Explorador de ruinas","LEGACY_EXPLORACION","PLATA","Visita 2 estructuras distintas","structure","*",2,0,16,400),
         new Contract("explore_3","Cronista de caminos","LEGACY_EXPLORACION","PLATA","Visita 3 estructuras distintas","structure","*",3,0,20,450),
         new Contract("explore_biome_2","Huellas en el mapa","LEGACY_EXPLORACION","BRONCE","Visita 2 biomas distintos del Overworld","biome","*",2,0,8,180),
@@ -110,6 +114,14 @@ public final class AdventureContracts {
         Contract c=instance(instanceId);
         return c==null?"":c.id();
     }
+    private static int reputationRequired(Contract c){
+        if(c.id().startsWith("rep_"))return c.id().contains("legendary")?700:300;
+        return 0;
+    }
+    private static boolean eligible(Progress p,Contract c,int era){
+        return c.minEra()<=era &&
+            AdventurerReputation.points(p)>=reputationRequired(c);
+    }
     private static String slot(String category,int index){return category+":"+index;}
 
     private static String pick(Progress p,String category,int era){
@@ -117,14 +129,14 @@ public final class AdventureContracts {
         Set<String> inUse=new HashSet<>();
         for(String id:p.contractOffers.values())inUse.add(templateId(id));
         for(String id:p.activeContracts)inUse.add(templateId(id));
-        for(Contract c:CATALOG)if(c.category().equals(category)&&c.minEra()<=era&&!inUse.contains(c.id()))
+        for(Contract c:CATALOG)if(c.category().equals(category)&&eligible(p,c,era)&&!inUse.contains(c.id()))
             pool.add(c);
         if(pool.isEmpty()){
             // Mantener siempre tres ofertas incluso con tres activos de una era
             // temprana: permitimos repetir plantilla en activos, nunca en ofertas.
             inUse.clear();
             for(String id:p.contractOffers.values())inUse.add(templateId(id));
-            for(Contract c:CATALOG)if(c.category().equals(category)&&c.minEra()<=era
+            for(Contract c:CATALOG)if(c.category().equals(category)&&eligible(p,c,era)
                 &&!inUse.contains(c.id()))pool.add(c);
         }
         if(pool.isEmpty())return null;
@@ -147,7 +159,7 @@ public final class AdventureContracts {
                 String key=slot(category,i);
                 String id=p.contractOffers.get(key);
                 Contract c=instance(id);
-                if(c!=null&&c.category().equals(category)&&c.minEra()<=era&&!p.activeContracts.contains(id))
+                if(c!=null&&c.category().equals(category)&&eligible(p,c,era)&&!p.activeContracts.contains(id))
                     continue;
                 p.contractOffers.remove(key);
                 String chosen=pick(p,category,era);
@@ -163,7 +175,7 @@ public final class AdventureContracts {
         boolean synced=fillOffers(p,p.era());
         if(synced)ProgressStore.save(player);
         Contract c=instance(id);
-        if(c==null||p.era()<c.minEra()||p.activeContracts.size()>=ACTIVE_LIMIT||
+        if(c==null||!eligible(p,c,p.era())||p.activeContracts.size()>=ACTIVE_LIMIT||
             p.claimedContracts.contains(id)||p.activeContracts.contains(id)||
             !p.contractOffers.containsValue(id))return false;
         p.activeContracts.add(id);
@@ -294,7 +306,7 @@ public final class AdventureContracts {
         result.addProperty("ready",on&&current>=c.quantity());
         result.addProperty("delivery",c.kind().equals("deliver"));
         // Materials available are supplied per-player in snapshot, not from saved progress.
-        result.addProperty("canAccept",offered&&era>=c.minEra()&&p.activeContracts.size()<ACTIVE_LIMIT);
+        result.addProperty("canAccept",offered&&eligible(p,c,era)&&p.activeContracts.size()<ACTIVE_LIMIT);
         result.addProperty("done",claimed);
         return result;
     }

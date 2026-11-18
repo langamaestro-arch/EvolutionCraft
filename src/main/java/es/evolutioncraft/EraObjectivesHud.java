@@ -26,10 +26,10 @@ import java.util.List;
 public final class EraObjectivesHud {
     private static JsonObject state;
     private static final int WIDTH=212;
-    private static final int GOLD=0xFFF4CE82;
-    private static final int WHITE=0xFFEDF1EF;
-    private static final int MUTED=0xFFADC3CC;
-    private static final int GREEN=0xFF7BD9A4;
+    private static final int GOLD=0xFFFFD36B;
+    private static final int WHITE=FantasySkin.INK;
+    private static final int MUTED=FantasySkin.MUTED;
+    private static final int GREEN=FantasySkin.GREEN;
     private static boolean contractsVisible=true;
     private static final KeyMapping TOGGLE_CONTRACTS=new KeyMapping(
         "key.evolutioncraft.toggle_contract_hud",InputConstants.KEY_K,KeyMapping.Category.MISC);
@@ -86,47 +86,47 @@ public final class EraObjectivesHud {
         int era=state.get("era").getAsInt();
         JsonArray entries=state.getAsJsonArray("pending");
         String eraName=state.get("eraName").getAsString();
-        int x=7,y=52;
+        int x=8,y=52;
         int width=Math.min(WIDTH,Math.max(144,g.guiWidth()/3));
         int bottom=g.guiHeight()-51;  // No invadir barra de acceso rápido
         JsonArray contracts=state.has("contracts")?state.getAsJsonArray("contracts"):new JsonArray();
         boolean showContracts=contractsVisible && contracts.size()>0;
-        int reserve=showContracts?Math.min(115,Math.max(0,bottom-y-60)):0;
+        int reserve=showContracts?Math.min(128,Math.max(0,bottom-y-74)):0;
         List<List<String>> rows=new ArrayList<>();
         int used=0,limit=Math.min(entries.size(),24);
         for(int i=0;i<limit;i++){
             List<String> row=lines(mc,entries.get(i).getAsString(),width-26);
             int needed=Math.max(16,row.size()*11+6);
-            if(y+32+used+needed>bottom-20-reserve)break;
+            if(y+45+used+needed>bottom-20-reserve)break;
             rows.add(row);
             used+=needed;
         }
         int hidden=entries.size()-rows.size();
-        int h=36+used+(hidden>0?15:0);
-        if(era==5)h=45;
+        int h=47+used+(hidden>0?15:0);
+        if(era==5)h=58;
         h=Math.min(h,bottom-y-reserve);
-        g.fill(x,y,x+width,y+h,0xC811202C);
-        g.fill(x,y,x+3,y+h,0xFF9B773F);
-        g.fill(x+5,y+25,x+width-6,y+26,0xFF52616D);
-        g.text(mc.font,"EVOLUTIONCRAFT",x+12,y+7,GOLD);
+        FantasySkin.panel(g,x,y,width,h);
+        FantasySkin.ribbon(g,x+5,y+3,width-10,20);
+        FantasySkin.decorations(g,x,y,width,h);
+        g.text(mc.font,"EVOLUTIONCRAFT",x+29,y+9,0xFF5C2A1A);
         String subtitle=era==5?"Todas las eras completadas":"ERA: "+eraName.toUpperCase(java.util.Locale.ROOT);
-        g.text(mc.font,subtitle,x+12,y+18,MUTED);
+        g.text(mc.font,subtitle,x+13,y+26,WHITE);
         if(era==5){
-            g.text(mc.font,"¡Progreso de eras completo!",x+12,y+31,WHITE);
+            g.text(mc.font,"¡Progreso de eras completo!",x+15,y+40,WHITE);
             if(showContracts)renderContracts(g,mc,contracts,x,y+h+7,width,bottom);
             return;
         }
-        int lineY=y+31;
+        int lineY=y+41;
         for(List<String> row:rows){
-            g.text(mc.font,"◆",x+9,lineY,GOLD);
+            g.text(mc.font,"✦",x+12,lineY,0xFFB66A2E);
             for(String s:row){
-                g.text(mc.font,s,x+23,lineY,WHITE);
+                g.text(mc.font,s,x+27,lineY,WHITE);
                 lineY+=11;
             }
             lineY+=6;
         }
         if(hidden>0){
-            g.text(mc.font,"+"+hidden+" objetivos · Pulsa P",x+11,lineY,MUTED);
+            g.text(mc.font,"+"+hidden+" objetivos · Pulsa P",x+16,lineY,MUTED);
         }
         if(showContracts)renderContracts(g,mc,contracts,x,y+h+7,width,bottom);
     }
@@ -135,13 +135,15 @@ public final class EraObjectivesHud {
                                         JsonArray contracts,int x,int y,int width,int bottom){
         int available=bottom-y;
         if(available<29)return;
-        int count=Math.min(3,Math.min(contracts.size(),Math.max(0,(available-28)/25)));
-        int panelH=28+count*25;
-        g.fill(x,y,x+width,y+panelH,0xD011202C);
-        g.fill(x,y,x+3,y+panelH,0xFF579B89);
-        g.text(mc.font,"CONTRATOS ACTIVOS",x+12,y+6,GOLD);
-        g.text(mc.font,"K: ocultar · P: gestionar",x+12,y+17,MUTED);
-        int yy=y+29;
+        int count=Math.min(3,Math.min(contracts.size(),Math.max(0,(available-36)/27)));
+        int panelH=35+count*27;
+        if(panelH>available)return;
+        FantasySkin.panel(g,x,y,width,panelH);
+        FantasySkin.ribbon(g,x+5,y+3,width-10,20);
+        FantasySkin.decorations(g,x,y,width,panelH);
+        g.text(mc.font,"CONTRATOS ACTIVOS",x+22,y+9,0xFF592C1D);
+        g.text(mc.font,"K: ocultar · P: gestionar",x+13,y+26,MUTED);
+        int yy=y+39;
         for(int i=0;i<count;i++){
             JsonObject contract=contracts.get(i).getAsJsonObject();
             boolean ready=contract.get("ready").getAsBoolean();
@@ -152,17 +154,14 @@ public final class EraObjectivesHud {
             int color=ready?GREEN:WHITE;
             List<String> names=lines(mc,name,width-26);
             String shortName=names.isEmpty()?name:names.get(0);
-            g.text(mc.font,shortName,x+11,yy,color);
-            g.text(mc.font,progress,x+width-12-mc.font.width(progress),yy+11,ready?GREEN:GOLD);
-            int barLeft=x+11,barRight=x+width-12;
-            int barY=yy+14;
-            int barMax=barRight-barLeft-55;
-            if(barMax>0){
-                g.fill(barLeft,barY,barLeft+barMax,barY+4,0xFF273E4D);
-                g.fill(barLeft,barY,barLeft+(int)(barMax*(double)Math.min(current,required)/Math.max(required,1)),
-                    barY+4,ready?GREEN:0xFFE0BD79);
-            }
-            yy+=25;
+            g.text(mc.font,shortName,x+17,yy,color);
+            g.text(mc.font,progress,x+width-16-mc.font.width(progress),yy+11,ready?GREEN:FantasySkin.INK);
+            int barLeft=x+17,barRight=x+width-16;
+            int barY=yy+13;
+            int barMax=barRight-barLeft-52;
+            if(barMax>0)FantasySkin.progress(g,barLeft,barY,barMax,7,
+                Math.min(current,required),required,ready?GREEN:0xFFE7A83D);
+            yy+=27;
         }
     }
 }

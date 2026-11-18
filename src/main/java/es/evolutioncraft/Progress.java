@@ -62,6 +62,14 @@ public final class Progress {
     public java.util.Map<String,String> epicOffers=new java.util.HashMap<>();
     public java.util.Map<String,Integer> epicProgress=new java.util.HashMap<>();
     public long epicSequence=0L;
+    /** Integración opcional Thoridrop. La migración conserva la era ya alcanzada. */
+    public boolean thoridropMigrated=false;
+    public int thoridropGrandfatherEra=0;
+    public Set<Integer> thoridropTributes=new HashSet<>();
+    public transient boolean thoridropGateActive=false;
+    public transient int thoridropNormalWins=0,thoridropMythicWins=0,thoridropLegendaryWins=0;
+    public transient long thoridropLastRefresh=-1;
+
 
     /** Tres ofertas persistentes por categoria. Los IDs son instancias únicas. */
     public java.util.Map<String,String> contractOffers=new java.util.HashMap<>();
@@ -152,7 +160,7 @@ public final class Progress {
                 (s.endsWith("_pickaxe") || s.endsWith("_axe") || s.endsWith("_sword") ||
                  s.endsWith("_shovel") || s.endsWith("_hoe")));
     }
-    public int era() {
+    public int legacyEra() {
         if (!craftedTools("wooden") || !advancements.contains("minecraft:story/mine_stone") || toolLevel() < 1 || !completedMissions.contains("wood")) return 0;
         if (!craftedTools("stone") || !craftedArmor("leather") || tradeCount < 1 || !visitedVillage || toolLevel() < 2 || !completedMissions.contains("stone") || agricultureLevel() < 1 || husbandryLevel() < 1) return 1;
         if (!craftedTools("copper") || !craftedArmor("copper") || !tradedEquipment("iron") ||
@@ -163,6 +171,22 @@ public final class Progress {
                 !advancements.contains("minecraft:story/enter_the_nether") || toolLevel() < 5 ||
                 !completedMissions.contains("ancient_debris")) return 4;
         return 5;
+    }
+    /** El tributo se aplica sólo a las nuevas transiciones, no retrocede eras. */
+    public int era() {
+        int unlocked=legacyEra();
+        if(!thoridropGateActive)return unlocked;
+        int result=Math.min(unlocked,2);
+        for(int target=3;target<=unlocked;target++){
+            if(target<=thoridropGrandfatherEra ||
+               (thoridropTributes!=null&&thoridropTributes.contains(target) &&
+                switch(target){case 3 -> thoridropNormalWins>=2;
+                               case 4 -> thoridropMythicWins>=1;
+                               case 5 -> thoridropLegendaryWins>=1;
+                               default -> true;}))result=target;
+            else break;
+        }
+        return Math.max(result,Math.min(thoridropGrandfatherEra,unlocked));
     }
     /** Cinco niveles acumulativos; todos los peces proceden de la pesca registrada. */
     public int fishingLevel() {

@@ -29,7 +29,12 @@ public final class EpicContracts {
         new BossQuest("wither","El rey marchito","minecraft:wither",4,700,"HEROICO",4000,48),
         new BossQuest("dragon","El último dragón","minecraft:ender_dragon",4,1500,"LEGENDARIO",6500,64),
         new BossQuest("ravager","La bestia de la incursión","minecraft:ravager",3,300,"EPICO",1600,24),
-        new BossQuest("breeze","Tormenta en la cámara","minecraft:breeze",2,300,"EPICO",1400,20)
+        new BossQuest("breeze","Tormenta en la cámara","minecraft:breeze",2,300,"EPICO",1400,20),
+        // Identificadores verificados en nicktaleepicdungeons 0.22.0, NeoForge 26.3.
+        new BossQuest("nick_don_cascabel","Las campanas del terror","nicktaleepicdungeons:don_cascabel",3,300,"EPICO",2200,32),
+        new BossQuest("nick_black_knight","El Caballero Negro","nicktaleepicdungeons:black_knight",4,700,"HEROICO",4500,48),
+        new BossQuest("nick_cerberus","Las tres fauces del fuego","nicktaleepicdungeons:cerberus",4,700,"HEROICO",4500,48),
+        new BossQuest("nick_colossus","El Coloso de las Runas","nicktaleepicdungeons:runebound_colossus",5,1500,"LEGENDARIO",7000,64)
     );
     private static void init(Progress p){
         if(p.epicActive==null)p.epicActive=new HashSet<>();
@@ -160,11 +165,26 @@ public final class EpicContracts {
             q.emeralds()+" esmeraldas y "+q.xp()+" XP."),true);
         return true;
     }
+    private static String mobName(String registryId){
+        return switch(registryId){
+            case "minecraft:warden" -> "Guardián de las profundidades (Warden)";
+            case "minecraft:elder_guardian" -> "Guardián anciano";
+            case "minecraft:wither" -> "Wither";
+            case "minecraft:ender_dragon" -> "Dragón del End";
+            case "minecraft:ravager" -> "Devastador";
+            case "minecraft:breeze" -> "Brisa";
+            case "nicktaleepicdungeons:don_cascabel" -> "Don Cascabel";
+            case "nicktaleepicdungeons:black_knight" -> "Caballero Negro";
+            case "nicktaleepicdungeons:cerberus" -> "Cerbero de llamas";
+            case "nicktaleepicdungeons:runebound_colossus" -> "Coloso de las Runas";
+            default -> registryId.substring(registryId.indexOf(':')+1).replace('_',' ');
+        };
+    }
     private static JsonObject row(String id,BossQuest q,String status,Progress p){
         JsonObject o=new JsonObject();
         o.addProperty("id",id);
         o.addProperty("text",q.title());
-        o.addProperty("description","Derrota al jefe "+q.mob().substring(q.mob().indexOf(':')+1).replace('_',' '));
+        o.addProperty("description","Derrota a "+mobName(q.mob())+".");
         o.addProperty("category","JEFES");
         o.addProperty("tier",q.tier());
         o.addProperty("progress",p.epicProgress.getOrDefault(id,0));
@@ -174,6 +194,12 @@ public final class EpicContracts {
         o.addProperty("canAccept",status.equals("offer")&&p.epicActive.isEmpty()&&eligible(p,q));
         o.addProperty("reward",q.emeralds()+" esmeraldas + "+q.xp()+" XP + equipo encantado");
         o.addProperty("epicStatus",status);
+        o.addProperty("requiredRep",q.rep());
+        o.addProperty("requiredEra",Progress.ERA_NAMES[q.minEra()]);
+        o.addProperty("currentRep",AdventurerReputation.points(p));
+        o.addProperty("currentEra",p.era());
+        o.addProperty("requires", "Era "+Progress.ERA_NAMES[q.minEra()]+" · "+q.rep()+" REP");
+        o.addProperty("origin",q.mob().startsWith("nicktaleepicdungeons:")?"Nicktale Epic Dungeons":"Minecraft");
         return o;
     }
     public static JsonArray snapshot(ServerPlayer player){
@@ -185,6 +211,17 @@ public final class EpicContracts {
             if(q!=null)a.add(row(id,q,"offer",p));}
         p.epicClaimed.stream().sorted().limit(10).forEach(id->{BossQuest q=template(id);
             if(q!=null)a.add(row(id,q,"claimed",p));});
+        // Mostrar todos los jefes todavía bloqueados como vista previa.
+        // No crear ofertas ni permitir aceptar mediante IDs de plantilla.
+        Set<String> displayed=new HashSet<>();
+        for(var item:a){
+            BossQuest q=template(item.getAsJsonObject().get("id").getAsString());
+            if(q!=null)displayed.add(q.id());
+        }
+        for(BossQuest q:CATALOG){
+            if(!displayed.contains(q.id()))
+                a.add(row(q.id(),q,"locked",p));
+        }
         return a;
     }
 }

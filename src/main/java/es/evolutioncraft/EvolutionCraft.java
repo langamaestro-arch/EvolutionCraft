@@ -215,8 +215,11 @@ public final class EvolutionCraft {
                     }else{
                         // Exception-only fallback: cannot discard or silently delete rare items.
                         // The server spawns the exact stack in front of its owner.
-                        var dropped=player.drop(kept,false);
-                        if(dropped!=null)dropped.setPickUpDelay(20);
+                        var dropped=new net.minecraft.world.entity.item.ItemEntity(
+                            player.level(),player.getX(),player.getY()+0.4,player.getZ(),kept);
+                        dropped.setOwner(player.getUUID());
+                        player.level().addFreshEntity(dropped);
+                        dropped.setPickUpDelay(20);
                     }
                 }
                 if(player.tickCount%40==0)

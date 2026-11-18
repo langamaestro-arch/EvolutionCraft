@@ -71,6 +71,11 @@ public final class EpicContracts {
         }
         return changed;
     }
+    public static int reputationFor(String id){
+        BossQuest q=template(id);
+        if(q==null)return 0;
+        return switch(q.tier()){case "LEGENDARIO"->200;case "HEROICO"->125;default->75;};
+    }
     public static boolean accept(ServerPlayer player,String id){
         if(!EvolutionConfig.get(player).contractsEnabled)return false;
         Progress p=ProgressStore.get(player);init(p);

@@ -217,7 +217,6 @@ public final class EvolutionCraft {
                         // The server spawns the exact stack in front of its owner.
                         var dropped=new net.minecraft.world.entity.item.ItemEntity(
                             player.level(),player.getX(),player.getY()+0.4,player.getZ(),kept);
-                        dropped.setOwner(player.getUUID());
                         player.level().addFreshEntity(dropped);
                         dropped.setPickUpDelay(20);
                     }

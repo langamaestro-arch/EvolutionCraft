@@ -27,13 +27,13 @@ public final class ProgressScreen extends Screen {
     private static final String[] SECTIONS={"EVOLUCION","HABILIDADES","DIMENSIONES","LOGROS","SECRETOS","RECOMPENSAS","DESCUBRIMIENTOS","CONTRATOS","REPUTACION"};
     private static final Item[] SECTION_ICONS={Items.DIAMOND_PICKAXE,Items.ENCHANTED_BOOK,
         Items.ENDER_EYE,Items.BOOK,Items.NETHER_STAR,Items.CHEST,Items.COMPASS,Items.LECTERN,Items.NETHER_STAR};
-    private static final int[][] SECTION_TABS={{0,10},{1,2,3,4,5,6},{7,8},{11},{9},{12},{13,14,15,16,17,18},{19,20,21},{22}};
+    private static final int[][] SECTION_TABS={{0,10},{1,2,3,4,5,6},{7,8},{11},{9},{12},{13,14,15,16,17,18},{19,20,21,23},{22}};
     private static final String[] TITLES={"ERAS","PESCA","AGRICULTURA","GANADERIA",
-        "EXPLORACION","HERRAMIENTAS","ALQUIMIA","NETHER","END","SECRETOS","MISIONES","RESUMEN","PREMIOS","OVERWORLD","NETHER","ESTRUCTURAS","JEFES","ESTADISTICAS","HISTORIAL","OFERTAS","ACTIVOS","COMPLETADOS","RANGOS"};
+        "EXPLORACION","HERRAMIENTAS","ALQUIMIA","NETHER","END","SECRETOS","MISIONES","RESUMEN","PREMIOS","OVERWORLD","NETHER","ESTRUCTURAS","JEFES","ESTADISTICAS","HISTORIAL","OFERTAS","ACTIVOS","COMPLETADOS","RANGOS","EPICOS"};
     private static final Item[] ICONS={Items.IRON_PICKAXE,Items.FISHING_ROD,Items.WHEAT,
         Items.WHEAT,Items.COMPASS,Items.DIAMOND_PICKAXE,Items.BREWING_STAND,
         Items.OBSIDIAN,Items.ENDER_EYE,Items.NETHER_STAR,Items.BOOK,Items.NETHER_STAR,Items.CHEST,
-        Items.GRASS_BLOCK,Items.NETHERRACK,Items.COMPASS,Items.WITHER_SKELETON_SKULL,Items.WRITABLE_BOOK,Items.CLOCK,Items.PAPER,Items.WRITABLE_BOOK,Items.EMERALD,Items.NETHER_STAR};
+        Items.GRASS_BLOCK,Items.NETHERRACK,Items.COMPASS,Items.WITHER_SKELETON_SKULL,Items.WRITABLE_BOOK,Items.CLOCK,Items.PAPER,Items.WRITABLE_BOOK,Items.EMERALD,Items.NETHER_STAR,Items.WITHER_SKELETON_SKULL};
 
     private final JsonObject data;
     private int section=0,tab=0,stage=0,page=0;
@@ -80,6 +80,7 @@ public final class ProgressScreen extends Screen {
     private int tabsY(){return y()+112;}
 
     private JsonArray goals(){
+        if(tab==23)return data.getAsJsonArray("epicContracts");
         if(tab==22)return data.getAsJsonObject("reputation").getAsJsonArray("goals");
         if(tab>=19 && tab<=21){
             String key=tab==19?"available":tab==20?"active":"completed";
@@ -264,6 +265,30 @@ public final class ProgressScreen extends Screen {
             paginate();
             return true;
         }
+        if(tab==23){
+            JsonArray contracts=goals();
+            int begin=pageStarts.get(page);
+            int end=page+1<pageStarts.size()?pageStarts.get(page+1):contracts.size();
+            int cy=contentY()+4;
+            for(int i=begin;i<end;i++){
+                JsonObject contract=contracts.get(i).getAsJsonObject();
+                int h=rowHeight(contract);
+                if(inside(mx,my,mainX()+mainW()-111,cy+4,100,19)){
+                    String status=contract.get("epicStatus").getAsString();
+                    String action=status.equals("offer")?
+                        (contract.get("canAccept").getAsBoolean()?"aceptar":""):
+                        status.equals("active")?
+                            (contract.get("ready").getAsBoolean()?"reclamar":"abandonar"):"";
+                    if(!action.isEmpty()){
+                        var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
+                        if(connection!=null)connection.sendCommand(
+                            "ecepico "+action+" "+contract.get("id").getAsString());
+                        return true;
+                    }
+                }
+                cy+=h;
+            }
+        }
         if(tab>=19 && tab<=21 && data.getAsJsonObject("contracts").get("enabled").getAsBoolean()){
             JsonArray contracts=goals();
             int begin=pageStarts.get(page);
@@ -373,6 +398,7 @@ public final class ProgressScreen extends Screen {
             case 8 -> 0xFFD6A4F5;
             case 19,20,21 -> 0xFFF1CD87;
             case 22 -> 0xFFD8B8F4;
+            case 23 -> 0xFFC4483E;
             default -> GOLD;
         };
     }
@@ -400,6 +426,7 @@ public final class ProgressScreen extends Screen {
             case 20 -> "CONTRATOS ACTIVOS";
             case 21 -> "CONTRATOS COMPLETADOS";
             case 22 -> "REPUTACION DEL AVENTURERO";
+            case 23 -> "CONTRATOS EPICOS Y JEFES";
             default -> "TU EVOLUCION";
         };
     }
@@ -426,6 +453,7 @@ public final class ProgressScreen extends Screen {
             case 19 -> "12 ofertas · 3 por categoria · 3 activos max.";
             case 20 -> "Activos: "+goals().size()+" / 3";
             case 21 -> "Reclamados: "+goals().size();
+            case 23 -> "Desafios especiales · 1 activo · Reputacion y era";
             case 22 -> data.getAsJsonObject("reputation").get("rank").getAsString()+" · "+
                 data.getAsJsonObject("reputation").get("points").getAsInt()+" puntos";
             default -> getInt("overallPercent")+"% completado";
@@ -597,7 +625,7 @@ public final class ProgressScreen extends Screen {
         JsonArray list=goals();
         int done=completed(list),total=list.size();
         FantasySkin.progress(g,mx+8,yy+183,mw-16,9,done,Math.max(1,total),0xFFE1A849);
-        text(g,tab>=19?"Contratos: "+total:tab>=13?"Registros: "+total:done+" / "+total+" objetivos",mx+9,yy+195,MUTED);
+        text(g,tab==23?"Epicos: "+total:tab>=19?"Contratos: "+total:tab>=13?"Registros: "+total:done+" / "+total+" objetivos",mx+9,yy+195,MUTED);
         String side=tab==9?"Distintivo: "+badgeLabel():tab==11?"Progreso de todas las habilidades":"";
         if(!side.isEmpty()&&font.width(side)<mw-150)
             text(g,side,mx+mw-9-font.width(side),yy+195,GOLD);
@@ -625,12 +653,17 @@ public final class ProgressScreen extends Screen {
                     {text(g,line,left+31,cy+38,unlocked?GREEN:MUTED);break;}
             } else if(objective.has("tier")&&objective.has("progress")){
                 String tier=objective.get("tier").getAsString();
-                int tierColor=tier.equals("ORO")?GOLD:tier.equals("PLATA")?0xFFC3D2DE:0xFFD59D6B;
+                int tierColor=tab==23?0xFFC4483E:tier.equals("ORO")?GOLD:tier.equals("PLATA")?0xFFC3D2DE:0xFFD59D6B;
                 roundedBorder(g,left,cy,cardW,height-3,5,tierColor,i%2==0?CARD:CARD2);
                 fill(g,left+2,cy+8,left+5,cy+height-11,tierColor);
                 item(g,Items.PAPER,left+9,cy+10);
                 text(g,label,left+31,cy+7,TEXT);
-                String action=tab==21?"RECLAMADO":tab==19?
+                String action=tab==23?
+                    (objective.get("epicStatus").getAsString().equals("claimed")?"RECLAMADO":
+                     objective.get("epicStatus").getAsString().equals("offer")?
+                     (objective.get("canAccept").getAsBoolean()?"ACEPTAR":"BLOQUEADO"):
+                     objective.get("ready").getAsBoolean()?"RECLAMAR":"ABANDONAR"):
+                    tab==21?"RECLAMADO":tab==19?
                     (objective.get("canAccept").getAsBoolean()?"ACEPTAR":"BLOQUEADO"):
                     (objective.get("ready").getAsBoolean()?"RECLAMAR":
                     objective.has("delivery")&&objective.get("delivery").getAsBoolean()

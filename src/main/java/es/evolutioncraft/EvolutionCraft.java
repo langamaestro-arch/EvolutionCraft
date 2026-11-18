@@ -137,6 +137,15 @@ public final class EvolutionCraft {
                 if(p.discoveredBosses==null)p.discoveredBosses=new java.util.HashSet<>();
                 if(p.discoveredBosses.add(entity))DiscoveryJournal.record(p,player,"boss",entity);
             }
+            // Nicktale era bosses count only if this player actually received kill credit.
+            // Recording is persistent and never spends consumables or quest rewards.
+            if(entity.equals(NicktaleBossGate.entity(3)) ||
+               entity.equals(NicktaleBossGate.entity(4)) ||
+               entity.equals(NicktaleBossGate.entity(5))){
+                if(p.nicktaleEraBossKills==null)
+                    p.nicktaleEraBossKills=new java.util.HashSet<>();
+                p.nicktaleEraBossKills.add(entity);
+            }
             if(entity.equals("minecraft:warden") || entity.equals("minecraft:wither"))p.bossKills.add(entity);
             if(entity.equals("minecraft:elder_guardian"))p.elderGuardianKills++;
             if(entity.equals("minecraft:ender_dragon"))

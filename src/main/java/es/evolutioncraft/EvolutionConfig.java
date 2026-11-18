@@ -26,6 +26,7 @@ public final class EvolutionConfig {
     public final int explorationInterval;
     public final boolean rewardsEnabled;
     public final boolean contractsEnabled;
+    public final boolean thoridropEnabled;
     public final boolean equipmentRestrictions;
     public final boolean craftingRestrictions;
     public final boolean arsenalForgeRestrictions;
@@ -45,6 +46,7 @@ public final class EvolutionConfig {
         explorationInterval=bounded(p,"performance.scan_interval_ticks",80,40,400);
         rewardsEnabled=booleanValue(p,"rewards.enabled",true);
         contractsEnabled=booleanValue(p,"contracts.enabled",true);
+        thoridropEnabled=booleanValue(p,"thoridrop.era_requirements",true);
         equipmentRestrictions=booleanValue(p,"equipment.restrictions",true);
         craftingRestrictions=booleanValue(p,"crafting.restrictions",true);
         arsenalForgeRestrictions=booleanValue(p,"arsenal_forge.restrictions",true);
@@ -69,6 +71,7 @@ public final class EvolutionConfig {
         def(p,"performance.scan_interval_ticks","80");
         def(p,"rewards.enabled","true");
         def(p,"contracts.enabled","true");
+        def(p,"thoridrop.era_requirements","true");
         def(p,"equipment.restrictions","true");
         def(p,"crafting.restrictions","true");
         def(p,"arsenal_forge.restrictions","true");

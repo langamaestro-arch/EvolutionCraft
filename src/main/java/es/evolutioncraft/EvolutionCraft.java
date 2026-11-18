@@ -124,6 +124,7 @@ public final class EvolutionCraft {
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         String entity = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).toString();
         AdventureContracts.onAction(player,"kill",entity,1);
+        EpicContracts.bossKilled(player,entity);
         update(player, p -> {
             boolean journalBoss=java.util.Set.of("minecraft:warden","minecraft:wither",
                 "minecraft:ender_dragon","minecraft:elder_guardian").contains(entity)

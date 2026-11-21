@@ -19,6 +19,44 @@ public final class RecipeEraRules {
         return requiredEra(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
     }
     public static int requiredEra(String id){
+        // Throwing Discs 1.0.0: materials verified against each bundled recipe.
+        if(id.startsWith("throwingdiscs:")){
+            return switch(id.substring("throwingdiscs:".length())){
+                case "copper_throwing_disc" -> 2;
+                case "iron_throwing_disc","golden_throwing_disc" -> 3;
+                case "diamond_throwing_disc" -> 4;
+                case "netherite_throwing_disc" -> 5;
+                default -> 0;
+            };
+        }
+        // Nicktale Gear 1.1.0 contains no bundled crafting recipe JSON.
+        // Use explicit item-family tiers rather than pretending an unverified
+        // ingredient cost. All special equipment is at least Iron tier.
+        // Non-equipment (ammo, consumables, cosmetics) is unaffected.
+        if(id.startsWith("nicktalegear:")){
+            String name=id.substring("nicktalegear:".length());
+            if(name.startsWith("midnight_leather_")||
+               name.startsWith("ranger_leather_"))return 1;
+            if(name.startsWith("royal_gold_")||
+               name.startsWith("steel_guard_"))return 3;
+            if(name.startsWith("arcane_royal_")||
+               name.startsWith("arcane_tide_"))return 5;
+            if(name.startsWith("war_"))return 4;
+            return switch(name){
+                case "agent_007_pistol","amos_bow","buster_sword",
+                    "energy_sword","martillo_chillon","nichirin_blade",
+                    "master_sword","keyblade","kingdom_key" -> 3;
+                case "dark_repulser","dragon_slayer","elucidator",
+                    "leviathan_axe","oathkeeper","oblivion",
+                    "redhorn_stonethresher","skyward_harp",
+                    "spear_of_longinus","way_to_dawn","zangetsu" -> 4;
+                case "excalibur_fate","mistsplitter_reforged",
+                    "primordial_jade_cutter","primordial_jade_winged_spear",
+                    "staff_of_homa","ultima_weapon","wolfs_gravestone",
+                    "yoru" -> 5;
+                default -> 0;
+            };
+        }
         if(id.startsWith("networkstorage:")){
             return switch(id.substring("networkstorage:".length())){
                 case "chest_connector","guide_book","network_autocrafter",

@@ -197,6 +197,8 @@ public final class GuideData {
         goal(nether,"Agricultura nivel III",p.agricultureLevel()>=3);
         goal(nether,"Ganadería nivel III",p.husbandryLevel()>=3);
         goal(nether,"Derrotar al Warden",p.bossKills.contains("minecraft:warden"));
+        if(p.nicktaleDimensionGateActive)
+            NicktaleDimensionGate.addNetherGoals(nether,p);
         goal(nether,"Avances originales ("+p.advancements.size()+"/"+config.netherAdvancements+")",p.advancements.size()>=config.netherAdvancements);
         goal(nether,"Biomas del Overworld ("+p.overworldBiomes.size()+"/"+config.netherBiomes+")",p.overworldBiomes.size()>=20);
         goal(nether,"Exploracion nivel IV",p.explorationLevel()>=4);
@@ -208,6 +210,8 @@ public final class GuideData {
         goal(end,"Agricultura nivel V",p.agricultureLevel()>=5);
         goal(end,"Ganadería nivel V",p.husbandryLevel()>=5);
         goal(end,"Derrotar al Wither",p.bossKills.contains("minecraft:wither"));
+        if(p.nicktaleDimensionGateActive)
+            NicktaleDimensionGate.addEndGoals(end,p);
         goal(end,"Avances originales ("+p.advancements.size()+"/"+config.endAdvancements+")",p.advancements.size()>=config.endAdvancements);
         goal(end,"Explorar los biomas del Nether",p.advancements.contains("minecraft:nether/explore_nether"));
         JsonObject missions=group(root,"missionGoals","Misiones especiales");

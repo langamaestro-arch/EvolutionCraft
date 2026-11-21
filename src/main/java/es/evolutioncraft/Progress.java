@@ -12,6 +12,12 @@ public final class Progress {
     public Set<String> fishSpecies = new HashSet<>();
     public Set<String> fishingTreasures = new HashSet<>();
     public Set<String> bossKills = new HashSet<>();
+    /** Nicktale 0.23.0 dimension guardians killed by this player. */
+    public Set<String> nicktaleDimensionBossKills=new HashSet<>();
+    public boolean nicktaleDimensionMigrated=false;
+    public boolean nicktaleNetherGrandfathered=false;
+    public boolean nicktaleEndGrandfathered=false;
+    public transient boolean nicktaleDimensionGateActive=false;
     /** Distinct Nicktale bosses defeated personally, persisted per-player. */
     public Set<String> nicktaleEraBossKills=new HashSet<>();
     /** Preserves already unlocked eras when introducing the new boss gates. */
@@ -233,8 +239,13 @@ public final class Progress {
         return canNether(config.netherAdvancements,config.netherBiomes);
     }
     private boolean canNether(int achievements,int biomeCount){
-        return era() >= 4 && fishingLevel() >= 3 && bossKills.contains("minecraft:warden") &&
-               agricultureLevel() >= 3 && husbandryLevel() >= 3 && advancements.size() >= achievements && overworldBiomes.size() >= biomeCount && explorationLevel() >= 4;
+        boolean original=era() >= 4 && fishingLevel() >= 3 &&
+               bossKills.contains("minecraft:warden") &&
+               agricultureLevel() >= 3 && husbandryLevel() >= 3 &&
+               advancements.size() >= achievements &&
+               overworldBiomes.size() >= biomeCount && explorationLevel() >= 4;
+        return original && (!nicktaleDimensionGateActive || !nicktaleDimensionMigrated ||
+               nicktaleNetherGrandfathered || NicktaleDimensionGate.netherReady(this));
     }
     public boolean canEnd() {
         return canEnd(70,40,20);
@@ -243,8 +254,14 @@ public final class Progress {
         return canEnd(config.endAdvancements,config.netherAdvancements,config.netherBiomes);
     }
     private boolean canEnd(int endAdvancements,int netherAdvancements,int netherBiomes){
-        return canNether(netherAdvancements,netherBiomes) && fishingLevel() == 5 && explorationLevel() >= 5 && alchemyLevel() >= 3 && bossKills.contains("minecraft:wither") &&
-               agricultureLevel() >= 5 && husbandryLevel() >= 5 && advancements.size() >= endAdvancements && advancements.contains("minecraft:nether/explore_nether");
+        boolean original=canNether(netherAdvancements,netherBiomes) &&
+               fishingLevel() == 5 && explorationLevel() >= 5 &&
+               alchemyLevel() >= 3 && bossKills.contains("minecraft:wither") &&
+               agricultureLevel() >= 5 && husbandryLevel() >= 5 &&
+               advancements.size() >= endAdvancements &&
+               advancements.contains("minecraft:nether/explore_nether");
+        return original && (!nicktaleDimensionGateActive || !nicktaleDimensionMigrated ||
+               nicktaleEndGrandfathered || NicktaleDimensionGate.endReady(this));
     }
     /**
      * Clasificacion por identificador de registro. Funciona sin depender de los JAR

@@ -196,7 +196,11 @@ public final class GuideData {
         goal(nether,"Pesca nivel III",p.fishingLevel()>=3);
         goal(nether,"Agricultura nivel III",p.agricultureLevel()>=3);
         goal(nether,"Ganadería nivel III",p.husbandryLevel()>=3);
-        goal(nether,"Derrotar al Warden",p.bossKills.contains("minecraft:warden"));
+        JsonObject warden=new JsonObject();
+        warden.addProperty("text","Derrotar al Warden");
+        warden.addProperty("detail","Dónde encontrarlo: Oscuridad Profunda (Deep Dark), especialmente ciudades antiguas; se invoca mediante chilladores de sculk");
+        warden.addProperty("done",p.bossKills.contains("minecraft:warden"));
+        nether.getAsJsonArray("goals").add(warden);
         if(p.nicktaleDimensionGateActive)
             NicktaleDimensionGate.addNetherGoals(nether,p);
         goal(nether,"Avances originales ("+p.advancements.size()+"/"+config.netherAdvancements+")",p.advancements.size()>=config.netherAdvancements);
@@ -209,7 +213,11 @@ public final class GuideData {
         goal(end,"Alquimia nivel III",p.alchemyLevel()>=3);
         goal(end,"Agricultura nivel V",p.agricultureLevel()>=5);
         goal(end,"Ganadería nivel V",p.husbandryLevel()>=5);
-        goal(end,"Derrotar al Wither",p.bossKills.contains("minecraft:wither"));
+        JsonObject wither=new JsonObject();
+        wither.addProperty("text","Derrotar al Wither");
+        wither.addProperty("detail","No aparece en una estructura: invócalo con 4 bloques de arena o tierra de almas y 3 cabezas de esqueleto del Wither");
+        wither.addProperty("done",p.bossKills.contains("minecraft:wither"));
+        end.getAsJsonArray("goals").add(wither);
         if(p.nicktaleDimensionGateActive)
             NicktaleDimensionGate.addEndGoals(end,p);
         goal(end,"Avances originales ("+p.advancements.size()+"/"+config.endAdvancements+")",p.advancements.size()>=config.endAdvancements);

@@ -5,6 +5,7 @@ import es.evolutioncraft.EvolutionConfig;
 import es.evolutioncraft.ProgressStore;
 import es.evolutioncraft.RecipeEraRules;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ResultSlot;
 import net.minecraft.world.inventory.Slot;
@@ -25,7 +26,10 @@ public abstract class CraftingResultEraMixin {
         if(!(player instanceof ServerPlayer sp))return;
         if(player.getAbilities().instabuild)return;
         if(!EvolutionConfig.get(sp).craftingRestrictions)return;
-        int needed=RecipeEraRules.requiredEra(((Slot)(Object)this).getItem());
+        var stack=((Slot)(Object)this).getItem();
+        if(stack.isEmpty())return;
+        String itemId=BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        int needed=Math.max(Progress.requiredEra(itemId),RecipeEraRules.requiredEra(itemId));
         if(needed>ProgressStore.get(sp).era()){
             cir.setReturnValue(false);
         }

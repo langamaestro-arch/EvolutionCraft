@@ -55,6 +55,21 @@ public final class ProgressStore {
                 progress.nicktaleEraBossKills=new java.util.HashSet<>();
             save(player);
         }
+        // Migración no destructiva de las restricciones de dimensiones.
+        // Conservar permisos de viaje que el jugador ya había desbloqueado.
+        progress.nicktaleDimensionGateActive=
+            net.neoforged.fml.ModList.get().isLoaded("nicktaleepicdungeons");
+        if(progress.nicktaleDimensionGateActive && !progress.nicktaleDimensionMigrated){
+            progress.nicktaleDimensionGateActive=false;
+            EvolutionConfig cfg=EvolutionConfig.get(player);
+            progress.nicktaleNetherGrandfathered=progress.canNether(cfg);
+            progress.nicktaleEndGrandfathered=progress.canEnd(cfg);
+            progress.nicktaleDimensionMigrated=true;
+            progress.nicktaleDimensionGateActive=true;
+            if(progress.nicktaleDimensionBossKills==null)
+                progress.nicktaleDimensionBossKills=new java.util.HashSet<>();
+            save(player);
+        }
         return progress;
     }
     public static void save(ServerPlayer player) {

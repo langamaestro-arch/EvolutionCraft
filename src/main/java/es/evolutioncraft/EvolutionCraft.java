@@ -146,6 +146,11 @@ public final class EvolutionCraft {
                     p.nicktaleEraBossKills=new java.util.HashSet<>();
                 p.nicktaleEraBossKills.add(entity);
             }
+            if(NicktaleDimensionGate.isRequiredBoss(entity)){
+                if(p.nicktaleDimensionBossKills==null)
+                    p.nicktaleDimensionBossKills=new java.util.HashSet<>();
+                p.nicktaleDimensionBossKills.add(entity);
+            }
             if(entity.equals("minecraft:warden") || entity.equals("minecraft:wither"))p.bossKills.add(entity);
             if(entity.equals("minecraft:elder_guardian"))p.elderGuardianKills++;
             if(entity.equals("minecraft:ender_dragon"))
@@ -181,8 +186,8 @@ public final class EvolutionCraft {
         // Evita saturar el chat si el jugador permanece dentro de un portal.
         if (player.tickCount % 40 == 0) {
             player.sendSystemMessage(Component.literal(netherDenied
-                    ? "§c[Evolution Craft] Nether bloqueado: Diamante, "+config.netherBiomes+" biomas, "+config.netherAdvancements+" avances, habilidades III y Warden."
-                    : "§c[Evolution Craft] End bloqueado: "+config.endAdvancements+" avances, Exploracion V, Alquimia III y Wither."));
+                    ? "§c[Evolution Craft] Nether bloqueado: guardianes Nicktale, Diamante, "+config.netherBiomes+" biomas, "+config.netherAdvancements+" avances, habilidades III y Warden."
+                    : "§c[Evolution Craft] End bloqueado: guardianes Nicktale, "+config.endAdvancements+" avances, Exploracion V, Alquimia III y Wither."));
         }
     }
 

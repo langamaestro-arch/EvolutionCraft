@@ -17,6 +17,29 @@ public final class ProgressGuide {
 
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent event) {
+        // Recuperación administrativa para la misión inicial atascada.
+        // Permiso de administración del servidor; no accesible a jugadores normales.
+        event.getDispatcher().register(Commands.literal("ecmision")
+            .requires(Commands.hasPermission(
+                new net.minecraft.server.permissions.PermissionCheck.Require(
+                    net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)))
+            .then(Commands.literal("completar")
+                .then(Commands.argument("jugador",StringArgumentType.word())
+                    .then(Commands.literal("wood").executes(ctx->{
+                        String name=StringArgumentType.getString(ctx,"jugador");
+                        ServerPlayer target=ctx.getSource().getServer()
+                            .getPlayerList().getPlayerByName(name);
+                        if(target==null)return 0;
+                        Progress progress=ProgressStore.get(target);
+                        boolean added=progress.completedMissions.add("wood");
+                        if(added)ProgressStore.save(target);
+                        target.sendSystemMessage(Component.literal(
+                            "§a[EvolutionCraft] Misión de la hoguera y primera noche "+
+                            (added?"completada por un administrador.":"ya completada.")),false);
+                        PacketDistributor.sendToPlayer(target,
+                            new GuidePayload(GuideData.snapshot(target)));
+                        return Command.SINGLE_SUCCESS;
+                    })))));
         event.getDispatcher().register(Commands.literal("ectributo")
             .then(Commands.literal("entregar").executes(ctx->{
                 ServerPlayer player=ctx.getSource().getPlayerOrException();

@@ -68,7 +68,10 @@ public final class GuideData {
             switch(era) {
                 case 0 -> {
                     goal(tmp,"Avance: conseguir piedra",p.advancements.contains("minecraft:story/mine_stone"));
-                    goal(tmp,"Mision: primera noche, hoguera y herramientas",p.completedMissions.contains("wood"));
+                    goal(tmp,"Mision: primera noche ("+(p.nightsSurvived>=1?"SI":"NO")+
+                        ") y hoguera fabricada ("+
+                        (p.crafted.contains("minecraft:campfire")?"SI":"NO")+")",
+                        p.completedMissions.contains("wood"));
                     goal(tmp,"Maestria herramientas I",p.toolLevel()>=1);
                 }
                 case 1 -> {

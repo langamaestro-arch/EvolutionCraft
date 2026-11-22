@@ -154,11 +154,11 @@ public final class EvolutionEvents {
                 changed=true;
             }
             if(phase<1200 && p.lastNightIndex==day-1) {
-                // Exige al menos 7200 ticks presenciados; desconectarse no supera el reto.
-                if(p.nightTicksObserved>=7200) {
-                    p.nightsSurvived++;
-                    p.cleanNights++;
-                }
+                // The introductory mission only requires witnessing a night
+                // turn to dawn; this also works when another player skips it.
+                // Harder clean-night achievements still need 7200 active ticks.
+                if(p.nightTicksObserved>0)p.nightsSurvived++;
+                if(p.nightTicksObserved>=7200)p.cleanNights++;
                 p.lastNightIndex=-1;
                 p.nightTicksObserved=0;
                 changed=true;

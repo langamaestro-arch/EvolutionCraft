@@ -32,9 +32,20 @@ public final class EvolutionEvents {
     public static void wake(PlayerWakeUpEvent event){
         if(!(event.getEntity() instanceof ServerPlayer player))return;
         Progress p=ProgressStore.get(player);
-        p.cleanNights=0;
+        // Sleeping through the night is a valid way to complete the first-night
+        // mission. Previously waking cleared the night before it could count.
+        // Only count a night the player actually entered (nightTicksObserved>0).
+        if(player.level().dimension()==Level.OVERWORLD &&
+           p.lastNightIndex>=0 && p.nightTicksObserved>0){
+            p.nightsSurvived++;
+            p.cleanNights=0; // Clean-night streak still requires staying awake.
+        }else{
+            p.cleanNights=0;
+        }
         p.lastNightIndex=-1;
         p.nightTicksObserved=0;
+        if(p.nightsSurvived>=1 && p.crafted.contains("minecraft:campfire"))
+            p.completedMissions.add("wood");
         ProgressStore.save(player);
     }
 

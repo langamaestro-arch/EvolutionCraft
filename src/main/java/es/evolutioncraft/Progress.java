@@ -6,6 +6,8 @@ import java.util.Set;
 /** Estado serializable de cada jugador. No depende de las clases de Minecraft. */
 public final class Progress {
     public static final String[] ERA_NAMES = {"Madera", "Piedra y cuero", "Cobre", "Hierro", "Diamante", "Netherita"};
+    /** Administrador: -1 = progresion natural; 0..5 = era fijada expresamente. */
+    public int adminEraOverride=-1;
     public Set<String> crafted = new HashSet<>();
     public Set<String> trades = new HashSet<>();
     public Set<String> advancements = new HashSet<>();
@@ -190,6 +192,8 @@ public final class Progress {
     }
     /** Both integrations are additive, independent and never revoke previously earned eras. */
     public int era() {
+        if(adminEraOverride>=0 && adminEraOverride<ERA_NAMES.length)
+            return adminEraOverride;
         int unlocked=legacyEra();
         if(thoridropGateActive){
             int result=Math.min(unlocked,2);

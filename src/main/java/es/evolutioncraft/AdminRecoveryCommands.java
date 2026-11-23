@@ -22,10 +22,10 @@ public final class AdminRecoveryCommands {
 
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event){
-        var operator=Commands.hasPermission(
-            new net.minecraft.server.permissions.PermissionCheck.Require(
-                net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN));
-        event.getDispatcher().register(Commands.literal("ecera").requires(operator)
+
+        event.getDispatcher().register(Commands.literal("ecera").requires(Commands.hasPermission(
+                new net.minecraft.server.permissions.PermissionCheck.Require(
+                    net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)))
             .then(Commands.literal("establecer")
                 .then(Commands.argument("jugador",StringArgumentType.word())
                     .then(Commands.argument("era",StringArgumentType.word())
@@ -43,7 +43,9 @@ public final class AdminRecoveryCommands {
                     .executes(ctx->status(
                         ctx.getSource().getServer().getPlayerList().getPlayerByName(
                             StringArgumentType.getString(ctx,"jugador")))))));
-        event.getDispatcher().register(Commands.literal("ecobjetivo").requires(operator)
+        event.getDispatcher().register(Commands.literal("ecobjetivo").requires(Commands.hasPermission(
+                new net.minecraft.server.permissions.PermissionCheck.Require(
+                    net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)))
             .then(Commands.literal("completar")
                 .then(Commands.argument("jugador",StringArgumentType.word())
                     .then(Commands.argument("tipo",StringArgumentType.word())

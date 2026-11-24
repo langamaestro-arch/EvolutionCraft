@@ -43,6 +43,15 @@ public final class AdminRecoveryCommands {
                     .executes(ctx->status(
                         ctx.getSource().getServer().getPlayerList().getPlayerByName(
                             StringArgumentType.getString(ctx,"jugador")))))));
+        // Atajo de emergencia para el jefe de la transicion Cobre -> Hierro.
+        event.getDispatcher().register(Commands.literal("eczombi").requires(Commands.hasPermission(
+                new net.minecraft.server.permissions.PermissionCheck.Require(
+                    net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)))
+            .then(Commands.argument("jugador",StringArgumentType.word())
+                .executes(ctx->completeFromSource(
+                    ctx.getSource(),
+                    StringArgumentType.getString(ctx,"jugador"),
+                    "jefe","nicktaleepicdungeons:mutant_zombie"))));
         event.getDispatcher().register(Commands.literal("ecobjetivo").requires(Commands.hasPermission(
                 new net.minecraft.server.permissions.PermissionCheck.Require(
                     net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)))
@@ -50,9 +59,9 @@ public final class AdminRecoveryCommands {
                 .then(Commands.argument("jugador",StringArgumentType.word())
                     .then(Commands.argument("tipo",StringArgumentType.word())
                         .then(Commands.argument("id",StringArgumentType.word())
-                            .executes(ctx->complete(
-                                ctx.getSource().getServer().getPlayerList().getPlayerByName(
-                                    StringArgumentType.getString(ctx,"jugador")),
+                            .executes(ctx->completeFromSource(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx,"jugador"),
                                 StringArgumentType.getString(ctx,"tipo"),
                                 StringArgumentType.getString(ctx,"id"))))))));
     }
@@ -110,6 +119,32 @@ public final class AdminRecoveryCommands {
             " | control: "+(p.adminEraOverride>=0?"administrador":"progresion natural")),false);
         return Command.SINGLE_SUCCESS;
     }
+    private static int completeFromSource(net.minecraft.commands.CommandSourceStack source,
+                                           String playerName,String kind,String id){
+        ServerPlayer target=source.getServer().getPlayerList().getPlayerByName(playerName);
+        if(target==null){
+            source.sendSystemMessage(Component.literal(
+                "§c[EvolutionCraft] Jugador '"+playerName+"' no encontrado. Debe estar conectado."));
+            return 0;
+        }
+        int result=complete(target,kind,id);
+        if(result!=0){
+            Progress p=ProgressStore.get(target);
+            boolean verified="jefe".equalsIgnoreCase(kind) &&
+                "nicktaleepicdungeons:mutant_zombie".equals(id)
+                ? NicktaleBossGate.defeated(p,3):result>0;
+            source.sendSystemMessage(Component.literal(
+                (verified?"§a":"§c")+"[EvolutionCraft] "+kind+" '"+id+
+                "' para "+target.getGameProfile().name()+
+                (verified?" registrado correctamente.":" NO se ha podido verificar.")));
+        }else{
+            source.sendSystemMessage(Component.literal(
+                "§c[EvolutionCraft] No se pudo registrar '"+id+
+                "'. Revisa el tipo y el identificador."));
+        }
+        return result;
+    }
+
     private static int complete(ServerPlayer player,String kind,String id){
         if(player==null)return 0;
         if(id.isBlank() || id.length()>160)return 0;

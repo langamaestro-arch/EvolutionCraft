@@ -133,6 +133,7 @@ public final class GuideData {
                 goal(tmp,"Agricultura nivel "+era,p.agricultureLevel()>=era);
                 goal(tmp,"Ganadería nivel "+era,p.husbandryLevel()>=era);
             }
+            AdminEraObjectives.apply(stage,p,era+1);
             eras.getAsJsonArray("goals").add(stage);
         }
         JsonObject fish=group(root,"fishingGoals","Maestría de pesca");

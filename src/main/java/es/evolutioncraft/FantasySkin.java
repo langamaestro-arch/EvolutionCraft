@@ -112,6 +112,40 @@ public final class FantasySkin {
             }
         }
     }
+    /** Open leather-bound codex. All art uses native pixel rectangles. */
+    public static void book(GuiGraphicsExtractor g,int x,int y,int w,int h,int spine){
+        if(w<100||h<100)return;
+        f(g,x+3,y+5,w,h,0x88000000);
+        f(g,x,y,w,h,0xFF351B17);
+        f(g,x+2,y+2,w-4,h-4,0xFF873A29);
+        edge(g,x+3,y+3,w-6,h-6,0xFFD28C46);
+        f(g,x+5,y+5,w-10,h-10,0xFF4E241D);
+        f(g,x+9,y+8,w-18,h-16,0xFFB48855);
+        f(g,x+11,y+8,w-22,h-20,0xFFE3C49A);
+        f(g,x+13,y+8,w-26,h-23,0xFFF6E3BE);
+        for(int i=0;i<4;i++){
+            f(g,x+13,y+h-15+i*2,w-26,1,0xFFAD8558);
+        }
+        f(g,spine-4,y+8,8,h-22,0xFFB58B60);
+        f(g,spine-2,y+8,4,h-22,0xFF865A3C);
+        f(g,spine,y+8,1,h-22,0xFF573327);
+        f(g,spine+3,y+8,2,h-22,0xFFFFEAC8);
+        for(int cx:new int[]{x+2,x+w-20}){
+            for(int cy:new int[]{y+2,y+h-20}){
+                f(g,cx,cy,18,18,0xFF633719);
+                f(g,cx+1,cy+1,16,16,0xFFDC8C27);
+                f(g,cx+2,cy+2,14,3,0xFFFFE49B);
+                f(g,cx+2,cy+5,3,11,0xFFFFC35B);
+                f(g,cx+6,cy+6,8,8,0xFF9D5622);
+                diamond(g,cx+10,cy+10,3,0xFFFFCE61);
+            }
+        }
+        f(g,spine-7,y+h-13,14,18,0xFF582126);
+        f(g,spine-5,y+h-12,10,15,0xFFB83F35);
+        f(g,spine-4,y+h-12,1,14,0xFFFFC35B);
+        f(g,spine+3,y+h-12,1,14,0xFFFFC35B);
+        diamond(g,spine,y+h-5,2,GOLD);
+    }
     /** Crimson/orange metallic title banner; used in main window and HUD. */
     public static void ribbon(GuiGraphicsExtractor g,int x,int y,int w,int h){
         if(w<24||h<10)return;

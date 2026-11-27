@@ -104,6 +104,7 @@ public final class AdminRecoveryCommands {
         if(player==null)return 0;
         Progress p=ProgressStore.get(player);
         p.adminEraOverride=-1;
+        if(p.adminEraObjectives!=null)p.adminEraObjectives.clear();
         refresh(player);
         player.sendSystemMessage(Component.literal(
             "§a[EvolutionCraft] Era administrativa restaurada: ahora se aplica la progresion real ("+

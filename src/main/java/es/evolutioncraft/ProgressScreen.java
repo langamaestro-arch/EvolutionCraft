@@ -182,7 +182,7 @@ public final class ProgressScreen extends Screen {
             default -> GOLD;
         };
     }
-    private int rowHeight(JsonObject o){return Math.max(23,Math.min(38,(contentBottom()-contentY())/5));}
+    private int rowHeight(JsonObject o){return Math.max(30,Math.min(44,(contentBottom()-contentY())/4));}
     private int rowsPerPage(){return Math.max(1,(contentBottom()-contentY())/rowHeight(null));}
     private void paginate(){
         pageStarts.clear();pageStarts.add(0);
@@ -527,7 +527,7 @@ public final class ProgressScreen extends Screen {
         if(s.contains("ciudad antigua"))return "ancient_city";
         if(s.contains("aldea"))return "objective_village";
         if(s.contains("estructura"))return "objective_discover";
-        if(s.contains("bioma"))return "objective_biomes";
+        if(s.contains("bioma"))return "hud_explore";
         if(s.contains("pico"))return material+"_pickaxe";
         if(s.contains("espada"))return material+"_sword";
         if(s.contains("hacha"))return material+"_axe";
@@ -538,7 +538,7 @@ public final class ProgressScreen extends Screen {
         if(s.contains("peto"))return armor+"_chestplate";
         if(s.contains("pantalones"))return armor+"_leggings";
         if(s.contains("botas"))return armor+"_boots";
-        if(s.contains("piedra"))return "objective_stone";
+        if(s.contains("piedra"))return "hud_stone";
         if(s.contains("mesa")&&s.contains("trabajo"))return "crafting_table";
         if(s.contains("encant"))return "enchanting_table";
         if(s.contains("herreria"))return "smithing_table";
@@ -556,10 +556,10 @@ public final class ProgressScreen extends Screen {
         if(s.contains("nether"))return "portal_nether";
         if(s.contains("end"))return "portal_end";
         if(s.contains("bioma")||s.contains("explor"))return "category_exploration";
-        if(s.contains("diamante"))return "diamond";
-        if(s.contains("hierro"))return "iron_ingot";
-        if(s.contains("cobre"))return "copper_ingot";
-        if(s.contains("madera"))return "wood";
+        if(s.contains("diamante"))return "hud_diamond";
+        if(s.contains("hierro"))return "hud_iron";
+        if(s.contains("cobre"))return "hud_copper";
+        if(s.contains("madera"))return "hud_wood";
         return TAB_ART[tab];
     }
     private String fit(String s,int w){if(font.width(s)<=w)return s;while(!s.isEmpty()&&font.width(s+"…")>w)s=s.substring(0,s.length()-1);return s+"…";}
@@ -602,8 +602,8 @@ public final class ProgressScreen extends Screen {
             JsonObject o=list.get(i).getAsJsonObject();int ry=contentY()+(i-from)*rh;
             boolean ok=flag(o,"done");
             texture(g,i==selected?"action_highlight":"action_normal",lx,ry,pw,rh-2);
-            int sz=Math.max(8,Math.min(25,rh-6));
-            texture(g,art(o),lx+5,ry+2,sz,sz);
+            int sz=Math.min(40,rh-3);
+            texture(g,art(o),lx+3,ry+1,sz,sz);
             String label=secretEntry(o)&&!ok?"??? · Desafío oculto":val(o,"text");
             text(g,fit(label,pw-sz-35),lx+sz+9,ry+(rh-10)/2,TEXT);
             texture(g,ok?"status_complete":secretEntry(o)?"status_locked":"status_pending",lx+pw-22,ry+(rh-18)/2,17,17);
@@ -617,7 +617,7 @@ public final class ProgressScreen extends Screen {
         if(o!=null){
             boolean ok=flag(o,"done");
             String label=secretEntry(o)&&!ok?"Desafío oculto":val(o,"text");
-            int sz=Math.min(42,panelH()*92/1000);
+            int sz=Math.min(64,Math.min(pw/3,py(405)-py(310)-2));
             texture(g,art(o),rx,py(310),sz,sz);
             int ty=py(310)+3;
             for(String line:wrap(label,Math.max(20,pw-sz-10))){if(ty+9>py(405))break;text(g,line,rx+sz+6,ty,TEXT);ty+=10;}

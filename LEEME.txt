@@ -1,0 +1,1 @@
+Recursos para integrar en textures/gui. Restaurar render del pergamino HUD sin relleno opaco encima; ajustar filas y pie a la zona interior. Revisar selector de iconos para exploración y maestría. Las pistas de secretos requieren modificar Java según condiciones reales; no incluidas en este ZIP. No modificar datos de progreso.

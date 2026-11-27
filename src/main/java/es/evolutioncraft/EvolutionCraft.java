@@ -133,7 +133,7 @@ public final class EvolutionCraft {
         AdventureContracts.onAction(killer,"kill",entity,1);
         EpicContracts.bossKilled(killer,entity);
         update(killer, p -> {
-            EliteMobGate.record(p,event.getEntity().getTags());
+            EliteMobGate.record(p,event.getEntity().getTagsForCommands());
             boolean journalBoss=java.util.Set.of("minecraft:warden","minecraft:wither",
                 "minecraft:ender_dragon","minecraft:elder_guardian").contains(entity)
                 || (entity.startsWith("nicktaleepicdungeons:") &&

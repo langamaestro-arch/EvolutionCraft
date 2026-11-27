@@ -4,7 +4,7 @@ name: Compilar Evolution Craft 26.3
 on:
   workflow_dispatch:
   push:
-    branches: [main, evolutioncraft-2.0, evolutioncraft-2.1, evolutioncraft-beta-11.2]
+    branches: [main, evolutioncraft-2.0, evolutioncraft-2.1, evolutioncraft-beta-11.2, evolutioncraft-beta-11.6]
 
 permissions:
   contents: read

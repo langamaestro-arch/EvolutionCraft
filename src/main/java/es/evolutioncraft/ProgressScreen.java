@@ -74,9 +74,11 @@ public final class ProgressScreen extends Screen {
     private int mainW(){return panelW()-sidebarW()-31;}
     private int contentY(){return y()+208;}
     private int contentBottom(){return y()+panelH()-57;}
-    private int navY(){return y()+91;}
-    private int navStep(){return 28;}
-    private int navHeight(){return 25;}
+    private int navY(){return y()+48;}
+    private int navHeight(){return 30;}
+    private int navX(int i){return x()+14+i*(panelW()-28)/SECTIONS.length;}
+    private int navW(int i){return navX(i+1)-navX(i)-2;}
+    private static final String[] SHORT_SECTIONS={"Eras","Oficios","Mundos","Logros","Secretos","Premios","Diario","Contratos","Rangos"};
     private int tabsY(){return y()+112;}
 
     private JsonArray goals(){
@@ -233,7 +235,7 @@ public final class ProgressScreen extends Screen {
         int xx=x(),yy=y(),ww=panelW(),hh=panelH();
         if(inside(mx,my,xx+ww-34,yy+10,23,22)){onClose();return true;}
         for(int s=0;s<SECTIONS.length;s++){
-            if(inside(mx,my,xx+12,navY()+s*navStep(),sidebarW()-8,navHeight())){
+            if(inside(mx,my,navX(s),navY(),navW(s),navHeight())){
                 switchSection(s);return true;
             }
         }
@@ -552,55 +554,58 @@ public final class ProgressScreen extends Screen {
         int xx=x(),yy=y(),ww=panelW(),hh=panelH(),sx=xx+10,sw=sidebarW(),mx=mainX(),mw=mainW();
         int accent=accent();
         fill(g,0,0,width,height,0xB9000000);
-        // Decoración integral en pergamino, sin modificar posiciones de botones.
-        FantasySkin.fortressFrame(g,xx-12,yy-12,ww+24,hh+24);
-        FantasySkin.panel(g,xx-5,yy-5,ww+10,hh+10);
-        FantasySkin.panel(g,sx,yy+58,sw,hh-70);
-        FantasySkin.panel(g,mx-4,yy+58,mw+8,hh-70);
-        FantasySkin.ribbon(g,xx+6,yy+5,ww-12,43);
-        FantasySkin.decorations(g,xx-5,yy-5,ww+10,hh+10);
-        FantasySkin.card(g,xx+13,yy+9,35,35,true);
-        item(g,Items.ENCHANTED_BOOK,xx+22,yy+18);
-        text(g,"✦  EVOLUTIONCRAFT  ✦",xx+55,yy+12,0xFF67331E);
-        text(g,"C R O N I C A S    D E L    A V E N T U R E R O",
-            xx+55,yy+28,0xFF814923);
+        FantasySkin.book(g,xx-4,yy-4,ww+8,hh+8,mx-7);
+        FantasySkin.ribbon(g,xx+12,yy+5,ww-24,38);
+        item(g,Items.ENCHANTED_BOOK,xx+22,yy+15);
+        center(g,"EVOLUTIONCRAFT",xx+ww/2,yy+11,0xFF67331E);
+        center(g,"CRONICAS DEL AVENTURERO",xx+ww/2,yy+24,0xFF814923);
         FantasySkin.card(g,xx+ww-35,yy+11,24,22,
             inside(mouseX,mouseY,xx+ww-35,yy+11,24,22));
         center(g,"X",xx+ww-23,yy+18,RED);
-
-        text(g,"SECCIONES",sx+17,yy+69,0xFF844623);
-        fill(g,sx+14,yy+82,sx+sw-13,yy+84,0xFFB67E45);
-        FantasySkin.diamond(g,sx+sw/2,yy+83,3,FantasySkin.PURPLE);
         for(int i=0;i<SECTIONS.length;i++){
-            int ny=navY()+i*navStep();
-            boolean selected=section==i;
-            boolean hover=inside(mouseX,mouseY,xx+12,ny,sw-8,navHeight());
-            FantasySkin.nav(g,xx+12,ny,sw-8,navHeight(),selected||hover);
-            item(g,SECTION_ICONS[i],xx+19,ny+5);
-            text(g,SECTIONS[i],xx+40,ny+9,selected?0xFF65341C:TEXT);
+            int nx=navX(i),ny=navY(),nw=navW(i);
+            boolean active=section==i,hover=inside(mouseX,mouseY,nx,ny,nw,navHeight());
+            FantasySkin.nav(g,nx,ny,nw,navHeight(),active||hover);
+            item(g,SECTION_ICONS[i],nx+(nw-16)/2,ny+2);
+            if(font.width(SHORT_SECTIONS[i])<=nw-2)
+                center(g,SHORT_SECTIONS[i],nx+nw/2,ny+19,active?0xFF65341C:TEXT);
+            if(active)fill(g,nx+4,ny+27,nx+nw-4,ny+29,0xFFB77A28);
+        }
+        center(g,"TU AVENTURA",sx+sw/2,yy+91,GOLD);
+        fill(g,sx+8,yy+105,sx+sw-7,yy+106,0xFFBC8951);
+        item(g,Items.DIAMOND_PICKAXE,sx+sw/2-8,yy+116);
+        center(g,"Era actual",sx+sw/2,yy+138,MUTED);
+        int eraY=yy+151;
+        for(String line:wrap(Progress.ERA_NAMES[Math.max(0,Math.min(5,getInt("era")))],sw-14)){
+            center(g,line,sx+sw/2,eraY,TEXT);eraY+=11;
+        }
+        int dy=eraY+12;
+        if(dy+55<yy+hh-95){
+            center(g,"DIMENSIONES",sx+sw/2,dy,GOLD);
+            center(g,"Nether: "+(getBool("nether")?"Abierto":"Cerrado"),sx+sw/2,dy+17,getBool("nether")?GREEN:RED);
+            center(g,"End: "+(getBool("end")?"Abierto":"Cerrado"),sx+sw/2,dy+32,getBool("end")?GREEN:RED);
         }
         int base=yy+hh-94;
-        text(g,"PROGRESO GLOBAL",sx+10,base,GOLD);
-        FantasySkin.progress(g,sx+10,base+16,sw-19,11,
-            Math.min(100,getInt("overallPercent")),100,0xFFE0A33A);
-        text(g,getInt("overallPercent")+"% completado",sx+10,base+31,MUTED);
-        fill(g,sx+9,base-9,sx+sw-9,base-8,0xFFBE8A59);
+        if(base>yy+170){
+            center(g,"PROGRESO",sx+sw/2,base,GOLD);
+            FantasySkin.progress(g,sx+10,base+16,sw-19,11,Math.min(100,getInt("overallPercent")),100,GREEN);
+            center(g,getInt("overallPercent")+"% completado",sx+sw/2,base+31,MUTED);
+        }
         if(section==4 && data.has("unlockedBadges")&&data.getAsJsonArray("unlockedBadges").size()>0){
             int by=yy+hh-58;
-            roundedBorder(g,xx+12,by,sw-8,32,6,GOLD,
-                inside(mouseX,mouseY,xx+12,by,sw-8,32)?0xFF3E5043:0xFF263E36);
-            text(g,"CAMBIAR INSIGNIA",xx+18,by+10,GOLD);
+            FantasySkin.card(g,xx+12,by,sw-8,32,inside(mouseX,mouseY,xx+12,by,sw-8,32));
+            center(g,"INSIGNIA",xx+12+(sw-8)/2,by+10,GOLD);
         }
 
-        FantasySkin.card(g,mx+5,yy+65,mw-10,35,false);
-        FantasySkin.ribbon(g,mx+10,yy+67,mw-20,14);
-        FantasySkin.diamond(g,mx+16,yy+86,3,FantasySkin.PURPLE);
-        item(g,ICONS[tab],mx+16,yy+72);
-        text(g,title(),mx+40,yy+70,0xFF67361F);
-        text(g,detail(),mx+40,yy+86,MUTED);
+        FantasySkin.card(g,mx+5,yy+80,mw-10,31,false);
+        FantasySkin.ribbon(g,mx+10,yy+82,mw-20,14);
+        
+        item(g,ICONS[tab],mx+16,yy+85);
+        text(g,title(),mx+40,yy+84,0xFF67361F);
+        text(g,detail(),mx+40,yy+99,MUTED);
         // Emblema derecho: cambia con la sección activa.
-        FantasySkin.card(g,mx+mw-38,yy+69,27,27,false);
-        item(g,SECTION_ICONS[section],mx+mw-32,yy+74);
+        FantasySkin.card(g,mx+mw-38,yy+81,27,27,false);
+        item(g,SECTION_ICONS[section],mx+mw-32,yy+86);
         int[] subtabs=SECTION_TABS[section];
         int cols=Math.min(3,subtabs.length);
         for(int i=0;i<subtabs.length;i++){

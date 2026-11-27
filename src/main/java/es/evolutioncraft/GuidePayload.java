@@ -14,7 +14,7 @@ public record GuidePayload(String json) implements CustomPacketPayload {
     public static final Type<GuidePayload> TYPE =
             new Type<>(Identifier.fromNamespaceAndPath(EvolutionCraft.ID, "guide"));
     public static final StreamCodec<RegistryFriendlyByteBuf, GuidePayload> STREAM_CODEC =
-            StreamCodec.composite(ByteBufCodecs.STRING_UTF8, GuidePayload::json, GuidePayload::new);
+            StreamCodec.composite(ByteBufCodecs.stringUtf8(262144), GuidePayload::json, GuidePayload::new);
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     @EventBusSubscriber(modid = EvolutionCraft.ID)

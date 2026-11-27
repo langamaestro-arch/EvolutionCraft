@@ -121,11 +121,18 @@ public final class EvolutionCraft {
             ProgressStore.save(dead);
             return;
         }
-        if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
+        // Damage may be credited to a projectile, pet or indirect source.
+        // Resolve the server-side killer instead of relying solely on
+        // DamageSource.getEntity() (which may be null for environmental deaths).
+        ServerPlayer player=null;
+        if(event.getSource().getEntity() instanceof ServerPlayer direct)player=direct;
+        else if(event.getEntity().getKillCredit() instanceof ServerPlayer credited)player=credited;
+        if(player==null)return;
         String entity = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).toString();
-        AdventureContracts.onAction(player,"kill",entity,1);
-        EpicContracts.bossKilled(player,entity);
-        update(player, p -> {
+        final ServerPlayer killer=player;
+        AdventureContracts.onAction(killer,"kill",entity,1);
+        EpicContracts.bossKilled(killer,entity);
+        update(killer, p -> {
             boolean journalBoss=java.util.Set.of("minecraft:warden","minecraft:wither",
                 "minecraft:ender_dragon","minecraft:elder_guardian").contains(entity)
                 || (entity.startsWith("nicktaleepicdungeons:") &&
@@ -135,7 +142,7 @@ public final class EvolutionCraft {
                      entity.contains("elder") || entity.contains("knight")));
             if(journalBoss){
                 if(p.discoveredBosses==null)p.discoveredBosses=new java.util.HashSet<>();
-                if(p.discoveredBosses.add(entity))DiscoveryJournal.record(p,player,"boss",entity);
+                if(p.discoveredBosses.add(entity))DiscoveryJournal.record(p,killer,"boss",entity);
             }
             // Nicktale era bosses count only if this player actually received kill credit.
             // Recording is persistent and never spends consumables or quest rewards.
@@ -159,7 +166,7 @@ public final class EvolutionCraft {
             if(entity.equals("minecraft:warden"))
                 p.wardenSlainWithoutDeath=p.wardenAttemptId.equals(event.getEntity().getUUID().toString()) &&
                     p.wardenAttemptDeaths==p.deathCount;
-            if(player.level().dimension()==Level.NETHER &&
+            if(killer.level().dimension()==Level.NETHER &&
                 (entity.equals("minecraft:blaze") || entity.equals("minecraft:ghast") ||
                  entity.equals("minecraft:wither_skeleton"))) p.netherKillTypes.add(entity);
         });

@@ -83,98 +83,86 @@ public final class EraObjectivesHud {
         return result;
     }
 
+    private static void art(GuiGraphicsExtractor g,String name,int x,int y,int w,int h){
+        g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
+            Identifier.fromNamespaceAndPath(EvolutionCraft.ID,"textures/gui/"+name+".png"),x,y,0f,0f,w,h,w,h);
+    }
+    private static String icon(String label){
+        String s=java.text.Normalizer.normalize(label.toLowerCase(java.util.Locale.ROOT),java.text.Normalizer.Form.NFD).replaceAll("\\p{M}","");
+        if(s.contains("thoridrop"))return "objective_thoridrop";
+        if(s.contains("tributo"))return "objective_tribute";
+        if(s.contains("pesca")||s.contains("pez"))return "category_fishing";
+        if(s.contains("bioma")||s.contains("explor")||s.contains("estructura"))return "hud_explore";
+        if(s.contains("derrot")||s.contains("matar"))return "category_bosses";
+        if(s.contains("cosecha")||s.contains("cultiv"))return "category_farming";
+        if(s.contains("cria"))return "objective_breeding";
+        if(s.contains("comerci"))return "objective_trade";
+        if(s.contains("diamante"))return "hud_diamond";
+        if(s.contains("hierro"))return "hud_iron";
+        if(s.contains("cobre"))return "hud_copper";
+        if(s.contains("piedra"))return "hud_stone";
+        if(s.contains("madera"))return "hud_wood";
+        return "objective_mastery";
+    }
+    private static String fit(Minecraft mc,String s,int w){
+        if(mc.font.width(s)<=w)return s;
+        while(!s.isEmpty()&&mc.font.width(s+"…")>w)s=s.substring(0,s.length()-1);
+        return s+"…";
+    }
+    private static void frame(GuiGraphicsExtractor g,Minecraft mc,String texture,String title,int x,int y,int w,int h){
+        art(g,texture,x,y,w,h);
+        // A clean parchment inset covers the fixed decorative slots, allowing variable row counts.
+        g.fill(x+12,y+12,x+w-12,y+h-12,0xFFF0DDB6);
+        FantasySkin.ribbon(g,x+14,y+12,w-28,18);
+        String t=fit(mc,title,w-54);
+        g.text(mc.font,t,x+(w-mc.font.width(t))/2,y+17,WHITE,false);
+    }
     private static void render(GuiGraphicsExtractor g,net.minecraft.client.DeltaTracker unused){
         Minecraft mc=Minecraft.getInstance();
-        if(mc.player==null || mc.gui.screen()!=null || state==null)return;
-        if(g.guiWidth()<300 || g.guiHeight()<165)return;
-
-        int era=state.get("era").getAsInt();
+        if(mc.player==null||mc.gui.screen()!=null||state==null||g.guiWidth()<300||g.guiHeight()<165)return;
+        int x=5,y=44,w=Math.min(200,Math.max(144,g.guiWidth()/3)),bottom=g.guiHeight()-48;
         JsonArray entries=state.getAsJsonArray("pending");
-        String eraName=state.get("eraName").getAsString();
-        int x=8,y=52;
-        int width=Math.min(WIDTH,Math.max(144,g.guiWidth()/3));
-        int bottom=g.guiHeight()-51;  // No invadir barra de acceso rápido
         JsonArray contracts=state.has("contracts")?state.getAsJsonArray("contracts"):new JsonArray();
-        boolean showContracts=contractsVisible && contracts.size()>0;
-        if(!eraVisible){
-            // El jugador puede esconder objetivos de era sin esconder contratos.
-            if(showContracts)renderContracts(g,mc,contracts,x,y,width,bottom);
-            return;
-        }
-        int reserve=showContracts?Math.min(128,Math.max(0,bottom-y-74)):0;
-        List<List<String>> rows=new ArrayList<>();
-        int requested=state.has("maxObjectives")?state.get("maxObjectives").getAsInt():24;
-        int used=0,limit=Math.min(entries.size(),Math.clamp(requested,4,24));
-        for(int i=0;i<limit;i++){
-            List<String> row=lines(mc,entries.get(i).getAsString(),width-26);
-            int needed=Math.max(13,row.size()*10+4);
-            if(y+43+used+needed>bottom-20-reserve)break;
-            rows.add(row);
-            used+=needed;
-        }
-        int hidden=entries.size()-rows.size();
-        int h=45+used+(hidden>0?14:0);
-        if(era==5)h=55;
-        h=Math.min(h,bottom-y-reserve);
-        FantasySkin.fortressFrame(g,x-7,y-7,width+14,h+14);
-        FantasySkin.panel(g,x,y,width,h);
-        FantasySkin.ribbon(g,x+5,y+3,width-10,20);
-        FantasySkin.decorations(g,x,y,width,h);
-        g.text(mc.font,"EVOLUTIONCRAFT",x+29,y+9,0xFF5C2A1A,false);
-        String subtitle=era==5?"Todas las eras completadas":"ERA: "+eraName.toUpperCase(java.util.Locale.ROOT);
-        g.text(mc.font,subtitle,x+13,y+26,WHITE,false);
-        if(era==5){
-            g.text(mc.font,"¡Progreso de eras completo!",x+15,y+40,WHITE,false);
-            if(showContracts)renderContracts(g,mc,contracts,x,y+h+7,width,bottom);
-            return;
-        }
-        int lineY=y+39;
-        for(List<String> row:rows){
-            g.text(mc.font,"✦",x+12,lineY,0xFFB66A2E,false);
-            for(String s:row){
-                g.text(mc.font,s,x+27,lineY,WHITE,false);
-                lineY+=10;
+        boolean show=contractsVisible&&contracts.size()>0;
+        if(eraVisible){
+            int available=bottom-y-(show?Math.min(90,Math.max(0,(bottom-y)/2)):0);
+            if(available>=66){
+                int count=Math.min(entries.size(),Math.min(Math.clamp(state.has("maxObjectives")?state.get("maxObjectives").getAsInt():24,4,24),Math.max(0,(available-66)/30)));
+                int h=66+count*30;
+                frame(g,mc,"hud_objectives","EVOLUTIONCRAFT",x,y,w,h);
+                g.text(mc.font,fit(mc,"ERA: "+state.get("eraName").getAsString(),w-36),x+18,y+34,WHITE,false);
+                for(int i=0;i<count;i++){
+                    String label=entries.get(i).getAsString();int yy=y+46+i*30;
+                    FantasySkin.card(g,x+14,yy,w-28,29,false);
+                    art(g,icon(label),x+15,yy,28,28);
+                    List<String> ls=lines(mc,label,w-65);
+                    for(int j=0;j<Math.min(2,ls.size());j++)g.text(mc.font,fit(mc,ls.get(j)+(j==1&&ls.size()>2?"…":""),w-65),x+46,yy+4+j*10,WHITE,false);
+                }
+                String footer=entries.size()>count?"+"+(entries.size()-count)+" objetivos · P":entries.size()==0?"Sin objetivos pendientes":"J: ocultar · P: guía";
+                g.text(mc.font,fit(mc,footer,w-36),x+18,y+h-19,MUTED,false);
+                y+=h+5;
             }
-            lineY+=4;
         }
-        if(hidden>0){
-            g.text(mc.font,"+"+hidden+" objetivos · Pulsa P",x+16,lineY,MUTED,false);
-        }
-        if(showContracts)renderContracts(g,mc,contracts,x,y+h+7,width,bottom);
+        if(show)renderContracts(g,mc,contracts,x,y,w,bottom);
     }
-
-    private static void renderContracts(GuiGraphicsExtractor g,Minecraft mc,
-                                        JsonArray contracts,int x,int y,int width,int bottom){
-        int available=bottom-y;
-        if(available<29)return;
-        int count=Math.min(3,Math.min(contracts.size(),Math.max(0,(available-36)/27)));
-        int panelH=35+count*27;
-        if(panelH>available)return;
-        FantasySkin.fortressFrame(g,x-7,y-7,width+14,panelH+14);
-        FantasySkin.panel(g,x,y,width,panelH);
-        FantasySkin.ribbon(g,x+5,y+3,width-10,20);
-        FantasySkin.decorations(g,x,y,width,panelH);
-        g.text(mc.font,"CONTRATOS ACTIVOS",x+22,y+9,0xFF592C1D,false);
-        g.text(mc.font,"K: ocultar · P: gestionar",x+13,y+26,MUTED,false);
-        int yy=y+39;
+    private static void renderContracts(GuiGraphicsExtractor g,Minecraft mc,JsonArray contracts,int x,int y,int w,int bottom){
+        int count=Math.min(contracts.size(),Math.min(4,Math.max(0,(bottom-y-58)/36)));
+        if(bottom-y<58)return;
+        int h=58+count*36;
+        frame(g,mc,"hud_contracts","CONTRATOS ACTIVOS",x,y,w,h);
         for(int i=0;i<count;i++){
-            JsonObject contract=contracts.get(i).getAsJsonObject();
-            boolean ready=contract.get("ready").getAsBoolean();
-            int current=contract.get("current").getAsInt();
-            int required=contract.get("required").getAsInt();
-            String name=contract.get("title").getAsString();
-            String progress=ready?"LISTO":Math.min(current,required)+"/"+required;
-            int color=ready?GREEN:WHITE;
-            List<String> names=lines(mc,name,width-26);
-            String shortName=names.isEmpty()?name:names.get(0);
-            g.text(mc.font,shortName,x+17,yy,color,false);
-            g.text(mc.font,progress,x+width-16-mc.font.width(progress),yy+11,ready?GREEN:FantasySkin.INK,false);
-            int barLeft=x+17,barRight=x+width-16;
-            int barY=yy+13;
-            int barMax=barRight-barLeft-52;
-            if(barMax>0)FantasySkin.progress(g,barLeft,barY,barMax,7,
-                Math.min(current,required),required,ready?GREEN:0xFFE7A83D);
-            yy+=27;
+            JsonObject o=contracts.get(i).getAsJsonObject();
+            int yy=y+34+i*36,current=o.get("current").getAsInt(),required=o.get("required").getAsInt();
+            boolean ready=o.get("ready").getAsBoolean();
+            String label=o.get("title").getAsString(),progress=ready?"LISTO":Math.min(current,required)+"/"+required;
+            FantasySkin.card(g,x+14,yy,w-28,35,false);
+            art(g,icon(label),x+15,yy+2,30,30);
+            List<String> ls=lines(mc,label,w-66);
+            for(int j=0;j<Math.min(2,ls.size());j++)g.text(mc.font,fit(mc,ls.get(j),w-66),x+48,yy+3+j*9,WHITE,false);
+            int tw=mc.font.width(progress);
+            FantasySkin.progress(g,x+48,yy+25,Math.max(5,w-66-tw-5),6,current,required,ready?GREEN:0xFFE7A83D);
+            g.text(mc.font,progress,x+w-17-tw,yy+23,ready?GREEN:WHITE,false);
         }
+        g.text(mc.font,fit(mc,(contracts.size()>count?"+"+(contracts.size()-count)+" contratos · ":"")+"K: ocultar",w-36),x+18,y+h-19,MUTED,false);
     }
 }

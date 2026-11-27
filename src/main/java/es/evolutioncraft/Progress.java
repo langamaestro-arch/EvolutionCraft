@@ -8,6 +8,7 @@ public final class Progress {
     public static final String[] ERA_NAMES = {"Madera", "Piedra y cuero", "Cobre", "Hierro", "Diamante", "Netherita"};
     /** Administrador: -1 = progresion natural; 0..5 = era fijada expresamente. */
     public int adminEraOverride=-1;
+    public java.util.Map<String,Boolean> adminDimensionObjectives=new java.util.HashMap<>();
     public java.util.Map<String,Integer> eliteMobKills=new java.util.HashMap<>();
     public boolean eliteMobMigrated, eliteNetherGrandfathered, eliteEndGrandfathered;
     public transient boolean eliteMobGateActive;
@@ -250,13 +251,7 @@ public final class Progress {
         return canNether(config.netherAdvancements,config.netherBiomes);
     }
     private boolean canNether(int achievements,int biomeCount){
-        boolean original=era() >= 4 && fishingLevel() >= 3 &&
-               bossKills.contains("minecraft:warden") &&
-               agricultureLevel() >= 3 && husbandryLevel() >= 3 &&
-               advancements.size() >= achievements &&
-               overworldBiomes.size() >= biomeCount && explorationLevel() >= 4;
-        return original && EliteMobGate.ready(this,false) && (!nicktaleDimensionGateActive || !nicktaleDimensionMigrated ||
-               nicktaleNetherGrandfathered || NicktaleDimensionGate.netherReady(this));
+        return DimensionObjectives.ready(this,false,achievements,biomeCount,0);
     }
     public boolean canEnd() {
         return canEnd(70,40,20);
@@ -265,14 +260,7 @@ public final class Progress {
         return canEnd(config.endAdvancements,config.netherAdvancements,config.netherBiomes);
     }
     private boolean canEnd(int endAdvancements,int netherAdvancements,int netherBiomes){
-        boolean original=canNether(netherAdvancements,netherBiomes) &&
-               fishingLevel() == 5 && explorationLevel() >= 5 &&
-               alchemyLevel() >= 3 && bossKills.contains("minecraft:wither") &&
-               agricultureLevel() >= 5 && husbandryLevel() >= 5 &&
-               advancements.size() >= endAdvancements &&
-               advancements.contains("minecraft:nether/explore_nether");
-        return original && EliteMobGate.ready(this,true) && (!nicktaleDimensionGateActive || !nicktaleDimensionMigrated ||
-               nicktaleEndGrandfathered || NicktaleDimensionGate.endReady(this));
+        return DimensionObjectives.ready(this,true,netherAdvancements,netherBiomes,endAdvancements);
     }
     /**
      * Clasificacion por identificador de registro. Funciona sin depender de los JAR

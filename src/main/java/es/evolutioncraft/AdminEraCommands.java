@@ -45,13 +45,13 @@ public final class AdminEraCommands {
                     net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)))
             .then(Commands.literal("listar")
                 .then(Commands.argument("jugador",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(ctx.getSource().getOnlinePlayerNames(),b))
-                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("madera","piedra","cobre","hierro","diamante","netherita"),b))
+                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("piedra","cobre","hierro","diamante","netherita","nether","end"),b))
                         .executes(ctx->list(ctx.getSource(),
                             StringArgumentType.getString(ctx,"jugador"),
                             StringArgumentType.getString(ctx,"era"))))))
             .then(Commands.literal("completar")
                 .then(Commands.argument("jugador",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(ctx.getSource().getOnlinePlayerNames(),b))
-                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("madera","piedra","cobre","hierro","diamante","netherita"),b))
+                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("piedra","cobre","hierro","diamante","netherita","nether","end"),b))
                         .then(Commands.argument("numero",IntegerArgumentType.integer(1,99)).suggests(AdminEraCommands::suggestGoals)
                             .executes(ctx->changeGoal(ctx.getSource(),
                                 StringArgumentType.getString(ctx,"jugador"),
@@ -59,7 +59,7 @@ public final class AdminEraCommands {
                                 IntegerArgumentType.getInteger(ctx,"numero"),true))))))
             .then(Commands.literal("pendiente")
                 .then(Commands.argument("jugador",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(ctx.getSource().getOnlinePlayerNames(),b))
-                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("madera","piedra","cobre","hierro","diamante","netherita"),b))
+                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("piedra","cobre","hierro","diamante","netherita","nether","end"),b))
                         .then(Commands.argument("numero",IntegerArgumentType.integer(1,99)).suggests(AdminEraCommands::suggestGoals)
                             .executes(ctx->changeGoal(ctx.getSource(),
                                 StringArgumentType.getString(ctx,"jugador"),
@@ -70,15 +70,27 @@ public final class AdminEraCommands {
 
     private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestGoals(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, com.mojang.brigadier.suggestion.SuggestionsBuilder b){
         ServerPlayer player=ctx.getSource().getServer().getPlayerList().getPlayerByName(StringArgumentType.getString(ctx,"jugador"));
-        int stage=era(StringArgumentType.getString(ctx,"era"));
+        int stage=objectiveStage(StringArgumentType.getString(ctx,"era"));
         if(player!=null && stage>=1){
-            var goals=AdminEraObjectives.goals(JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject(),stage);
+            var goals=objectiveGoals(JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject(),stage);
             for(int i=0;i<goals.size();i++){
                 String number=Integer.toString(i+1);
                 if(number.startsWith(b.getRemaining())) b.suggest(i+1,new com.mojang.brigadier.LiteralMessage(goals.get(i).getAsJsonObject().get("text").getAsString()));
             }
         }
         return b.buildFuture();
+    }
+    private static int objectiveStage(String name){
+        if(name.equalsIgnoreCase("nether"))return 6;
+        if(name.equalsIgnoreCase("end"))return 7;
+        return era(name);
+    }
+    private static String objectiveName(int stage){
+        return stage==6?"Nether":stage==7?"End":Progress.ERA_NAMES[stage];
+    }
+    private static com.google.gson.JsonArray objectiveGoals(JsonObject root,int stage){
+        if(stage>=6)return root.getAsJsonObject(stage==6?"netherGoals":"endGoals").getAsJsonArray("goals");
+        return AdminEraObjectives.goals(root,stage);
     }
     private static int era(String name){
         return switch(name.toLowerCase(Locale.ROOT)){
@@ -134,16 +146,16 @@ public final class AdminEraCommands {
     private static int list(CommandSourceStack source,String username,String name){
         ServerPlayer player=target(source,username);
         if(player==null)return 0;
-        int stage=era(name);
+        int stage=objectiveStage(name);
         if(stage<1){
             source.sendSystemMessage(Component.literal(
                 "§c[EvolutionCraft] Indica una era que se pueda desbloquear: piedra, cobre, hierro, diamante, netherita."));
             return 0;
         }
         JsonObject root=JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject();
-        var goals=AdminEraObjectives.goals(root,stage);
+        var goals=objectiveGoals(root,stage);
         source.sendSystemMessage(Component.literal("§6[EvolutionCraft] "+username+
-            " | Para desbloquear "+Progress.ERA_NAMES[stage]+" | "+goals.size()+" objetivos"));
+            " | Para desbloquear "+objectiveName(stage)+" | "+goals.size()+" objetivos"));
         for(int i=0;i<goals.size();i++){
             JsonObject goal=goals.get(i).getAsJsonObject();
             source.sendSystemMessage(Component.literal(
@@ -158,14 +170,14 @@ public final class AdminEraCommands {
                                   int number,boolean done){
         ServerPlayer player=target(source,username);
         if(player==null)return 0;
-        int stage=era(name);
+        int stage=objectiveStage(name);
         if(stage<1){
             source.sendSystemMessage(Component.literal(
                 "§c[EvolutionCraft] Solo: piedra, cobre, hierro, diamante, netherita."));
             return 0;
         }
         JsonObject root=JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject();
-        var goals=AdminEraObjectives.goals(root,stage);
+        var goals=objectiveGoals(root,stage);
         if(number>goals.size()){
             source.sendSystemMessage(Component.literal(
                 "§c[EvolutionCraft] Objetivo inexistente: hay "+goals.size()+
@@ -174,6 +186,15 @@ public final class AdminEraCommands {
         }
         String label=goals.get(number-1).getAsJsonObject().get("text").getAsString();
         Progress p=ProgressStore.get(player);
+        if(stage>=6){
+            if(p.adminDimensionObjectives==null)p.adminDimensionObjectives=new java.util.HashMap<>();
+            String key=(stage==6?"nether:":"end:")+goals.get(number-1).getAsJsonObject().get("id").getAsString();
+            p.adminDimensionObjectives.put(key,done);
+            refresh(player);
+            source.sendSystemMessage(Component.literal("§a[EvolutionCraft] "+username+" | "+objectiveName(stage)+" | "+label+": "+(done?"COMPLETADO":"PENDIENTE")));
+            EvolutionCraftLogger.warn("ADMIN DIMENSION "+player.getUUID()+" "+key+"="+done+" by "+source.getTextName());
+            return Command.SINGLE_SUCCESS;
+        }
         int current=p.era();
         if(p.adminEraOverride<0)p.adminEraOverride=current;
         if(!done && stage<=current){
@@ -195,7 +216,7 @@ public final class AdminEraCommands {
         }
         refresh(player);
         source.sendSystemMessage(Component.literal(
-            "§a[EvolutionCraft] "+username+" | "+Progress.ERA_NAMES[stage]+
+            "§a[EvolutionCraft] "+username+" | "+objectiveName(stage)+
             " | "+number+" ("+label+"): "+(done?"COMPLETADO":"PENDIENTE")+
             " | era efectiva: "+Progress.ERA_NAMES[p.era()]));
         player.sendSystemMessage(Component.literal(

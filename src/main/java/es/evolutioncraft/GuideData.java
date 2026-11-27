@@ -206,23 +206,23 @@ public final class GuideData {
         goal(missions,"Netherita: equipamiento completo y herramientas V",p.completedMissions.contains("netherite"));
         JsonObject secrets=group(root,"secretGoals","Desafíos secretos");
         // El servidor solo revela el nombre y la recompensa cuando el reto está completado.
-        // Las pistas no contienen números ni requisitos exactos.
+        // Las pistas explican los requisitos sin revelar el nombre ni la recompensa.
         String[][] hidden={
-            {"noche","La noche es mía","Bronce","Sobrevive varias noches completas sin dormir.","Superviviente"},
-            {"tesoros","La suerte del pescador","Bronce","Pesca objetos de la categoría tesoro, no solo peces.","Pescador afortunado"},
-            {"comerciante","Comerciante legendario","Bronce","Realiza muchos intercambios con aldeanos.","Mercader"},
-            {"tierra","Tierra fértil","Bronce","Recolecta cientos de cultivos manteniendo tu racha.","Granjero incansable"},
-            {"animales","Amigo de los animales","Bronce","Domestica un lobo, un gato y un caballo.","Domador"},
-            {"diamantes","Corazón de diamante","Plata","Extrae muchas menas de diamante generadas naturalmente.","Minero experto"},
-            {"fronteras","Sin fronteras","Plata","Descubre numerosos biomas del mundo y del Nether.","Explorador legendario"},
-            {"oceano","Señor de los océanos","Plata","Derrota a un guardián anciano y consigue una esponja.","Conquistador del océano"},
-            {"arcano","Poder arcano","Plata","Consigue tres encantamientos de nivel alto en tu equipo.","Encantador"},
-            {"elixir","Elixir de la vida","Plata","Consume distintas pociones y experimenta con muchos efectos.","Alquimista excepcional"},
-            {"terror","El terror tiene miedo","Oro","Derrota al Warden sin morir.","Cazador de pesadillas"},
-            {"infierno","Infierno dominado","Oro","Derrota las distintas criaturas hostiles del Nether.","Señor del Nether"},
-            {"dragon","Cazador de dragones","Oro","Derrota al dragón del End.","Matadragones"},
-            {"equipo","El equipo definitivo","Oro","Equípate con netherita y alcanza la máxima maestría de herramientas.","Maestro herrero"},
-            {"evolucion","La evolución definitiva","Oro","Completa las maestrías y los demás desafíos secretos.","Leyenda de EvolutionCraft"}
+            {"noche","La noche es mía","Bronce","Permanece despierto desde el anochecer hasta el amanecer durante diez noches limpias. Evita dormir y procura sobrevivir.","Superviviente"},
+            {"tesoros","La suerte del pescador","Bronce","Pesca en aguas abiertas con una caña hasta obtener cinco tesoros, como libros encantados o etiquetas. Los peces normales no cuentan.","Pescador afortunado"},
+            {"comerciante","Comerciante legendario","Bronce","Visita aldeas y completa cincuenta intercambios con aldeanos. Puedes repetir ofertas y comerciar con distintos oficios.","Mercader"},
+            {"tierra","Tierra fértil","Bronce","Recolecta cultivos maduros hasta alcanzar una racha de quinientas cosechas. Replanta y mantén la actividad agrícola.","Granjero incansable"},
+            {"animales","Amigo de los animales","Bronce","Domestica un lobo con huesos, un gato con pescado crudo y un caballo montándolo hasta que aparezcan corazones.","Domador"},
+            {"diamantes","Corazón de diamante","Plata","Extrae sesenta y cuatro bloques de mena de diamante natural en las profundidades. Los bloques colocados no cuentan.","Minero experto"},
+            {"fronteras","Sin fronteras","Plata","Explora cuarenta biomas distintos entre el mundo normal y el Nether. Consulta los descubrimientos en el Diario.","Explorador legendario"},
+            {"oceano","Señor de los océanos","Plata","Busca un monumento oceánico, derrota a un guardián anciano y consigue una esponja seca o mojada.","Conquistador del océano"},
+            {"arcano","Poder arcano","Plata","Usa la mesa de encantamientos y el yunque para reunir tres encantamientos de nivel III o superior en una misma herramienta o espada.","Encantador"},
+            {"elixir","Elixir de la vida","Plata","Bebe cinco tipos distintos de pociones y registra diez efectos diferentes. Experimenta con la alquimia.","Alquimista excepcional"},
+            {"terror","El terror tiene miedo","Oro","Encuentra al Warden en la oscuridad profunda y derrótalo sin morir desde que comienzas a combatir contra ese ejemplar.","Cazador de pesadillas"},
+            {"infierno","Infierno dominado","Oro","En el Nether, derrota al menos un blaze, un ghast y un esqueleto del Wither. Busca fortalezas y zonas abiertas.","Señor del Nether"},
+            {"dragon","Cazador de dragones","Oro","Accede al End y derrota al dragón. Destruye los cristales que lo curan y aprovecha cuando descienda al portal.","Matadragones"},
+            {"equipo","El equipo definitivo","Oro","Mejora en la mesa de herrería las cuatro piezas de armadura y las cinco herramientas de netherita. Alcanza maestría de herramientas V.","Maestro herrero"},
+            {"evolucion","La evolución definitiva","Oro","Alcanza la era final, consigue nivel V en los seis oficios y completa los otros catorce desafíos secretos.","Leyenda de EvolutionCraft"}
         };
         for(String[] entry:hidden){
             boolean solved=p.secretChallenges.contains(entry[0]);

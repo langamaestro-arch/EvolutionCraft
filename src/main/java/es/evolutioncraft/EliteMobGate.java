@@ -29,6 +29,7 @@ final class EliteMobGate {
         boolean exempt=end?p.eliteEndGrandfathered:p.eliteNetherGrandfathered;
         for(int i=0;i<5;i++)if(required[i]>0){
             JsonObject g=new JsonObject();
+            g.addProperty("id","elite:"+TIERS[i]);
             g.addProperty("text","EliteMobs: eliminar "+LABELS[i]+" ("+count(p,i)+"/"+required[i]+")"+(exempt?" - acceso previo":""));
             g.addProperty("done",exempt||count(p,i)>=required[i]);
             group.getAsJsonArray("goals").add(g);

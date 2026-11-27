@@ -27,14 +27,14 @@ public final class AdminEraCommands {
                 new net.minecraft.server.permissions.PermissionCheck.Require(
                     net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)))
             .then(Commands.literal("avanzar")
-                .then(Commands.argument("jugador",StringArgumentType.word())
-                    .then(Commands.argument("era",StringArgumentType.word())
+                .then(Commands.argument("jugador",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(ctx.getSource().getOnlinePlayerNames(),b))
+                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("madera","piedra","cobre","hierro","diamante","netherita"),b))
                         .executes(ctx->setStage(ctx.getSource(),
                             StringArgumentType.getString(ctx,"jugador"),
                             StringArgumentType.getString(ctx,"era"),true)))))
             .then(Commands.literal("retroceder")
-                .then(Commands.argument("jugador",StringArgumentType.word())
-                    .then(Commands.argument("era",StringArgumentType.word())
+                .then(Commands.argument("jugador",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(ctx.getSource().getOnlinePlayerNames(),b))
+                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("madera","piedra","cobre","hierro","diamante","netherita"),b))
                         .executes(ctx->setStage(ctx.getSource(),
                             StringArgumentType.getString(ctx,"jugador"),
                             StringArgumentType.getString(ctx,"era"),false))))));
@@ -44,23 +44,23 @@ public final class AdminEraCommands {
                 new net.minecraft.server.permissions.PermissionCheck.Require(
                     net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)))
             .then(Commands.literal("listar")
-                .then(Commands.argument("jugador",StringArgumentType.word())
-                    .then(Commands.argument("era",StringArgumentType.word())
+                .then(Commands.argument("jugador",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(ctx.getSource().getOnlinePlayerNames(),b))
+                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("madera","piedra","cobre","hierro","diamante","netherita"),b))
                         .executes(ctx->list(ctx.getSource(),
                             StringArgumentType.getString(ctx,"jugador"),
                             StringArgumentType.getString(ctx,"era"))))))
             .then(Commands.literal("completar")
-                .then(Commands.argument("jugador",StringArgumentType.word())
-                    .then(Commands.argument("era",StringArgumentType.word())
-                        .then(Commands.argument("numero",IntegerArgumentType.integer(1,99))
+                .then(Commands.argument("jugador",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(ctx.getSource().getOnlinePlayerNames(),b))
+                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("madera","piedra","cobre","hierro","diamante","netherita"),b))
+                        .then(Commands.argument("numero",IntegerArgumentType.integer(1,99)).suggests(AdminEraCommands::suggestGoals)
                             .executes(ctx->changeGoal(ctx.getSource(),
                                 StringArgumentType.getString(ctx,"jugador"),
                                 StringArgumentType.getString(ctx,"era"),
                                 IntegerArgumentType.getInteger(ctx,"numero"),true))))))
             .then(Commands.literal("pendiente")
-                .then(Commands.argument("jugador",StringArgumentType.word())
-                    .then(Commands.argument("era",StringArgumentType.word())
-                        .then(Commands.argument("numero",IntegerArgumentType.integer(1,99))
+                .then(Commands.argument("jugador",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(ctx.getSource().getOnlinePlayerNames(),b))
+                    .then(Commands.argument("era",StringArgumentType.word()).suggests((ctx,b)->net.minecraft.commands.SharedSuggestionProvider.suggest(java.util.List.of("madera","piedra","cobre","hierro","diamante","netherita"),b))
+                        .then(Commands.argument("numero",IntegerArgumentType.integer(1,99)).suggests(AdminEraCommands::suggestGoals)
                             .executes(ctx->changeGoal(ctx.getSource(),
                                 StringArgumentType.getString(ctx,"jugador"),
                                 StringArgumentType.getString(ctx,"era"),
@@ -68,6 +68,18 @@ public final class AdminEraCommands {
         event.getDispatcher().register(individual);
     }
 
+    private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestGoals(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, com.mojang.brigadier.suggestion.SuggestionsBuilder b){
+        ServerPlayer player=ctx.getSource().getServer().getPlayerList().getPlayerByName(StringArgumentType.getString(ctx,"jugador"));
+        int stage=era(StringArgumentType.getString(ctx,"era"));
+        if(player!=null && stage>=1){
+            var goals=AdminEraObjectives.goals(JsonParser.parseString(GuideData.snapshot(player)).getAsJsonObject(),stage);
+            for(int i=0;i<goals.size();i++){
+                String number=Integer.toString(i+1);
+                if(number.startsWith(b.getRemaining())) b.suggest(i+1,new com.mojang.brigadier.LiteralMessage(goals.get(i).getAsJsonObject().get("text").getAsString()));
+            }
+        }
+        return b.buildFuture();
+    }
     private static int era(String name){
         return switch(name.toLowerCase(Locale.ROOT)){
             case "madera","0" -> 0;

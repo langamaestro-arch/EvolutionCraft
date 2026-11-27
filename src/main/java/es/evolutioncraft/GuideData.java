@@ -208,21 +208,21 @@ public final class GuideData {
         // El servidor solo revela el nombre y la recompensa cuando el reto está completado.
         // Las pistas no contienen números ni requisitos exactos.
         String[][] hidden={
-            {"noche","La noche es mía","Bronce","Cuando todos descansan, el verdadero superviviente permanece despierto","Superviviente"},
-            {"tesoros","La suerte del pescador","Bronce","No todos los tesoros se encuentran bajo tierra. Algunos esperan bajo el agua","Pescador afortunado"},
-            {"comerciante","Comerciante legendario","Bronce","Las esmeraldas abren puertas que ninguna herramienta puede romper","Mercader"},
-            {"tierra","Tierra fértil","Bronce","Una gran cosecha requiere paciencia, dedicación y mantenerse con vida","Granjero incansable"},
-            {"animales","Amigo de los animales","Bronce","Tres compañeros muy diferentes pueden convertirse en tus mejores aliados","Domador"},
-            {"diamantes","Corazón de diamante","Plata","Los diamantes más valiosos son aquellos que arrancas de las profundidades","Minero experto"},
-            {"fronteras","Sin fronteras","Plata","El mundo es mucho más grande de lo que imaginas. Atrévete a conocerlo","Explorador legendario"},
-            {"oceano","Señor de los océanos","Plata","En las profundidades del océano, un antiguo guardián protege un peculiar tesoro","Conquistador del océano"},
-            {"arcano","Poder arcano","Plata","Una herramienta excepcional puede contener varios poderes extraordinarios","Encantador"},
-            {"elixir","Elixir de la vida","Plata","El verdadero alquimista no solo crea sus pociones: también conoce sus efectos","Alquimista excepcional"},
-            {"terror","El terror tiene miedo","Oro","En la oscuridad más profunda habita un terror. Demuéstrale que tú no conoces el miedo","Cazador de pesadillas"},
-            {"infierno","Infierno dominado","Oro","Tres amenazas gobiernan el infierno. Solo quien las venza en una misma expedición dominará sus tierras","Señor del Nether"},
-            {"dragon","Cazador de dragones","Oro","El último gran desafío no admite una segunda oportunidad","Matadragones"},
-            {"equipo","El equipo definitivo","Oro","El metal más poderoso no sirve de nada sin alguien capaz de dominarlo","Maestro herrero"},
-            {"evolucion","La evolución definitiva","Oro","Solo quien lo haya dominado absolutamente todo podrá convertirse en una leyenda","Leyenda de EvolutionCraft"}
+            {"noche","La noche es mía","Bronce","Sobrevive varias noches completas sin dormir.","Superviviente"},
+            {"tesoros","La suerte del pescador","Bronce","Pesca objetos de la categoría tesoro, no solo peces.","Pescador afortunado"},
+            {"comerciante","Comerciante legendario","Bronce","Realiza muchos intercambios con aldeanos.","Mercader"},
+            {"tierra","Tierra fértil","Bronce","Recolecta cientos de cultivos manteniendo tu racha.","Granjero incansable"},
+            {"animales","Amigo de los animales","Bronce","Domestica un lobo, un gato y un caballo.","Domador"},
+            {"diamantes","Corazón de diamante","Plata","Extrae muchas menas de diamante generadas naturalmente.","Minero experto"},
+            {"fronteras","Sin fronteras","Plata","Descubre numerosos biomas del mundo y del Nether.","Explorador legendario"},
+            {"oceano","Señor de los océanos","Plata","Derrota a un guardián anciano y consigue una esponja.","Conquistador del océano"},
+            {"arcano","Poder arcano","Plata","Consigue tres encantamientos de nivel alto en tu equipo.","Encantador"},
+            {"elixir","Elixir de la vida","Plata","Consume distintas pociones y experimenta con muchos efectos.","Alquimista excepcional"},
+            {"terror","El terror tiene miedo","Oro","Derrota al Warden sin morir.","Cazador de pesadillas"},
+            {"infierno","Infierno dominado","Oro","Derrota las distintas criaturas hostiles del Nether.","Señor del Nether"},
+            {"dragon","Cazador de dragones","Oro","Derrota al dragón del End.","Matadragones"},
+            {"equipo","El equipo definitivo","Oro","Equípate con netherita y alcanza la máxima maestría de herramientas.","Maestro herrero"},
+            {"evolucion","La evolución definitiva","Oro","Completa las maestrías y los demás desafíos secretos.","Leyenda de EvolutionCraft"}
         };
         for(String[] entry:hidden){
             boolean solved=p.secretChallenges.contains(entry[0]);

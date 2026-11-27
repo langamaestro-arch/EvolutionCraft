@@ -76,6 +76,7 @@ public final class NicktaleDimensionGate {
     }
     private static void goal(JsonObject group,Boss boss,boolean complete){
         JsonObject o=new JsonObject();
+        o.addProperty("id","boss:"+boss.id());
         o.addProperty("text","Derrotar a "+boss.label());
         o.addProperty("detail","Estructura: "+boss.structure());
         o.addProperty("done",complete);

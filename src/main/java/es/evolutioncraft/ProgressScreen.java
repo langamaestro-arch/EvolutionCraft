@@ -65,22 +65,29 @@ public final class ProgressScreen extends Screen {
     }
     private int getInt(String key){return data.has(key)?data.get(key).getAsInt():0;}
     private boolean getBool(String key){return data.has(key)&&data.get(key).getAsBoolean();}
-    private int panelW(){return Math.min(760,width-12);}
-    private int panelH(){return Math.min(455,height-12);}
+    private int panelW(){return Math.min(780,width-8);}
+    private int panelH(){return Math.min(485,height-8);}
     private int x(){return (width-panelW())/2;}
     private int y(){return (height-panelH())/2;}
-    private int sidebarW(){return panelW()/2-34;}
-    private int mainX(){return x()+panelW()/2+9;}
-    private int mainW(){return panelW()/2-36;}
-    private int contentY(){return y()+208;}
-    private int contentBottom(){return y()+panelH()-57;}
-    private int navY(){return y()+50;}
-    private int navStep(){return 30;}
-    private int navHeight(){return 27;}
-    private int navX(int i){return x()+30+(i%3)*(sidebarW()-10)/3;}
-    private int navW(){return (sidebarW()-10)/3-3;}
+    private int px(int n){return x()+panelW()*n/1000;}
+    private int py(int n){return y()+panelH()*n/1000;}
+    private int leftX(){return px(85);}
+    private int rightX(){return px(535);}
+    private int pageW(){return panelW()*380/1000;}
+    private int mainW(){return pageW();}
+    private int contentY(){return py(365);}
+    private int contentBottom(){return py(830);}
+    private int selected=0, detailPage=0;
     private static final String[] SHORT_SECTIONS={"Eras","Oficios","Mundos","Logros","Secretos","Premios","Diario","Contratos","Rangos"};
-    private int tabsY(){return y()+112;}
+    private static final String[] SECTION_ART={"category_eras","category_farming","category_nether","category_missions","medal_gold","category_rewards","category_discoveries","category_contracts","merit_three"};
+    private static final String[] TAB_ART={"category_eras","category_fishing","category_farming","category_husbandry","category_exploration","iron_pickaxe","category_alchemy","category_nether","category_end","medal_gold","category_missions","category_eras","category_rewards","category_biomes","category_nether","category_exploration","category_bosses","category_discoveries","category_discoveries","category_contracts","category_contracts","category_contracts","merit_three","category_bosses"};
+    private int navX(int i){return px(67)+i*(panelW()*866/1000)/9;}
+    private int navW(){return panelW()*866/9000-2;}
+    private int navY(){return py(135);}
+    private int navHeight(){return Math.max(24,panelH()*95/1000);}
+    private int subX(int i,int count){return leftX()+(i%Math.min(3,count))*pageW()/Math.min(3,count);}
+    private int subW(int count){return pageW()/Math.min(3,count)-2;}
+    private int subY(int i,int count){return py(240)+(i/Math.min(3,count))*19;}
 
     private JsonArray goals(){
         if(tab==23)return data.getAsJsonArray("epicContracts");
@@ -175,205 +182,75 @@ public final class ProgressScreen extends Screen {
             default -> GOLD;
         };
     }
-    private int rowHeight(JsonObject o){
-        if(o.has("tribute"))return 44;
-        if(o.has("threshold"))return 60;
-        if(o.has("tier") && o.has("progress")){
-            if(tab==23)return 78;
-            int desc=wrap(o.get("description").getAsString(),Math.max(65,mainW()-96)).size();
-            return Math.max(tab==20 && o.has("delivery") &&
-                o.get("delivery").getAsBoolean()?90:56,46+desc*11);
-        }
-        if(o.has("detail")){
-            int nameLines=wrap(o.get("text").getAsString(),Math.max(60,mainW()-100)).size();
-            int details=wrap(o.get("detail").getAsString(),Math.max(60,mainW()-100)).size();
-            return Math.max(43,10+11*(nameLines+details)+7);
-        }
-        if(tab==12 && o.has("xp")){
-            return Math.max(48,31+11*wrap(o.get("items").getAsString(),Math.max(70,mainW()-126)).size());
-        }
-        if(secretEntry(o)){
-            String second=o.get("done").getAsBoolean()
-                ?"Distintivo: "+o.get("reward").getAsString()
-                :"Pista: "+o.get("hint").getAsString();
-            int lineCount=wrap(second,Math.max(55,mainW()-92)).size();
-            return Math.max(47,32+lineCount*11);
-        }
-        return Math.max(29,10+11*wrap(o.get("text").getAsString(),Math.max(45,mainW()-94)).size());
-    }
+    private int rowHeight(JsonObject o){return Math.max(23,Math.min(38,(contentBottom()-contentY())/5));}
+    private int rowsPerPage(){return Math.max(1,(contentBottom()-contentY())/rowHeight(null));}
     private void paginate(){
         pageStarts.clear();pageStarts.add(0);
-        JsonArray arr=goals();
-        int used=0,available=Math.max(29,contentBottom()-contentY()-8);
-        for(int i=0;i<arr.size();i++){
-            int h=rowHeight(arr.get(i).getAsJsonObject());
-            if(used>0 && used+h>available){pageStarts.add(i);used=0;}
-            used+=h;
-        }
+        for(int i=rowsPerPage();i<goals().size();i+=rowsPerPage())pageStarts.add(i);
         page=Math.max(0,Math.min(page,pageStarts.size()-1));
+        selected=Math.max(pageStarts.get(page),Math.min(selected,Math.min(goals().size()-1,pageStarts.get(page)+rowsPerPage()-1)));
     }
-    @Override protected void init(){
-        // Minecraft inicializa la fuente y las dimensiones antes de representar el primer fotograma.
-        paginate();
+    @Override protected void init(){paginate();}
+    private void switchSection(int next){section=next;tab=SECTION_TABS[next][0];resetSelection();}
+    private void switchTab(int next){tab=next;resetSelection();}
+    private void resetSelection(){page=0;selected=0;detailPage=0;paginate();}
+    private boolean inside(double mx,double my,int xx,int yy,int ww,int hh){return mx>=xx&&mx<xx+ww&&my>=yy&&my<yy+hh;}
+    private void turn(int step){page=Math.max(0,Math.min(pageStarts.size()-1,page+step));selected=pageStarts.get(page);detailPage=0;}
+    private JsonObject chosen(){JsonArray a=goals();return a.isEmpty()?null:a.get(Math.max(0,Math.min(selected,a.size()-1))).getAsJsonObject();}
+    private static String val(JsonObject o,String k){return o.has(k)&&!o.get(k).isJsonNull()?o.get(k).getAsString():"";}
+    private static boolean flag(JsonObject o,String k){return o.has(k)&&o.get(k).getAsBoolean();}
+    private String action(JsonObject o){
+        if(o==null)return "";
+        if(tab==0&&flag(o,"tribute")&&flag(o,"canDeliver"))return "ENTREGAR";
+        if(tab==12&&flag(o,"ready"))return "RECLAMAR";
+        if(tab==22&&flag(o,"ready"))return "RECLAMAR";
+        if(tab==23){String s=val(o,"epicStatus");return s.equals("offer")&&flag(o,"canAccept")?"ACEPTAR":s.equals("active")?(flag(o,"ready")?"RECLAMAR":"ABANDONAR"):"";}
+        if(tab==19&&flag(o,"canAccept"))return "ACEPTAR";
+        if(tab==20)return flag(o,"ready")?"RECLAMAR":flag(o,"delivery")?"ENTREGAR":"ABANDONAR";
+        return "";
     }
-    private void switchSection(int next){
-        section=next;tab=SECTION_TABS[next][0];page=0;paginate();
+    private void execute(JsonObject o,String a){
+        if(o==null||a.isEmpty())return;
+        String cmd= switch(tab){
+            case 0 -> "ectributo entregar";
+            case 12 -> "ecreclamar "+val(o,"id");
+            case 22 -> "ecrango "+val(o,"id");
+            case 23 -> "ecepico "+a.toLowerCase(Locale.ROOT)+" "+val(o,"id");
+            case 19,20 -> "eccontrato "+a.toLowerCase(Locale.ROOT)+" "+val(o,"id");
+            default -> "";
+        };
+        var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
+        if(connection!=null&&!cmd.isEmpty())connection.sendCommand(cmd);
     }
-    private void switchTab(int next){tab=next;page=0;paginate();}
-    private boolean inside(double mx,double my,int xx,int yy,int ww,int hh){
-        return mx>=xx&&mx<xx+ww&&my>=yy&&my<yy+hh;
-    }
-    private int gridX(int col,int cols){
-        int left=mainX()+9;
-        return left+col*(mainW()-18)/cols;
-    }
-    private int gridW(int cols){return (mainW()-18)/cols-5;}
-
     @Override public boolean mouseClicked(MouseButtonEvent event,boolean doubleClick){
-        if(event.button()!=1)return super.mouseClicked(event,doubleClick);
+        if(event.button()!=0&&event.button()!=1)return super.mouseClicked(event,doubleClick);
         if(pageStarts.isEmpty())paginate();
         double mx=event.x(),my=event.y();
-        int xx=x(),yy=y(),ww=panelW(),hh=panelH();
-        if(inside(mx,my,xx+ww-34,yy+10,23,22)){onClose();return true;}
-        for(int s=0;s<SECTIONS.length;s++){
-            if(inside(mx,my,navX(s),navY()+(s/3)*navStep(),navW(),navHeight())){
-                switchSection(s);return true;
-            }
-        }
+        if(inside(mx,my,px(918),py(65),20,18)){onClose();return true;}
+        for(int i=0;i<SECTIONS.length;i++)if(inside(mx,my,navX(i),navY(),navW(),navHeight())){switchSection(i);return true;}
         int[] subs=SECTION_TABS[section];
-        int cols=Math.min(3,subs.length);
-        for(int i=0;i<subs.length;i++){
-            int tx=gridX(i%cols,cols),ty=tabsY()+(i/cols)*27;
-            if(inside(mx,my,tx,ty,gridW(cols),24)){
-                switchTab(subs[i]);return true;
-            }
+        for(int i=0;i<subs.length;i++)if(inside(mx,my,subX(i,subs.length),subY(i,subs.length),subW(subs.length),18)){switchTab(subs[i]);return true;}
+        if(tab==0&&inside(mx,my,leftX(),py(320),20,18)){stage=Math.max(0,stage-1);resetSelection();return true;}
+        if(tab==0&&inside(mx,my,leftX()+pageW()-20,py(320),20,18)){stage=Math.min(4,stage+1);resetSelection();return true;}
+        if(tab==19&&inside(mx,my,leftX(),py(320),pageW(),18)){offerFilter=(offerFilter+1)%OFFER_FILTERS.length;resetSelection();return true;}
+        if(inside(mx,my,leftX(),py(850),22,20)){turn(-1);return true;}
+        if(inside(mx,my,leftX()+pageW()-22,py(850),22,20)){turn(1);return true;}
+        if(inside(mx,my,leftX(),contentY(),pageW(),contentBottom()-contentY())){
+            int idx=pageStarts.get(page)+(int)((my-contentY())/rowHeight(null));
+            if(idx<goals().size()&&idx<pageStarts.get(page)+rowsPerPage()){selected=idx;detailPage=0;return true;}
         }
-        if(tab==22){
-            JsonArray ranks=goals();
-            int begin=pageStarts.get(page),end=page+1<pageStarts.size()?pageStarts.get(page+1):ranks.size();
-            int cy=contentY()+4;
-            for(int i=begin;i<end;i++){
-                JsonObject rank=ranks.get(i).getAsJsonObject();
-                int h=rowHeight(rank);
-                if(rank.get("ready").getAsBoolean()&&
-                    inside(mx,my,mainX()+mainW()-111,cy+4,100,19)){
-                    var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
-                    if(connection!=null)connection.sendCommand("ecrango "+rank.get("id").getAsString());
-                    return true;
-                }
-                cy+=h;
-            }
-        }
-        if(tab==19 && inside(mx,my,mainX()+8,y()+157,mainW()-16,25)){
-            offerFilter=(offerFilter+1)%OFFER_FILTERS.length;
-            page=0;
-            paginate();
+        if(inside(mx,my,rightX(),py(850),pageW()/2-2,20)){execute(chosen(),action(chosen()));return true;}
+        if(inside(mx,my,rightX()+pageW()/2,py(850),pageW()/2,20)){
+            if(tab==20&&chosen()!=null&&flag(chosen(),"delivery"))execute(chosen(),"ABANDONAR");
+            else if(section==4)changeBadge();
             return true;
-        }
-        if(tab==23){
-            JsonArray contracts=goals();
-            int begin=pageStarts.get(page);
-            int end=page+1<pageStarts.size()?pageStarts.get(page+1):contracts.size();
-            int cy=contentY()+4;
-            for(int i=begin;i<end;i++){
-                JsonObject contract=contracts.get(i).getAsJsonObject();
-                int h=rowHeight(contract);
-                if(inside(mx,my,mainX()+mainW()-111,cy+4,100,19)){
-                    String status=contract.get("epicStatus").getAsString();
-                    String action=status.equals("offer")?
-                        (contract.get("canAccept").getAsBoolean()?"aceptar":""):
-                        status.equals("active")?
-                            (contract.get("ready").getAsBoolean()?"reclamar":"abandonar"):"";
-                    if(!action.isEmpty()){
-                        var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
-                        if(connection!=null)connection.sendCommand(
-                            "ecepico "+action+" "+contract.get("id").getAsString());
-                        return true;
-                    }
-                }
-                cy+=h;
-            }
-        }
-        if(tab>=19 && tab<=21 && data.getAsJsonObject("contracts").get("enabled").getAsBoolean()){
-            JsonArray contracts=goals();
-            int begin=pageStarts.get(page);
-            int end=page+1<pageStarts.size()?pageStarts.get(page+1):contracts.size();
-            int cy=contentY()+4;
-            for(int i=begin;i<end;i++){
-                JsonObject contract=contracts.get(i).getAsJsonObject();
-                int h=rowHeight(contract);
-                boolean isDelivery=contract.has("delivery")&&contract.get("delivery").getAsBoolean();
-                boolean abandonButton=tab==20&&isDelivery&&
-                    inside(mx,my,mainX()+mainW()-111,cy+27,100,19);
-                if(abandonButton||inside(mx,my,mainX()+mainW()-111,cy+4,100,19)){
-                    String action=abandonButton?"abandonar":tab==19?"aceptar":tab==20?
-                        contract.get("ready").getAsBoolean()?"reclamar":
-                        isDelivery?"entregar":"abandonar":"";
-                    if(!action.isEmpty() && (tab!=19||contract.get("canAccept").getAsBoolean())){
-                        var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
-                        if(connection!=null)connection.sendCommand(
-                            "eccontrato "+action+" "+contract.get("id").getAsString());
-                        return true;
-                    }
-                }
-                cy+=h;
-            }
-        }
-        if(tab==12){
-            JsonArray rewards=goals();
-            int begin=pageStarts.get(page);
-            int end=page+1<pageStarts.size()?pageStarts.get(page+1):rewards.size();
-            int cy=contentY()+4;
-            for(int i=begin;i<end;i++){
-                JsonObject reward=rewards.get(i).getAsJsonObject();
-                int h=rowHeight(reward);
-                if(reward.get("ready").getAsBoolean() &&
-                    inside(mx,my,mainX()+11,cy,mainW()-22,h-3)){
-                    var connection=net.minecraft.client.Minecraft.getInstance().getConnection();
-                    if(connection!=null)connection.sendCommand("ecreclamar "+reward.get("id").getAsString());
-                    return true;
-                }
-                cy+=h;
-            }
-        }
-        if(tab==0){
-            JsonArray rows=goals();
-            int from=pageStarts.get(page);
-            int to=page+1<pageStarts.size()?pageStarts.get(page+1):rows.size();
-            int yyRow=contentY()+4;
-            for(int i=from;i<to;i++){
-                JsonObject row=rows.get(i).getAsJsonObject();
-                if(row.has("tribute")&&row.get("canDeliver").getAsBoolean()&&
-                    inside(mx,my,mainX()+mainW()-111,yyRow+4,100,19)){
-                    var conn=net.minecraft.client.Minecraft.getInstance().getConnection();
-                    if(conn!=null)conn.sendCommand("ectributo entregar");
-                    return true;
-                }
-                yyRow+=rowHeight(row);
-            }
-            if(inside(mx,my,mainX()+10,y()+159,24,23)&&stage>0){
-                stage--;page=0;paginate();return true;
-            }
-            if(inside(mx,my,mainX()+mainW()-34,y()+159,24,23)&&stage<4){
-                stage++;page=0;paginate();return true;
-            }
-        }
-        int fy=y()+hh-45;
-        if(inside(mx,my,mainX()+7,fy,34,29)&&page>0){page--;return true;}
-        if(inside(mx,my,mainX()+mainW()-41,fy,34,29)&&page<pageStarts.size()-1){
-            page++;return true;
-        }
-        if(section==4&&inside(mx,my,xx+12,yy+hh-58,sidebarW()-8,34)){
-            changeBadge();return true;
         }
         return super.mouseClicked(event,doubleClick);
     }
     @Override public boolean mouseScrolled(double mx,double my,double scrollX,double scrollY){
-        if(pageStarts.isEmpty())paginate();
-        if(inside(mx,my,mainX(),contentY(),mainW(),contentBottom()-contentY())&&scrollY!=0){
-            page=Math.max(0,Math.min(pageStarts.size()-1,page+(scrollY<0?1:-1)));
-            return true;
-        }
+        if(scrollY==0)return false;
+        if(inside(mx,my,leftX(),contentY(),pageW(),contentBottom()-contentY())){turn(scrollY<0?1:-1);return true;}
+        if(inside(mx,my,rightX(),py(340),pageW(),py(830)-py(340))){detailPage=Math.max(0,detailPage+(scrollY<0?1:-1));return true;}
         return super.mouseScrolled(mx,my,scrollX,scrollY);
     }
     private void changeBadge(){
@@ -555,258 +432,123 @@ public final class ProgressScreen extends Screen {
     private void center(GuiGraphicsExtractor g,String s,int xx,int yy,int c){g.text(font,s,xx-font.width(s)/2,yy,c,false);}
     private void item(GuiGraphicsExtractor g,Item i,int xx,int yy){g.item(new ItemStack(i),xx,yy);}
 
+    private String art(JsonObject o){
+        String s=val(o,"text").toLowerCase(Locale.ROOT);
+        if(secretEntry(o)&&!flag(o,"done"))return "status_locked";
+        if(s.contains("elitemobs")){
+            if(s.contains("berserker"))return "elite_berserker";
+            if(s.contains("campe"))return "elite_champion";
+            if(s.contains("infernal"))return "elite_infernal";
+            if(s.contains("tosco"))return "elite_tough";
+            return "elite_elite";
+        }
+        if(s.contains("warden"))return "warden";
+        if(s.contains("wither"))return "wither";
+        if(s.contains("derrotar"))return "category_bosses";
+        String material=s.contains("netherita")?"netherite":s.contains("diamante")?"diamond":s.contains("hierro")?"iron":s.contains("cobre")?"copper":s.contains("piedra")?"stone":s.contains("madera")?"wooden":stage==0?"wooden":stage==1?"stone":stage==2?"copper":stage==3?"iron":"diamond";
+        if(s.contains("pico"))return material.equals("netherite")?"netherite_sword":material+"_pickaxe";
+        if(s.contains("espada"))return material.equals("copper")?"copper_pickaxe":material+"_sword";
+        if(s.contains("casco")||s.contains("peto")||s.contains("botas")||s.contains("pantalones")||s.contains("armadura"))return switch(material){case "copper"->"copper_armor";case "netherite"->"netherite_armor";case "iron","diamond"->"iron_armor";default->"leather_armor";};
+        if(s.contains("mesa")&&s.contains("trabajo"))return "crafting_table";
+        if(s.contains("encant"))return "enchanting_table";
+        if(s.contains("herreria"))return "smithing_table";
+        if(s.contains("horno"))return "furnace";
+        if(s.contains("escudo"))return "shield";
+        if(s.contains("arco"))return "bow";
+        if(s.contains("cama")||s.contains("noche"))return "bed_food";
+        if(s.contains("barca"))return "boat";
+        if(s.contains("pesca"))return "category_fishing";
+        if(s.contains("agricultura")||s.contains("cosecha"))return "category_farming";
+        if(s.contains("ganader"))return "category_husbandry";
+        if(s.contains("alquimia")||s.contains("poci"))return "category_alchemy";
+        if(s.contains("escombro"))return "ancient_debris";
+        if(s.contains("netherita"))return "netherite_ingot";
+        if(s.contains("nether"))return "portal_nether";
+        if(s.contains("end"))return "portal_end";
+        if(s.contains("bioma")||s.contains("explor"))return "category_exploration";
+        if(s.contains("diamante"))return "diamond";
+        if(s.contains("hierro"))return "iron_ingot";
+        if(s.contains("cobre"))return "copper_ingot";
+        if(s.contains("madera"))return "wood";
+        return TAB_ART[tab];
+    }
+    private String fit(String s,int w){if(font.width(s)<=w)return s;while(!s.isEmpty()&&font.width(s+"…")>w)s=s.substring(0,s.length()-1);return s+"…";}
+    private void bar(GuiGraphicsExtractor g,int xx,int yy,int w,int h,int current,int max){
+        texture(g,"progress_track",xx,yy,w,h);
+        int fillW=(int)((long)Math.max(0,w-10)*Math.max(0,Math.min(current,max))/Math.max(1,max));
+        if(fillW>0)texture(g,"progress_fill",xx+5,yy+3,fillW,Math.max(2,h-6));
+    }
+    private void control(GuiGraphicsExtractor g,String name,String label,int xx,int yy,int w,int h){
+        texture(g,name,xx,yy,w,h);center(g,fit(label,w-8),xx+w/2,yy+(h-8)/2,TEXT);
+    }
     @Override public void extractRenderState(GuiGraphicsExtractor g,int mouseX,int mouseY,float delta){
         if(pageStarts.isEmpty())paginate();
-        int xx=x(),yy=y(),ww=panelW(),hh=panelH(),sx=xx+30,sw=sidebarW(),mx=mainX(),mw=mainW();
-        int accent=accent();
         fill(g,0,0,width,height,0xB9000000);
-        texture(g,"book",xx,yy+24,ww,hh-24);
-        texture(g,"logo",xx+ww/2-100,yy-2,200,68);
-        texture(g,"button",xx+ww-35,yy+11,24,22);
-        center(g,"X",xx+ww-23,yy+18,RED);
+        texture(g,"book",x(),py(65),panelW(),panelH()*935/1000);
+        int logoW=panelW()*29/100;
+        texture(g,"logo",x()+(panelW()-logoW)/2,y(),logoW,panelH()*17/100);
+        control(g,"action_normal","X",px(918),py(65),20,18);
         for(int i=0;i<SECTIONS.length;i++){
-            int nx=navX(i),ny=navY()+(i/3)*navStep();
-            boolean active=section==i,hover=inside(mouseX,mouseY,nx,ny,navW(),navHeight());
-            texture(g,active||hover?"selected":"button",nx,ny,navW(),navHeight());
-            item(g,SECTION_ICONS[i],nx+(navW()-16)/2,ny+1);
-            if(font.width(SHORT_SECTIONS[i])<navW()-4)center(g,SHORT_SECTIONS[i],nx+navW()/2,ny+17,TEXT);
+            int nx=navX(i),nw=navW(),ny=navY(),nh=navHeight();
+            texture(g,section==i||inside(mouseX,mouseY,nx,ny,nw,nh)?"tab_active":"tab_normal",nx,ny,nw,nh);
+            int sz=Math.min(23,nh-11);
+            texture(g,SECTION_ART[i],nx+(nw-sz)/2,ny+2,sz,sz);
+            center(g,fit(SHORT_SECTIONS[i],nw-4),nx+nw/2,ny+nh-10,TEXT);
         }
-        center(g,"TU AVENTURA",xx+ww/4,yy+152,GOLD);
-        texture(g,"separator",xx+35,yy+166,sidebarW()-12,8);
-        center(g,"Era actual",xx+ww/4,yy+184,MUTED);
-        center(g,Progress.ERA_NAMES[Math.max(0,Math.min(5,getInt("era")))],xx+ww/4,yy+198,TEXT);
-        center(g,"Nether: "+(getBool("nether")?"Abierto":"Cerrado"),xx+ww/4,yy+218,getBool("nether")?GREEN:RED);
-        center(g,"End: "+(getBool("end")?"Abierto":"Cerrado"),xx+ww/4,yy+232,getBool("end")?GREEN:RED);
-        int base=yy+hh-94;
-        text(g,"PROGRESO GLOBAL",sx+10,base,GOLD);
-        FantasySkin.progress(g,sx+10,base+16,sw-19,11,
-            Math.min(100,getInt("overallPercent")),100,0xFFE0A33A);
-        text(g,getInt("overallPercent")+"% completado",sx+10,base+31,MUTED);
-        fill(g,sx+9,base-9,sx+sw-9,base-8,0xFFBE8A59);
-        if(section==4 && data.has("unlockedBadges")&&data.getAsJsonArray("unlockedBadges").size()>0){
-            int by=yy+hh-58;
-            roundedBorder(g,xx+12,by,sw-8,32,6,GOLD,
-                inside(mouseX,mouseY,xx+12,by,sw-8,32)?0xFF3E5043:0xFF263E36);
-            text(g,"CAMBIAR INSIGNIA",xx+18,by+10,GOLD);
-        }
-
-        
-        
-        
-        item(g,ICONS[tab],mx+16,yy+72);
-        text(g,title(),mx+40,yy+70,0xFF67361F);
-        text(g,detail(),mx+40,yy+86,MUTED);
-        // Emblema derecho: cambia con la sección activa.
-        
-        
-        int[] subtabs=SECTION_TABS[section];
-        int cols=Math.min(3,subtabs.length);
-        for(int i=0;i<subtabs.length;i++){
-            int target=subtabs[i],tx=gridX(i%cols,cols),ty=tabsY()+(i/cols)*27;
-            int tw=gridW(cols);
-            boolean selected=tab==target,hover=inside(mouseX,mouseY,tx,ty,tw,24);
-            texture(g,selected||hover?"selected":"button",tx,ty,tw,24);
-            if(selected)fill(g,tx+7,ty+21,tx+tw-7,ty+22,0xFFE09B2E);
-            item(g,ICONS[target],tx+7,ty+4);
-            if(font.width(TITLES[target])<=tw-29)text(g,TITLES[target],tx+26,ty+8,selected?0xFF6D361C:MUTED);
-        }
-        if(tab==22){
-            JsonObject rep=data.getAsJsonObject("reputation");
-            int points=rep.get("points").getAsInt(),lower=rep.get("lower").getAsInt();
-            int next=rep.get("next").getAsInt();
-            int trackX=mx+18,trackY=yy+160,trackWidth=mw-36;
-            FantasySkin.progress(g,trackX,trackY,trackWidth,9,points-lower,Math.max(1,next-lower),0xFFDDA43E);
-            int progress=rep.get("maxRank").getAsBoolean()?trackWidth:
-                (int)(trackWidth*((double)Math.max(0,points-lower)/Math.max(1,next-lower)));
-            // El relleno del pergamino ya representa este progreso.
-            center(g,rep.get("rank").getAsString()+" · "+points+
-                (rep.get("maxRank").getAsBoolean()?" · rango maximo":" / "+next+" REP"),
-                mx+mw/2,yy+174,MUTED);
-        }
-        if(tab!=0 && tab!=22){
-            String phrase=tab==19?"FILTRO: "+OFFER_FILTERS[offerFilter]+"  < Cambiar >":motto();
-            if(tab==19)FantasySkin.card(g,mx+8,yy+158,mw-16,23,true);
-            if(font.width(phrase)<mw-30)
-                center(g,phrase,mx+mw/2,yy+169,tab==19?GOLD:0xFF8FAAA9);
-        }
+        int[] subs=SECTION_TABS[section];
+        for(int i=0;i<subs.length;i++)control(g,tab==subs[i]?"tab_active":"tab_normal",TITLES[subs[i]],subX(i,subs.length),subY(i,subs.length),subW(subs.length),18);
+        int lx=leftX(),rx=rightX(),pw=pageW();
+        String heading=tab==0?Progress.ERA_NAMES[stage+1]:tab==19?"Filtro: "+OFFER_FILTERS[offerFilter]:title();
         if(tab==0){
-            FantasySkin.card(g,mx+8,yy+159,mw-16,23,true);
-            center(g,Progress.ERA_NAMES[stage+1].toUpperCase(Locale.ROOT),
-                mx+mw/2,yy+166,GOLD);
-            if(stage>0)text(g,"<",mx+19,yy+165,TEXT);
-            if(stage<4)text(g,">",mx+mw-27,yy+165,TEXT);
-        }
+            texture(g,"arrow_previous",lx,py(320),20,18);
+            texture(g,"arrow_next",lx+pw-20,py(320),20,18);
+            center(g,fit(heading,pw-45),lx+pw/2,py(320)+5,TEXT);
+        }else if(tab==19)control(g,"action_normal",heading,lx,py(320),pw,18);
+        else center(g,fit(heading,pw),lx+pw/2,py(320)+5,TEXT);
         JsonArray list=goals();
-        int done=completed(list),total=list.size();
-        FantasySkin.progress(g,mx+8,yy+183,mw-16,9,done,Math.max(1,total),0xFFE1A849);
-        text(g,tab==23?"Epicos: "+total:tab>=19?"Contratos: "+total:tab>=13?"Registros: "+total:done+" / "+total+" objetivos",mx+9,yy+195,MUTED);
-        String side=tab==9?"Distintivo: "+badgeLabel():tab==11?"Progreso de todas las habilidades":"";
-        if(!side.isEmpty()&&font.width(side)<mw-150)
-            text(g,side,mx+mw-9-font.width(side),yy+195,GOLD);
-        
-        int begin=pageStarts.get(Math.max(0,Math.min(page,pageStarts.size()-1))),end=page+1<pageStarts.size()?pageStarts.get(page+1):list.size();
-        int cy=contentY()+4;
-        for(int i=begin;i<end;i++){
-            JsonObject objective=list.get(i).getAsJsonObject();
-            boolean ok=objective.get("done").getAsBoolean();
-            String label=objective.get("text").getAsString();
-            int height=rowHeight(objective),left=mx+11,cardW=mw-22;
-            if(objective.has("tribute")){
-                boolean ready=objective.get("canDeliver").getAsBoolean();
-                int color=ok?GREEN:ready?GOLD:0xFF95643A;
-                roundedBorder(g,left,cy,cardW,height-3,5,color,CARD);
-                item(g,Items.AMETHYST_SHARD,left+11,cy+10);
-                text(g,label,left+31,cy+7,ok?GREEN:TEXT);
-                text(g,objective.get("description").getAsString(),left+31,cy+23,MUTED);
-                boolean needsPriorEra=objective.has("needsPriorEra") &&
-                    objective.get("needsPriorEra").getAsBoolean();
-                String action=ok?"ENTREGADO":ready?"ENTREGAR":
-                    needsPriorEra?"ERA "+objective.get("priorEra").getAsString().toUpperCase(Locale.ROOT):
-                    "PENDIENTE";
-                roundedBorder(g,left+cardW-103,cy+3,96,19,4,color,CARD2);
-                text(g,action,left+cardW-8-font.width(action),cy+8,color);
-            } else if(objective.has("threshold")){
-                boolean unlocked=objective.get("unlocked").getAsBoolean();
-                boolean ready=objective.get("ready").getAsBoolean();
-                int color=ok?GREEN:ready?GOLD:unlocked?TEXT:MUTED;
-                roundedBorder(g,left,cy,cardW,height-3,5,color,i%2==0?CARD:CARD2);
-                fill(g,left+2,cy+7,left+5,cy+height-10,color);
-                item(g,Items.NETHER_STAR,left+10,cy+11);
-                text(g,label.toUpperCase(Locale.ROOT),left+31,cy+7,color);
-                String action=ok?"RECLAMADO":ready?"RECLAMAR":"BLOQUEADO";
-                roundedBorder(g,left+cardW-103,cy+3,96,19,4,color,0xFF182B37);
-                text(g,action,left+cardW-8-font.width(action),cy+8,color);
-                text(g,"Requiere "+objective.get("threshold").getAsInt()+" puntos",left+31,cy+23,MUTED);
-                for(String line:wrap(objective.get("reward").getAsString(),Math.max(65,mw-114)))
-                    {text(g,line,left+31,cy+38,unlocked?GREEN:MUTED);break;}
-            } else if(objective.has("tier")&&objective.has("progress")){
-                String tier=objective.get("tier").getAsString();
-                int tierColor=tab==23?0xFFA63D34:tier.equals("ORO")?0xFF95601E:tier.equals("PLATA")?0xFF556B7C:0xFF985224;
-                roundedBorder(g,left,cy,cardW,height-3,5,tierColor,i%2==0?CARD:CARD2);
-                fill(g,left+2,cy+8,left+5,cy+height-11,tierColor);
-                item(g,Items.PAPER,left+9,cy+10);
-                text(g,label,left+31,cy+7,TEXT);
-                String action=tab==23?
-                    (objective.get("epicStatus").getAsString().equals("claimed")?"RECLAMADO":
-                     objective.get("epicStatus").getAsString().equals("locked")?"BLOQUEADO":
-                     objective.get("epicStatus").getAsString().equals("offer")?
-                     (objective.get("canAccept").getAsBoolean()?"ACEPTAR":"BLOQUEADO"):
-                     objective.get("ready").getAsBoolean()?"RECLAMAR":"ABANDONAR"):
-                    tab==21?"RECLAMADO":tab==19?
-                    (objective.get("canAccept").getAsBoolean()?"ACEPTAR":"BLOQUEADO"):
-                    (objective.get("ready").getAsBoolean()?"RECLAMAR":
-                    objective.has("delivery")&&objective.get("delivery").getAsBoolean()
-                        ?"ENTREGAR":"ABANDONAR");
-                roundedBorder(g,left+cardW-103,cy+3,96,19,4,tierColor,0xFF182B37);
-                text(g,action,left+cardW-8-font.width(action),cy+8,tierColor);
-                if(tab==20 && objective.has("delivery") && objective.get("delivery").getAsBoolean()){
-                    roundedBorder(g,left+cardW-103,cy+26,96,19,4,MUTED,0xFF182B37);
-                    String leave="ABANDONAR";
-                    text(g,leave,left+cardW-8-font.width(leave),cy+31,MUTED);
-                }
-                String description=objective.get("description").getAsString();
-                int detailY=cy+21;
-                for(String line:wrap(description,Math.max(65,mw-96))){
-                    text(g,line,left+31,detailY,MUTED);detailY+=11;
-                }
-                if(tab==20 && objective.has("inventory") && objective.has("missing")){
-                    int owned=objective.get("inventory").getAsInt();
-                    int missing=objective.get("missing").getAsInt();
-                    String info=objective.get("ready").getAsBoolean()
-                        ?"Materiales entregados · recompensa disponible"
-                        :"Disponibles: "+owned+" · faltan "+missing;
-                    text(g,info,left+31,detailY+2,missing==0?GREEN:MUTED);
-                    detailY+=12;
-                }
-                String reward=objective.get("reward").getAsString();
-                int count=objective.get("progress").getAsInt(),required=objective.get("target").getAsInt();
-                String category=objective.has("category")?objective.get("category").getAsString():"";
-                if(tab==23){
-                    String req=objective.get("requires").getAsString();
-                    boolean unlocked=objective.get("epicStatus").getAsString().equals("offer") ||
-                        objective.get("epicStatus").getAsString().equals("active") ||
-                        objective.get("epicStatus").getAsString().equals("claimed");
-                    text(g,req,left+31,detailY+1,unlocked?GREEN:0xFF95422E);
-                    text(g,tier+" · "+count+"/"+required+" · "+
-                        objective.get("origin").getAsString(),left+31,detailY+13,tierColor);
-                    text(g,reward,left+31,detailY+25,TEXT);
-                }else{
-                    String footer=category+" · "+tier+" · "+Math.min(count,required)+"/"+required+" · "+reward;
-                    text(g,footer,left+31,detailY+2,tierColor);
-                }
-            } else if(objective.has("detail")){
-                roundedBorder(g,left,cy,cardW,height-3,5,0xFF3C5261,i%2==0?CARD:CARD2);
-                fill(g,left+2,cy+7,left+5,cy+height-10,GOLD);
-                item(g,ICONS[tab],left+10,cy+Math.max(5,(height-17)/2));
-                int yyRow=cy+7;
-                for(String line:wrap(label,Math.max(60,mw-100))){
-                    text(g,line,left+31,yyRow,TEXT);
-                    yyRow+=11;
-                }
-                yyRow+=2;
-                for(String line:wrap(objective.get("detail").getAsString(),Math.max(60,mw-100))){
-                    text(g,line,left+31,yyRow,MUTED);
-                    yyRow+=11;
-                }
-            } else if(tab==12 && objective.has("xp")){
-                boolean ready=objective.get("ready").getAsBoolean();
-                int border=ok?GREEN:ready?GOLD:DIM;
-                boolean hover=inside(mouseX,mouseY,left,cy,cardW,height-3);
-                roundedBorder(g,left,cy,cardW,height-3,5,
-                    hover&&ready?GOLD:0xFF405664,ok?0xFF203B37:ready?CARD:CARD2);
-                fill(g,left+2,cy+7,left+5,cy+height-10,border);
-                item(g,ok?Items.EMERALD:Items.CHEST,left+10,cy+10);
-                String prizeName=label;
-                text(g,prizeName,left+31,cy+7,ok?GREEN:TEXT);
-                String action=ok?"RECLAMADO":ready?"RECLAMAR":"BLOQUEADO";
-                text(g,action,left+cardW-8-font.width(action),cy+7,border);
-                String xpDetail=objective.get("xp").getAsInt()>0?
-                    " + "+objective.get("xp").getAsInt()+" XP":"";
-                String contents=objective.get("items").getAsString()+xpDetail;
-                int ty=cy+22;
-                for(String line:wrap(contents,Math.max(70,mw-126))){
-                    text(g,line,left+31,ty,MUTED);ty+=11;
-                }
-            } else if(secretEntry(objective)){
-                String rarity=objective.get("rarity").getAsString();
-                int tierColor=rarityColor(rarity);
-                boolean hover=inside(mouseX,mouseY,left,cy,cardW,height-3);
-                roundedBorder(g,left,cy,cardW,height-3,5,
-                    hover?tierColor:0xFF394A56,
-                    ok?0xFF203B37:hover?0xFF2A3D4A:i%2==0?CARD:CARD2);
-                fill(g,left+2,cy+8,left+5,cy+height-11,ok?GREEN:tierColor);
-                item(g,ok?Items.NETHER_STAR:Items.ENCHANTED_BOOK,left+10,cy+10);
-                String heading=ok?label:"??? · DESAFIO OCULTO";
-                text(g,heading,left+31,cy+8,ok?GREEN:TEXT);
-                String tier="["+rarity.toUpperCase(Locale.ROOT)+"]";
-                text(g,tier,left+cardW-9-font.width(tier),cy+8,tierColor);
-                String hint=ok?"Distintivo: "+objective.get("reward").getAsString():
-                    "Pista: "+objective.get("hint").getAsString();
-                int hintY=cy+24;
-                for(String line:wrap(hint,Math.max(55,mw-92))){
-                    text(g,line,left+31,hintY,ok?GREEN:MUTED);
-                    hintY+=11;
-                }
-                if(hover && !ok)fill(g,left+7,cy+height-7,left+cardW-7,cy+height-6,tierColor);
-            } else {
-                List<String> lines=wrap(label,Math.max(45,mw-94));
-                rounded(g,left,cy,cardW,height-3,4,
-                    ok?0xFF213D39:i%2==0?CARD:CARD2);
-                fill(g,left+2,cy+7,left+5,cy+height-10,ok?GREEN:DIM);
-                item(g,objectiveItem(label),left+9,cy+Math.max(1,(height-17)/2));
-                text(g,ok?"✔":"◇",left+31,cy+Math.max(1,(height-10)/2),ok?GREEN:RED);
-                int textY=cy+Math.max(2,(height-lines.size()*11)/2);
-                for(String line:lines){text(g,line,left+48,textY,ok?GREEN:TEXT);textY+=11;}
-            }
-            cy+=height;
+        int from=pageStarts.get(page),to=Math.min(list.size(),from+rowsPerPage());
+        int rh=rowHeight(null);
+        for(int i=from;i<to;i++){
+            JsonObject o=list.get(i).getAsJsonObject();int ry=contentY()+(i-from)*rh;
+            boolean ok=flag(o,"done");
+            texture(g,i==selected||inside(mouseX,mouseY,lx,ry,pw,rh-2)?"action_highlight":"action_normal",lx,ry,pw,rh-2);
+            int sz=Math.min(25,rh-6);
+            texture(g,art(o),lx+5,ry+2,sz,sz);
+            String label=secretEntry(o)&&!ok?"??? · Desafío oculto":val(o,"text");
+            text(g,fit(label,pw-sz-35),lx+sz+9,ry+(rh-10)/2,TEXT);
+            texture(g,ok?"status_complete":"status_pending",lx+pw-22,ry+(rh-18)/2,17,17);
         }
-        int footY=yy+hh-45;
-        boolean hasPrev=page>0,hasNext=page<pageStarts.size()-1;
-        texture(g,"previous",mx+7,footY,34,29);
-        texture(g,"next",mx+mw-41,footY,34,29);
-        center(g,"PAGINA "+(page+1)+" / "+pageStarts.size(),
-            mx+mw/2,footY+9,MUTED);
-        FantasySkin.diamond(g,mx+mw/2,footY+23,3,FantasySkin.PURPLE);
+        texture(g,"arrow_previous",lx,py(850),22,20);
+        texture(g,"arrow_next",lx+pw-22,py(850),22,20);
+        center(g,"Página "+(page+1)+" / "+pageStarts.size(),lx+pw/2,py(850)+6,TEXT);
+        center(g,"Progreso general: "+getInt("overallPercent")+"%",rx+pw/2,py(240),TEXT);
+        bar(g,rx,py(268),pw,12,getInt("overallPercent"),100);
+        JsonObject o=chosen();
+        if(o!=null){
+            boolean ok=flag(o,"done");
+            String label=secretEntry(o)&&!ok?"Desafío oculto":val(o,"text");
+            int sz=Math.min(34,panelH()*75/1000);
+            texture(g,art(o),rx,py(310),sz,sz);
+            int ty=py(310)+3;
+            for(String line:wrap(label,Math.max(20,pw-sz-10))){if(ty+9>py(405))break;text(g,line,rx+sz+6,ty,TEXT);ty+=10;}
+            texture(g,"separator_gold",rx,py(407),pw,6);
+            List<String> lines=new ArrayList<>();
+            lines.add("Estado: "+(ok?"Completado":"Pendiente"));
+            if(o.has("progress")&&o.has("target"))lines.add("Progreso: "+val(o,"progress")+" / "+val(o,"target"));
+            if(secretEntry(o)&&!ok){lines.addAll(wrap("Pista: "+val(o,"hint"),pw-12));}
+            else for(String key:new String[]{"detail","description","requires","origin","reward","items","xp","inventory","missing","threshold"}){
+                String v=val(o,key);if(!v.isEmpty())lines.addAll(wrap((key.equals("reward")?"Recompensa: ":key.equals("items")?"Objetos: ":key.equals("xp")?"XP: ":key.equals("threshold")?"Puntos: ":key.equals("inventory")?"Disponibles: ":key.equals("missing")?"Faltan: ":"")+v,pw-12));
+            }
+            int dy=py(440),maxLines=Math.max(1,(py(815)-dy)/11);
+            detailPage=Math.min(detailPage,Math.max(0,(lines.size()-1)/maxLines));
+            int first=detailPage*maxLines;
+            for(int i=first;i<Math.min(lines.size(),first+maxLines);i++){text(g,lines.get(i),rx+4,dy,i==0?(ok?GREEN:RED):TEXT);dy+=11;}
+            if(lines.size()>maxLines)center(g,"Detalles "+(detailPage+1)+"/"+((lines.size()+maxLines-1)/maxLines)+" · rueda",rx+pw/2,py(825),MUTED);
+            String act=action(o);
+            control(g,act.isEmpty()?"action_disabled":"action_highlight",act.isEmpty()?"Sin acción":act,rx,py(850),pw/2-2,20);
+            String secondary=tab==20&&flag(o,"delivery")?"ABANDONAR":section==4?"INSIGNIA":"";
+            if(!secondary.isEmpty())control(g,"action_normal",secondary,rx+pw/2,py(850),pw/2,20);
+        }else center(g,"Sin objetivos",rx+pw/2,py(420),MUTED);
         super.extractRenderState(g,mouseX,mouseY,delta);
     }
     @Override public boolean isPauseScreen(){return false;}

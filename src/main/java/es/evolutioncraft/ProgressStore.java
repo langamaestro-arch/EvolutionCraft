@@ -70,6 +70,18 @@ public final class ProgressStore {
                 progress.nicktaleDimensionBossKills=new java.util.HashSet<>();
             save(player);
         }
+        EvolutionConfig eliteConfig=EvolutionConfig.get(player);
+        boolean eliteActive=eliteConfig.eliteMobsEnabled && net.neoforged.fml.ModList.get().isLoaded("elitemobs");
+        progress.eliteMobGateActive=false;
+        if(eliteActive && !progress.eliteMobMigrated){
+            progress.eliteNetherGrandfathered=progress.canNether(eliteConfig);
+            progress.eliteEndGrandfathered=progress.canEnd(eliteConfig);
+            progress.eliteMobMigrated=true;
+            save(player);
+        }
+        progress.eliteNetherRequirements=eliteConfig.eliteNether;
+        progress.eliteEndRequirements=eliteConfig.eliteEnd;
+        progress.eliteMobGateActive=eliteActive;
         return progress;
     }
     public static void save(ServerPlayer player) {

@@ -65,18 +65,21 @@ public final class ProgressScreen extends Screen {
     }
     private int getInt(String key){return data.has(key)?data.get(key).getAsInt():0;}
     private boolean getBool(String key){return data.has(key)&&data.get(key).getAsBoolean();}
-    private int panelW(){return Math.min(635,width-12);}
+    private int panelW(){return Math.min(760,width-12);}
     private int panelH(){return Math.min(455,height-12);}
     private int x(){return (width-panelW())/2;}
     private int y(){return (height-panelH())/2;}
-    private int sidebarW(){return Math.min(140,Math.max(100,panelW()/4));}
-    private int mainX(){return x()+sidebarW()+19;}
-    private int mainW(){return panelW()-sidebarW()-31;}
+    private int sidebarW(){return panelW()/2-34;}
+    private int mainX(){return x()+panelW()/2+9;}
+    private int mainW(){return panelW()/2-36;}
     private int contentY(){return y()+208;}
     private int contentBottom(){return y()+panelH()-57;}
-    private int navY(){return y()+91;}
-    private int navStep(){return 28;}
-    private int navHeight(){return 25;}
+    private int navY(){return y()+50;}
+    private int navStep(){return 30;}
+    private int navHeight(){return 27;}
+    private int navX(int i){return x()+30+(i%3)*(sidebarW()-10)/3;}
+    private int navW(){return (sidebarW()-10)/3-3;}
+    private static final String[] SHORT_SECTIONS={"Eras","Oficios","Mundos","Logros","Secretos","Premios","Diario","Contratos","Rangos"};
     private int tabsY(){return y()+112;}
 
     private JsonArray goals(){
@@ -233,7 +236,7 @@ public final class ProgressScreen extends Screen {
         int xx=x(),yy=y(),ww=panelW(),hh=panelH();
         if(inside(mx,my,xx+ww-34,yy+10,23,22)){onClose();return true;}
         for(int s=0;s<SECTIONS.length;s++){
-            if(inside(mx,my,xx+12,navY()+s*navStep(),sidebarW()-8,navHeight())){
+            if(inside(mx,my,navX(s),navY()+(s/3)*navStep(),navW(),navHeight())){
                 switchSection(s);return true;
             }
         }
@@ -533,12 +536,17 @@ public final class ProgressScreen extends Screen {
     }
     /** Pixel-art rounded rectangles: no external textures or render APIs required. */
     /** La geometría de interacción permanece intacta; cambia sólo la apariencia. */
+    private void texture(GuiGraphicsExtractor g,String name,int xx,int yy,int ww,int hh){
+        if(ww<=0||hh<=0)return;
+        var id=net.minecraft.resources.Identifier.fromNamespaceAndPath(EvolutionCraft.ID,"textures/gui/"+name+".png");
+        g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,id,xx,yy,0f,0f,ww,hh,ww,hh);
+    }
     private void rounded(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int radius,int color){
-        FantasySkin.card(g,xx,yy,ww,hh,false);
+        texture(g,"button",xx,yy,ww,hh);
     }
     private void roundedBorder(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,
                                int radius,int edge,int middle){
-        FantasySkin.card(g,xx,yy,ww,hh,edge==GOLD || edge==GREEN || edge==0xFFE4A94A);
+        texture(g,edge==GOLD || edge==GREEN || edge==0xFFE4A94A?"selected":"button",xx,yy,ww,hh);
     }
     private void outline(GuiGraphicsExtractor g,int xx,int yy,int ww,int hh,int c){
         if(ww>2&&hh>2)g.outline(xx,yy,ww,hh,c);
@@ -549,36 +557,26 @@ public final class ProgressScreen extends Screen {
 
     @Override public void extractRenderState(GuiGraphicsExtractor g,int mouseX,int mouseY,float delta){
         if(pageStarts.isEmpty())paginate();
-        int xx=x(),yy=y(),ww=panelW(),hh=panelH(),sx=xx+10,sw=sidebarW(),mx=mainX(),mw=mainW();
+        int xx=x(),yy=y(),ww=panelW(),hh=panelH(),sx=xx+30,sw=sidebarW(),mx=mainX(),mw=mainW();
         int accent=accent();
         fill(g,0,0,width,height,0xB9000000);
-        // Decoración integral en pergamino, sin modificar posiciones de botones.
-        FantasySkin.fortressFrame(g,xx-12,yy-12,ww+24,hh+24);
-        FantasySkin.panel(g,xx-5,yy-5,ww+10,hh+10);
-        FantasySkin.panel(g,sx,yy+58,sw,hh-70);
-        FantasySkin.panel(g,mx-4,yy+58,mw+8,hh-70);
-        FantasySkin.ribbon(g,xx+6,yy+5,ww-12,43);
-        FantasySkin.decorations(g,xx-5,yy-5,ww+10,hh+10);
-        FantasySkin.card(g,xx+13,yy+9,35,35,true);
-        item(g,Items.ENCHANTED_BOOK,xx+22,yy+18);
-        text(g,"✦  EVOLUTIONCRAFT  ✦",xx+55,yy+12,0xFF67331E);
-        text(g,"C R O N I C A S    D E L    A V E N T U R E R O",
-            xx+55,yy+28,0xFF814923);
-        FantasySkin.card(g,xx+ww-35,yy+11,24,22,
-            inside(mouseX,mouseY,xx+ww-35,yy+11,24,22));
+        texture(g,"book",xx,yy+24,ww,hh-24);
+        texture(g,"logo",xx+ww/2-100,yy-2,200,68);
+        texture(g,"button",xx+ww-35,yy+11,24,22);
         center(g,"X",xx+ww-23,yy+18,RED);
-
-        text(g,"SECCIONES",sx+17,yy+69,0xFF844623);
-        fill(g,sx+14,yy+82,sx+sw-13,yy+84,0xFFB67E45);
-        FantasySkin.diamond(g,sx+sw/2,yy+83,3,FantasySkin.PURPLE);
         for(int i=0;i<SECTIONS.length;i++){
-            int ny=navY()+i*navStep();
-            boolean selected=section==i;
-            boolean hover=inside(mouseX,mouseY,xx+12,ny,sw-8,navHeight());
-            FantasySkin.nav(g,xx+12,ny,sw-8,navHeight(),selected||hover);
-            item(g,SECTION_ICONS[i],xx+19,ny+5);
-            text(g,SECTIONS[i],xx+40,ny+9,selected?0xFF65341C:TEXT);
+            int nx=navX(i),ny=navY()+(i/3)*navStep();
+            boolean active=section==i,hover=inside(mouseX,mouseY,nx,ny,navW(),navHeight());
+            texture(g,active||hover?"selected":"button",nx,ny,navW(),navHeight());
+            item(g,SECTION_ICONS[i],nx+(navW()-16)/2,ny+1);
+            if(font.width(SHORT_SECTIONS[i])<navW()-4)center(g,SHORT_SECTIONS[i],nx+navW()/2,ny+17,TEXT);
         }
+        center(g,"TU AVENTURA",xx+ww/4,yy+152,GOLD);
+        texture(g,"separator",xx+35,yy+166,sidebarW()-12,8);
+        center(g,"Era actual",xx+ww/4,yy+184,MUTED);
+        center(g,Progress.ERA_NAMES[Math.max(0,Math.min(5,getInt("era")))],xx+ww/4,yy+198,TEXT);
+        center(g,"Nether: "+(getBool("nether")?"Abierto":"Cerrado"),xx+ww/4,yy+218,getBool("nether")?GREEN:RED);
+        center(g,"End: "+(getBool("end")?"Abierto":"Cerrado"),xx+ww/4,yy+232,getBool("end")?GREEN:RED);
         int base=yy+hh-94;
         text(g,"PROGRESO GLOBAL",sx+10,base,GOLD);
         FantasySkin.progress(g,sx+10,base+16,sw-19,11,
@@ -592,25 +590,25 @@ public final class ProgressScreen extends Screen {
             text(g,"CAMBIAR INSIGNIA",xx+18,by+10,GOLD);
         }
 
-        FantasySkin.card(g,mx+5,yy+65,mw-10,35,false);
-        FantasySkin.ribbon(g,mx+10,yy+67,mw-20,14);
-        FantasySkin.diamond(g,mx+16,yy+86,3,FantasySkin.PURPLE);
+        
+        
+        
         item(g,ICONS[tab],mx+16,yy+72);
         text(g,title(),mx+40,yy+70,0xFF67361F);
         text(g,detail(),mx+40,yy+86,MUTED);
         // Emblema derecho: cambia con la sección activa.
-        FantasySkin.card(g,mx+mw-38,yy+69,27,27,false);
-        item(g,SECTION_ICONS[section],mx+mw-32,yy+74);
+        
+        
         int[] subtabs=SECTION_TABS[section];
         int cols=Math.min(3,subtabs.length);
         for(int i=0;i<subtabs.length;i++){
             int target=subtabs[i],tx=gridX(i%cols,cols),ty=tabsY()+(i/cols)*27;
             int tw=gridW(cols);
             boolean selected=tab==target,hover=inside(mouseX,mouseY,tx,ty,tw,24);
-            FantasySkin.nav(g,tx,ty,tw,24,selected||hover);
+            texture(g,selected||hover?"selected":"button",tx,ty,tw,24);
             if(selected)fill(g,tx+7,ty+21,tx+tw-7,ty+22,0xFFE09B2E);
             item(g,ICONS[target],tx+7,ty+4);
-            text(g,TITLES[target],tx+26,ty+8,selected?0xFF6D361C:MUTED);
+            if(font.width(TITLES[target])<=tw-29)text(g,TITLES[target],tx+26,ty+8,selected?0xFF6D361C:MUTED);
         }
         if(tab==22){
             JsonObject rep=data.getAsJsonObject("reputation");
@@ -645,7 +643,7 @@ public final class ProgressScreen extends Screen {
         String side=tab==9?"Distintivo: "+badgeLabel():tab==11?"Progreso de todas las habilidades":"";
         if(!side.isEmpty()&&font.width(side)<mw-150)
             text(g,side,mx+mw-9-font.width(side),yy+195,GOLD);
-        FantasySkin.card(g,mx+7,contentY()-1,mw-14,contentBottom()-contentY()+3,false);
+        
         int begin=pageStarts.get(Math.max(0,Math.min(page,pageStarts.size()-1))),end=page+1<pageStarts.size()?pageStarts.get(page+1):list.size();
         int cy=contentY()+4;
         for(int i=begin;i<end;i++){
@@ -804,12 +802,8 @@ public final class ProgressScreen extends Screen {
         }
         int footY=yy+hh-45;
         boolean hasPrev=page>0,hasNext=page<pageStarts.size()-1;
-        roundedBorder(g,mx+7,footY,34,29,5,hasPrev?accent:DIM,
-            hasPrev?0xFF314B5B:0xFF1B2B37);
-        roundedBorder(g,mx+mw-41,footY,34,29,5,hasNext?accent:DIM,
-            hasNext?0xFF314B5B:0xFF1B2B37);
-        center(g,"<",mx+24,footY+10,hasPrev?TEXT:DIM);
-        center(g,">",mx+mw-24,footY+10,hasNext?TEXT:DIM);
+        texture(g,"previous",mx+7,footY,34,29);
+        texture(g,"next",mx+mw-41,footY,34,29);
         center(g,"PAGINA "+(page+1)+" / "+pageStarts.size(),
             mx+mw/2,footY+9,MUTED);
         FantasySkin.diamond(g,mx+mw/2,footY+23,3,FantasySkin.PURPLE);

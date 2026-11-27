@@ -133,6 +133,7 @@ public final class EvolutionCraft {
         AdventureContracts.onAction(killer,"kill",entity,1);
         EpicContracts.bossKilled(killer,entity);
         update(killer, p -> {
+            EliteMobGate.record(p,event.getEntity().getTags());
             boolean journalBoss=java.util.Set.of("minecraft:warden","minecraft:wither",
                 "minecraft:ender_dragon","minecraft:elder_guardian").contains(entity)
                 || (entity.startsWith("nicktaleepicdungeons:") &&
@@ -193,8 +194,8 @@ public final class EvolutionCraft {
         // Evita saturar el chat si el jugador permanece dentro de un portal.
         if (player.tickCount % 40 == 0) {
             player.sendSystemMessage(Component.literal(netherDenied
-                    ? "§c[Evolution Craft] Nether bloqueado: guardianes Nicktale, Diamante, "+config.netherBiomes+" biomas, "+config.netherAdvancements+" avances, habilidades III y Warden."
-                    : "§c[Evolution Craft] End bloqueado: guardianes Nicktale, "+config.endAdvancements+" avances, Exploracion V, Alquimia III y Wither."));
+                    ? "§c[Evolution Craft] Nether bloqueado: consulta la guia (P). EliteMobs, guardianes Nicktale, Diamante, "+config.netherBiomes+" biomas, "+config.netherAdvancements+" avances, habilidades III y Warden."
+                    : "§c[Evolution Craft] End bloqueado: consulta la guia (P). EliteMobs, guardianes Nicktale, "+config.endAdvancements+" avances, Exploracion V, Alquimia III y Wither."));
         }
     }
 

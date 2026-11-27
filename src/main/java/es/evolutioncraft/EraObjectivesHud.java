@@ -97,6 +97,14 @@ public final class EraObjectivesHud {
         if(s.contains("cosecha")||s.contains("cultiv"))return "category_farming";
         if(s.contains("cria"))return "objective_breeding";
         if(s.contains("comerci"))return "objective_trade";
+        String material=s.contains("netherita")?"netherite":s.contains("diamante")?"diamond":s.contains("hierro")?"iron":s.contains("cobre")?"copper":s.contains("piedra")?"stone":"wooden";
+        if(s.contains("pico"))return material+"_pickaxe";
+        if(s.contains("espada"))return material+"_sword";
+        if(s.contains("azada"))return material+"_hoe";
+        if(s.contains("hacha"))return material+"_axe";
+        if(s.contains("pala"))return material+"_shovel";
+        if(s.contains("hoguera"))return "objective_campfire";
+        if(s.contains("noche")||s.contains("cama"))return "bed_food";
         if(s.contains("diamante"))return "hud_diamond";
         if(s.contains("hierro"))return "hud_iron";
         if(s.contains("cobre"))return "hud_copper";
@@ -110,9 +118,10 @@ public final class EraObjectivesHud {
         return s+"…";
     }
     private static void frame(GuiGraphicsExtractor g,Minecraft mc,String texture,String title,int x,int y,int w,int h){
-        art(g,texture,x,y,w,h);
+        FantasySkin.fortressFrame(g,x,y,w,h);
+        FantasySkin.panel(g,x+5,y+5,w-10,h-10);
         // A clean parchment inset covers the fixed decorative slots, allowing variable row counts.
-        g.fill(x+12,y+12,x+w-12,y+h-12,0xFFF0DDB6);
+        
         FantasySkin.ribbon(g,x+14,y+12,w-28,18);
         String t=fit(mc,title,w-54);
         g.text(mc.font,t,x+(w-mc.font.width(t))/2,y+17,WHITE,false);
@@ -125,10 +134,10 @@ public final class EraObjectivesHud {
         JsonArray contracts=state.has("contracts")?state.getAsJsonArray("contracts"):new JsonArray();
         boolean show=contractsVisible&&contracts.size()>0;
         if(eraVisible){
-            int available=bottom-y-(show?Math.min(90,Math.max(0,(bottom-y)/2)):0);
-            if(available>=66){
-                int count=Math.min(entries.size(),Math.min(Math.clamp(state.has("maxObjectives")?state.get("maxObjectives").getAsInt():24,4,24),Math.max(0,(available-66)/30)));
-                int h=66+count*30;
+            int available=bottom-y-(show?Math.min(115,Math.max(0,(bottom-y)/2)):0);
+            if(available>=82){
+                int count=Math.min(entries.size(),Math.min(Math.clamp(state.has("maxObjectives")?state.get("maxObjectives").getAsInt():24,4,24),Math.max(0,(available-82)/30)));
+                int h=82+count*30;
                 frame(g,mc,"hud_objectives","EVOLUTIONCRAFT",x,y,w,h);
                 g.text(mc.font,fit(mc,"ERA: "+state.get("eraName").getAsString(),w-36),x+18,y+34,WHITE,false);
                 for(int i=0;i<count;i++){
@@ -139,16 +148,16 @@ public final class EraObjectivesHud {
                     for(int j=0;j<Math.min(2,ls.size());j++)g.text(mc.font,fit(mc,ls.get(j)+(j==1&&ls.size()>2?"…":""),w-65),x+46,yy+4+j*10,WHITE,false);
                 }
                 String footer=entries.size()>count?"+"+(entries.size()-count)+" objetivos · P":entries.size()==0?"Sin objetivos pendientes":"J: ocultar · P: guía";
-                g.text(mc.font,fit(mc,footer,w-36),x+18,y+h-19,MUTED,false);
+                g.text(mc.font,fit(mc,footer,w-36),x+18,y+h-23,MUTED,false);
                 y+=h+5;
             }
         }
         if(show)renderContracts(g,mc,contracts,x,y,w,bottom);
     }
     private static void renderContracts(GuiGraphicsExtractor g,Minecraft mc,JsonArray contracts,int x,int y,int w,int bottom){
-        int count=Math.min(contracts.size(),Math.min(4,Math.max(0,(bottom-y-58)/36)));
-        if(bottom-y<58)return;
-        int h=58+count*36;
+        int count=Math.min(contracts.size(),Math.min(4,Math.max(0,(bottom-y-70)/36)));
+        if(bottom-y<70)return;
+        int h=70+count*36;
         frame(g,mc,"hud_contracts","CONTRATOS ACTIVOS",x,y,w,h);
         for(int i=0;i<count;i++){
             JsonObject o=contracts.get(i).getAsJsonObject();
@@ -163,6 +172,6 @@ public final class EraObjectivesHud {
             FantasySkin.progress(g,x+48,yy+25,Math.max(5,w-66-tw-5),6,current,required,ready?GREEN:0xFFE7A83D);
             g.text(mc.font,progress,x+w-17-tw,yy+23,ready?GREEN:WHITE,false);
         }
-        g.text(mc.font,fit(mc,(contracts.size()>count?"+"+(contracts.size()-count)+" contratos · ":"")+"K: ocultar",w-36),x+18,y+h-19,MUTED,false);
+        g.text(mc.font,fit(mc,(contracts.size()>count?"+"+(contracts.size()-count)+" contratos · ":"")+"K: ocultar",w-36),x+18,y+h-23,MUTED,false);
     }
 }

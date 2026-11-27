@@ -117,60 +117,56 @@ public final class EraObjectivesHud {
         while(!s.isEmpty()&&mc.font.width(s+"…")>w)s=s.substring(0,s.length()-1);
         return s+"…";
     }
-    private static void frame(GuiGraphicsExtractor g,Minecraft mc,String texture,String title,int x,int y,int w,int h){
-        art(g,texture,x,y,w,h);
-        // A clean parchment inset covers the fixed decorative slots, allowing variable row counts.
-        
-        FantasySkin.ribbon(g,x+14,y+12,w-28,18);
-        String t=fit(mc,title,w-54);
-        g.text(mc.font,t,x+(w-mc.font.width(t))/2,y+17,WHITE,false);
+    private static int pos(int size,int n,int base){return Math.round(size*n/(float)base);}
+    private static void centered(GuiGraphicsExtractor g,Minecraft mc,String s,int x,int y,int w,int color){
+        s=fit(mc,s,w);g.text(mc.font,s,x+(w-mc.font.width(s))/2,y,color,false);
     }
     private static void render(GuiGraphicsExtractor g,net.minecraft.client.DeltaTracker unused){
         Minecraft mc=Minecraft.getInstance();
         if(mc.player==null||mc.gui.screen()!=null||state==null||g.guiWidth()<300||g.guiHeight()<165)return;
-        int x=5,y=44,w=Math.min(200,Math.max(144,g.guiWidth()/3)),bottom=g.guiHeight()-48;
         JsonArray entries=state.getAsJsonArray("pending");
         JsonArray contracts=state.has("contracts")?state.getAsJsonArray("contracts"):new JsonArray();
         boolean show=contractsVisible&&contracts.size()>0;
+        int x=5,y=12,bottom=g.guiHeight()-42;
+        int panels=(eraVisible?1:0)+(show?1:0);
+        if(panels==0)return;
+        int w=Math.min(200,Math.min(g.guiWidth()/3,(bottom-y-6*(panels-1))*3/(4*panels)));
+        if(w<90)return;
+        int h=Math.round(w*4f/3f);
         if(eraVisible){
-            int available=bottom-y-(show?Math.min(115,Math.max(0,(bottom-y)/2)):0);
-            if(available>=82){
-                int count=Math.min(entries.size(),Math.min(Math.clamp(state.has("maxObjectives")?state.get("maxObjectives").getAsInt():24,4,24),Math.max(0,(available-82)/30)));
-                int h=82+count*30;
-                frame(g,mc,"hud_objectives","EVOLUTIONCRAFT",x,y,w,h);
-                g.text(mc.font,fit(mc,"ERA: "+state.get("eraName").getAsString(),w-36),x+18,y+34,WHITE,false);
-                for(int i=0;i<count;i++){
-                    String label=entries.get(i).getAsString();int yy=y+46+i*30;
-                    
-                    art(g,icon(label),x+15,yy,28,28);
-                    List<String> ls=lines(mc,label,w-65);
-                    for(int j=0;j<Math.min(2,ls.size());j++)g.text(mc.font,fit(mc,ls.get(j)+(j==1&&ls.size()>2?"…":""),w-65),x+46,yy+(ls.size()==1?10:4)+j*10,WHITE,false);
-                }
-                String footer=entries.size()>count?"+"+(entries.size()-count)+" objetivos · P":entries.size()==0?"Sin objetivos pendientes":"J: ocultar · P: guía";
-                g.text(mc.font,fit(mc,footer,w-36),x+18,y+h-23,MUTED,false);
-                y+=h+5;
+            art(g,"hud_objectives",x,y,w,h);
+            centered(g,mc,"EVOLUTIONCRAFT",x+pos(w,110,400),y+pos(h,37,533),pos(w,180,400),0xFFFFE3A0);
+            centered(g,mc,state.get("eraName").getAsString(),x+pos(w,137,400),y+pos(h,72,533),pos(w,126,400),WHITE);
+            int count=Math.min(5,entries.size());
+            for(int i=0;i<count;i++){
+                String label=entries.get(i).getAsString();
+                int cy=y+pos(h,160+i*67,533),cx=x+pos(w,90,400),sz=pos(w,52,400);
+                art(g,icon(label),cx-sz/2,cy-sz/2,sz,sz);
+                int tx=x+pos(w,123,400),tw=pos(w,171,400);
+                List<String> ls=lines(mc,label,tw);
+                int n=Math.min(2,ls.size());
+                for(int j=0;j<n;j++)g.text(mc.font,fit(mc,ls.get(j)+(j==1&&ls.size()>2?"…":""),tw),tx,cy-n*5+j*10,WHITE,false);
             }
+            centered(g,mc,entries.size()>count?"+"+(entries.size()-count)+" objetivos · P":"J: ocultar · P: guía",x+pos(w,65,400),y+pos(h,473,533),pos(w,270,400),WHITE);
+            y+=h+6;
         }
-        if(show)renderContracts(g,mc,contracts,x,y,w,bottom);
-    }
-    private static void renderContracts(GuiGraphicsExtractor g,Minecraft mc,JsonArray contracts,int x,int y,int w,int bottom){
-        int count=Math.min(contracts.size(),Math.min(4,Math.max(0,(bottom-y-70)/36)));
-        if(bottom-y<70)return;
-        int h=70+count*36;
-        frame(g,mc,"hud_contracts","CONTRATOS ACTIVOS",x,y,w,h);
-        for(int i=0;i<count;i++){
-            JsonObject o=contracts.get(i).getAsJsonObject();
-            int yy=y+34+i*36,current=o.get("current").getAsInt(),required=o.get("required").getAsInt();
-            boolean ready=o.get("ready").getAsBoolean();
-            String label=o.get("title").getAsString(),progress=ready?"LISTO":Math.min(current,required)+"/"+required;
-            
-            art(g,icon(label),x+15,yy+2,30,30);
-            List<String> ls=lines(mc,label,w-66);
-            for(int j=0;j<Math.min(2,ls.size());j++)g.text(mc.font,fit(mc,ls.get(j),w-66),x+48,yy+3+j*9,WHITE,false);
-            int tw=mc.font.width(progress);
-            FantasySkin.progress(g,x+48,yy+25,Math.max(5,w-66-tw-5),6,current,required,ready?GREEN:0xFFE7A83D);
-            g.text(mc.font,progress,x+w-17-tw,yy+23,ready?GREEN:WHITE,false);
+        if(show){
+            art(g,"hud_contracts",x,y,w,h);
+            centered(g,mc,"CONTRATOS",x+pos(w,110,400),y+pos(h,37,533),pos(w,180,400),0xFFFFE3A0);
+            centered(g,mc,"Activos",x+pos(w,137,400),y+pos(h,72,533),pos(w,126,400),WHITE);
+            int count=Math.min(4,contracts.size());
+            for(int i=0;i<count;i++){
+                JsonObject o=contracts.get(i).getAsJsonObject();
+                int cy=y+pos(h,159+i*77,533),cx=x+pos(w,92,400),sz=pos(w,55,400);
+                art(g,icon(o.get("title").getAsString()),cx-sz/2,cy-sz/2,sz,sz);
+                int tx=x+pos(w,128,400),tw=pos(w,165,400);
+                int current=o.get("current").getAsInt(),required=o.get("required").getAsInt();
+                boolean ready=o.get("ready").getAsBoolean();
+                g.text(mc.font,fit(mc,o.get("title").getAsString(),tw),tx,cy-9,WHITE,false);
+                String progress=ready?"LISTO":Math.min(current,required)+"/"+required;
+                g.text(mc.font,fit(mc,progress,tw),tx,cy+2,ready?GREEN:WHITE,false);
+            }
+            centered(g,mc,contracts.size()>count?"+"+(contracts.size()-count)+" contratos · K":"K: ocultar",x+pos(w,100,400),y+pos(h,459,533),pos(w,200,400),WHITE);
         }
-        g.text(mc.font,fit(mc,(contracts.size()>count?"+"+(contracts.size()-count)+" contratos · ":"")+"K: ocultar",w-36),x+18,y+h-23,MUTED,false);
     }
 }

@@ -8,6 +8,9 @@ public final class Progress {
     public static final String[] ERA_NAMES = {"Madera", "Piedra y cuero", "Cobre", "Hierro", "Diamante", "Netherita"};
     /** Administrador: -1 = progresion natural; 0..5 = era fijada expresamente. */
     public int adminEraOverride=-1;
+    /** Administrative correction of individual era objectives: key era goal index. */
+    public java.util.Map<String,Boolean> adminEraObjectives=new java.util.HashMap<>();
+
     public Set<String> crafted = new HashSet<>();
     public Set<String> trades = new HashSet<>();
     public Set<String> advancements = new HashSet<>();

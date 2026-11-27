@@ -208,7 +208,7 @@ public final class GuideData {
         if(p.nicktaleDimensionGateActive)
             NicktaleDimensionGate.addNetherGoals(nether,p);
         goal(nether,"Avances originales ("+p.advancements.size()+"/"+config.netherAdvancements+")",p.advancements.size()>=config.netherAdvancements);
-        goal(nether,"Biomas del Overworld ("+p.overworldBiomes.size()+"/"+config.netherBiomes+")",p.overworldBiomes.size()>=20);
+        goal(nether,"Biomas del Overworld ("+p.overworldBiomes.size()+"/"+config.netherBiomes+")",p.overworldBiomes.size()>=config.netherBiomes);
         goal(nether,"Exploracion nivel IV",p.explorationLevel()>=4);
         JsonObject end=group(root,"endGoals","Desbloquear End");
         goal(end,"Desbloquear el Nether",p.canNether(config));

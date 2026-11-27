@@ -76,7 +76,7 @@ public final class ProgressScreen extends Screen {
     private int pageW(){return panelW()*380/1000;}
     private int mainW(){return pageW();}
     private int contentY(){return py(365);}
-    private int contentBottom(){return py(830);}
+    private int contentBottom(){return py(770);}
     private int selected=0, detailPage=0;
     private static final String[] SHORT_SECTIONS={"Eras","Oficios","Mundos","Logros","Secretos","Premios","Diario","Contratos","Rangos"};
     private static final String[] SECTION_ART={"category_eras","category_farming","category_nether","category_missions","medal_gold","category_rewards","category_discoveries","category_contracts","merit_three"};
@@ -233,14 +233,14 @@ public final class ProgressScreen extends Screen {
         if(tab==0&&inside(mx,my,leftX(),py(320),20,18)){stage=Math.max(0,stage-1);resetSelection();return true;}
         if(tab==0&&inside(mx,my,leftX()+pageW()-20,py(320),20,18)){stage=Math.min(4,stage+1);resetSelection();return true;}
         if(tab==19&&inside(mx,my,leftX(),py(320),pageW(),18)){offerFilter=(offerFilter+1)%OFFER_FILTERS.length;resetSelection();return true;}
-        if(inside(mx,my,leftX(),py(850),22,20)){turn(-1);return true;}
-        if(inside(mx,my,leftX()+pageW()-22,py(850),22,20)){turn(1);return true;}
+        if(inside(mx,my,leftX(),py(790),22,20)){turn(-1);return true;}
+        if(inside(mx,my,leftX()+pageW()-22,py(790),22,20)){turn(1);return true;}
         if(inside(mx,my,leftX(),contentY(),pageW(),contentBottom()-contentY())){
             int idx=pageStarts.get(page)+(int)((my-contentY())/rowHeight(null));
             if(idx<goals().size()&&idx<pageStarts.get(page)+rowsPerPage()){selected=idx;detailPage=0;return true;}
         }
-        if(inside(mx,my,rightX(),py(850),pageW()/2-2,20)){execute(chosen(),action(chosen()));return true;}
-        if(inside(mx,my,rightX()+pageW()/2,py(850),pageW()/2,20)){
+        if(inside(mx,my,rightX(),py(790),pageW()/2-2,20)){execute(chosen(),action(chosen()));return true;}
+        if(inside(mx,my,rightX()+pageW()/2,py(790),pageW()/2,20)){
             if(tab==20&&chosen()!=null&&flag(chosen(),"delivery"))execute(chosen(),"ABANDONAR");
             else if(section==4)changeBadge();
             return true;
@@ -432,9 +432,82 @@ public final class ProgressScreen extends Screen {
     private void center(GuiGraphicsExtractor g,String s,int xx,int yy,int c){g.text(font,s,xx-font.width(s)/2,yy,c,false);}
     private void item(GuiGraphicsExtractor g,Item i,int xx,int yy){g.item(new ItemStack(i),xx,yy);}
 
+    private static String plain(String s){return java.text.Normalizer.normalize(s.toLowerCase(Locale.ROOT),java.text.Normalizer.Form.NFD).replaceAll("\\p{M}","");}
+    private String bossKey(JsonObject o){
+        String id=val(o,"id"),s=plain(val(o,"text"));
+        if(secretEntry(o)&&!flag(o,"done"))return "";
+        if(id.endsWith("nicktaleepicdungeons:mutant_zombie")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("zombi mutante"))))return "mutant_zombie";
+        if(id.endsWith("nicktaleepicdungeons:buried_axe_knight")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("hacha sepultada"))))return "buried_axe_knight";
+        if(id.endsWith("nicktaleepicdungeons:blueflame_elder")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("llama azul"))))return "blueflame_elder";
+        if(id.endsWith("nicktaleepicdungeons:voidborne_lich")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("lich del vacio"))))return "voidborne_lich";
+        if(id.endsWith("nicktaleepicdungeons:black_knight")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("caballero negro"))))return "black_knight";
+        if(id.endsWith("nicktaleepicdungeons:armored_skeleton")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("caballero esqueletico"))))return "armored_skeleton";
+        if(id.endsWith("nicktaleepicdungeons:cinderhorn_demon")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("cuernos de brasa"))))return "cinderhorn_demon";
+        if(id.endsWith("nicktaleepicdungeons:runebound_colossus")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("coloso de las runas"))))return "runebound_colossus";
+        if(id.endsWith("nicktaleepicdungeons:don_cascabel")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("don cascabel"))))return "don_cascabel";
+        if(id.endsWith("nicktaleepicdungeons:fortress_guard")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("guardia de la fortaleza"))))return "fortress_guard";
+        if(id.endsWith("nicktaleepicdungeons:gravebreaker_brute")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("quiebratumbas"))))return "gravebreaker_brute";
+        if(id.endsWith("nicktaleepicdungeons:violet_flying_witch")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("vuelo violeta"))))return "violet_flying_witch";
+        if(id.endsWith("nicktaleepicdungeons:vix_eclipse_fox")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("zorro del eclipse"))))return "vix_eclipse_fox";
+        if(id.endsWith("nicktaleepicdungeons:abyssal_shagbeast")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("barbafosa")||s.contains("bestia abisal"))))return "abyssal_shagbeast";
+        if(id.endsWith("nicktaleepicdungeons:cerberus")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("cerbero"))))return "cerberus";
+        if(id.endsWith("nicktaleepicdungeons:zombie_hulk")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("zombi hulk"))))return "zombie_hulk";
+        if(id.endsWith("nicktaleepicdungeons:sultan_eternal_sands")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("sultan"))))return "sultan_eternal_sands";
+        if(id.endsWith("nicktaleepicdungeons:eclipse_colossus")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("coloso del eclipse"))))return "eclipse_colossus";
+        if(id.endsWith("nicktaleepicdungeons:widow_of_the_well")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("viuda del pozo"))))return "widow_of_the_well";
+        if(id.endsWith("nicktaleepicdungeons:fire_centaur")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("centauro"))))return "fire_centaur";
+        if(id.endsWith("nicktaleepicdungeons:volcanic_golem")||((s.contains("derrotar")||s.contains("jefe nicktale"))&&(s.contains("golem volcanico"))))return "volcanic_golem";
+        return "";
+    }
+    private String bossStructure(String key){return switch(key){
+        case "mutant_zombie" -> "Relicario de Cobre (Copper Reliquary) / Gruta de los Ecos Cristalinos (Grotto of Crystal Echoes)";
+        case "buried_axe_knight" -> "Coliseo de los Condenados (Coliseum of the Condemned)";
+        case "blueflame_elder" -> "Camposanto de las Ánimas (Graveyard of Lost Souls)";
+        case "voidborne_lich" -> "Aguja del Nigromante (Necromancer Spire)";
+        case "black_knight" -> "Torreón de Obsidiana (Obsidian Keep)";
+        case "armored_skeleton" -> "Castillo del Rey Esqueleto (Skeleton King Castle)";
+        case "cinderhorn_demon" -> "Volcán del Señor de las Brasas (Volcano of the Ember Lord)";
+        case "runebound_colossus" -> "Fortaleza de la Calavera (Skull Fortress)";
+        case "don_cascabel" -> "Torre del Reloj de Cobre (Copper Clocktower) / Obelisco del Desierto (Desert Obelisk)";
+        case "fortress_guard" -> "Bastión de Ladrillo (Brick Bastion) / Baluarte Congelado (Frozen Bulwark)";
+        case "gravebreaker_brute" -> "Mina del Rey Enano (Dwarf King Mine) / Laberinto del Minotauro (Minotaur Labyrinth)";
+        case "violet_flying_witch" -> "Torre del Eco Profundo (Deep Echo Tower) / Torre de Brasas (Ember Tower)";
+        case "vix_eclipse_fox" -> "Ciudad-Árbol Élfica (Elven Tree City) / Ciudadela Celeste (Sky Citadel)";
+        case "abyssal_shagbeast" -> "Catedral Abismal (Abyssal Cathedral) / Galeón Fantasma (Ghost Galleon)";
+        case "cerberus" -> "Cripta de Cenizas (Ashen Crypt) / Catacumbas Rojas (Red Catacombs)";
+        case "zombie_hulk" -> "Cripta del Rey Olvidado (Crypt of the Forgotten King) / Túmulo Helado (Frost Barrow)";
+        case "sultan_eternal_sands" -> "Palacio del Sultán (Sultan's Palace)";
+        case "eclipse_colossus" -> "Montaña Enana (Dwarven Mountain Hold) / Torre de Babel (Tower of Babel)";
+        case "widow_of_the_well" -> "Ciudad Hundida (Sunken City)";
+        case "fire_centaur" -> "Bastión de las Llamas Gemelas (Bastion of the Twin Flames)";
+        case "volcanic_golem" -> "Bastión de las Llamas Gemelas (Bastion of the Twin Flames)";
+        default -> "";
+    };}
+    private String explanation(JsonObject o){
+        String s=plain(val(o,"text"));
+        if(s.contains("thoridrop"))return "Participa en los desafíos de suministro de Thoridrop y completa los de la dificultad indicada. Consulta el contador de este objetivo.";
+        if(s.contains("tributo"))return "Reúne los fragmentos de suministro de Thoridrop y entrega el tributo cuando esté disponible.";
+        if(s.contains("maestria")||s.contains("nivel")&&tab==0)return "Abre la pestaña Oficios y completa los requisitos de la habilidad hasta alcanzar el nivel indicado.";
+        if(s.contains("comerciar")||s.contains("intercambiar"))return "Busca un aldeano con la profesión adecuada y realiza el intercambio requerido. Si pide una herramienta concreta, elige esa oferta.";
+        if(s.contains("primera noche"))return "Sobrevive a tu primera noche y fabrica la hoguera si el objetivo lo exige.";
+        if(s.contains("fundir"))return "Utiliza un horno y combustible para fundir el mineral indicado y conseguir el avance correspondiente.";
+        if(s.contains("extraer")||s.contains("naturales")||s.contains("natural"))return "Explora y extrae el mineral indicado con una herramienta apropiada. Para requisitos naturales, busca vetas generadas en el mundo.";
+        if(s.contains("bioma")||s.contains("estructura")||s.contains("visitar"))return "Explora lugares nuevos de la clase indicada. Consulta el Diario para revisar los descubrimientos registrados.";
+        if(s.contains("peces")||s.contains("pescar")||s.contains("tesoros"))return "Utiliza una caña de pescar y consigue las capturas indicadas. Revisa el contador para saber cuánto falta.";
+        if(s.contains("cosecha"))return "Cultiva y recolecta los productos agrícolas que exige el objetivo.";
+        if(s.contains("crias"))return "Alimenta parejas de animales compatibles para conseguir crías y aumentar el contador.";
+        if(s.contains("usar herramientas"))return "Utiliza herramientas del material solicitado en tus actividades habituales hasta alcanzar el contador requerido.";
+        if(s.startsWith("pico de")||s.startsWith("hacha de")||s.startsWith("espada de")||s.startsWith("pala de")||s.startsWith("azada de")||s.startsWith("casco de")||s.startsWith("peto de")||s.startsWith("pantalones de")||s.startsWith("botas de"))return "Fabrica la pieza indicada con el material solicitado. Comprueba después que EvolutionCraft haya registrado el requisito.";
+        if(s.contains("avance"))return "Consigue el avance original de Minecraft indicado. Puedes comprobarlo también en el menú de avances.";
+        if(tab==0)return "Completa el requisito indicado para avanzar hacia la era "+Progress.ERA_NAMES[stage+1]+".";
+        if(tab==7||tab==8)return "Completa este requisito para avanzar en el desbloqueo de la dimensión.";
+        if(tab>=1&&tab<=6)return "Completa la actividad indicada para progresar en esta maestría.";
+        return "";
+    }
     private String art(JsonObject o){
-        String s=val(o,"text").toLowerCase(Locale.ROOT);
+        String s=plain(val(o,"text"));
         if(secretEntry(o)&&!flag(o,"done"))return "status_locked";
+        String boss=bossKey(o);if(!boss.isEmpty())return "boss_"+boss;
         if(s.contains("elitemobs")){
             if(s.contains("berserker"))return "elite_berserker";
             if(s.contains("campe"))return "elite_champion";
@@ -446,9 +519,26 @@ public final class ProgressScreen extends Screen {
         if(s.contains("wither"))return "wither";
         if(s.contains("derrotar"))return "category_bosses";
         String material=s.contains("netherita")?"netherite":s.contains("diamante")?"diamond":s.contains("hierro")?"iron":s.contains("cobre")?"copper":s.contains("piedra")?"stone":s.contains("madera")?"wooden":stage==0?"wooden":stage==1?"stone":stage==2?"copper":stage==3?"iron":"diamond";
-        if(s.contains("pico"))return material.equals("netherite")?"netherite_sword":material+"_pickaxe";
-        if(s.contains("espada"))return material.equals("copper")?"copper_pickaxe":material+"_sword";
-        if(s.contains("casco")||s.contains("peto")||s.contains("botas")||s.contains("pantalones")||s.contains("armadura"))return switch(material){case "copper"->"copper_armor";case "netherite"->"netherite_armor";case "iron","diamond"->"iron_armor";default->"leather_armor";};
+        if(s.contains("thoridrop"))return "objective_thoridrop";
+        if(s.contains("tributo"))return "objective_tribute";
+        if(s.contains("comerciar")||s.contains("intercambiar"))return "objective_trade";
+        if(s.contains("maestria"))return "objective_mastery";
+        if(s.contains("crias"))return "objective_breeding";
+        if(s.contains("ciudad antigua"))return "ancient_city";
+        if(s.contains("aldea"))return "objective_village";
+        if(s.contains("estructura"))return "objective_discover";
+        if(s.contains("bioma"))return "objective_biomes";
+        if(s.contains("pico"))return material+"_pickaxe";
+        if(s.contains("espada"))return material+"_sword";
+        if(s.contains("hacha"))return material+"_axe";
+        if(s.contains("pala"))return material+"_shovel";
+        if(s.contains("azada"))return material+"_hoe";
+        String armor=s.contains("cuero")?"leather":material.equals("wooden")||material.equals("stone")?"leather":material;
+        if(s.contains("casco"))return armor+"_helmet";
+        if(s.contains("peto"))return armor+"_chestplate";
+        if(s.contains("pantalones"))return armor+"_leggings";
+        if(s.contains("botas"))return armor+"_boots";
+        if(s.contains("piedra"))return "objective_stone";
         if(s.contains("mesa")&&s.contains("trabajo"))return "crafting_table";
         if(s.contains("encant"))return "enchanting_table";
         if(s.contains("herreria"))return "smithing_table";
@@ -491,9 +581,9 @@ public final class ProgressScreen extends Screen {
         for(int i=0;i<SECTIONS.length;i++){
             int nx=navX(i),nw=navW(),ny=navY(),nh=navHeight();
             texture(g,section==i||inside(mouseX,mouseY,nx,ny,nw,nh)?"tab_active":"tab_normal",nx,ny,nw,nh);
-            int sz=Math.min(23,nh-11);
+            int sz=Math.min(21,nh-19);
             texture(g,SECTION_ART[i],nx+(nw-sz)/2,ny+2,sz,sz);
-            center(g,fit(SHORT_SECTIONS[i],nw-4),nx+nw/2,ny+nh-10,TEXT);
+            center(g,fit(SHORT_SECTIONS[i],nw-4),nx+nw/2,ny+nh-17,TEXT);
         }
         int[] subs=SECTION_TABS[section];
         for(int i=0;i<subs.length;i++)control(g,tab==subs[i]?"tab_active":"tab_normal",TITLES[subs[i]],subX(i,subs.length),subY(i,subs.length),subW(subs.length),18);
@@ -511,43 +601,54 @@ public final class ProgressScreen extends Screen {
         for(int i=from;i<to;i++){
             JsonObject o=list.get(i).getAsJsonObject();int ry=contentY()+(i-from)*rh;
             boolean ok=flag(o,"done");
-            texture(g,i==selected||inside(mouseX,mouseY,lx,ry,pw,rh-2)?"action_highlight":"action_normal",lx,ry,pw,rh-2);
-            int sz=Math.min(25,rh-6);
+            texture(g,i==selected?"action_highlight":"action_normal",lx,ry,pw,rh-2);
+            int sz=Math.max(8,Math.min(25,rh-6));
             texture(g,art(o),lx+5,ry+2,sz,sz);
             String label=secretEntry(o)&&!ok?"??? · Desafío oculto":val(o,"text");
             text(g,fit(label,pw-sz-35),lx+sz+9,ry+(rh-10)/2,TEXT);
-            texture(g,ok?"status_complete":"status_pending",lx+pw-22,ry+(rh-18)/2,17,17);
+            texture(g,ok?"status_complete":secretEntry(o)?"status_locked":"status_pending",lx+pw-22,ry+(rh-18)/2,17,17);
         }
-        texture(g,"arrow_previous",lx,py(850),22,20);
-        texture(g,"arrow_next",lx+pw-22,py(850),22,20);
-        center(g,"Página "+(page+1)+" / "+pageStarts.size(),lx+pw/2,py(850)+6,TEXT);
+        texture(g,"arrow_previous",lx,py(790),22,20);
+        texture(g,"arrow_next",lx+pw-22,py(790),22,20);
+        center(g,"Página "+(page+1)+" / "+pageStarts.size(),lx+pw/2,py(790)+6,TEXT);
         center(g,"Progreso general: "+getInt("overallPercent")+"%",rx+pw/2,py(240),TEXT);
         bar(g,rx,py(268),pw,12,getInt("overallPercent"),100);
         JsonObject o=chosen();
         if(o!=null){
             boolean ok=flag(o,"done");
             String label=secretEntry(o)&&!ok?"Desafío oculto":val(o,"text");
-            int sz=Math.min(34,panelH()*75/1000);
+            int sz=Math.min(42,panelH()*92/1000);
             texture(g,art(o),rx,py(310),sz,sz);
             int ty=py(310)+3;
             for(String line:wrap(label,Math.max(20,pw-sz-10))){if(ty+9>py(405))break;text(g,line,rx+sz+6,ty,TEXT);ty+=10;}
             texture(g,"separator_gold",rx,py(407),pw,6);
             List<String> lines=new ArrayList<>();
             lines.add("Estado: "+(ok?"Completado":"Pendiente"));
+            String boss=bossKey(o);
+            if(!boss.isEmpty()){
+                lines.add("");lines.add("LOCALIZACIÓN");
+                lines.add("Dimensión: "+(boss.equals("fire_centaur")||boss.equals("volcanic_golem")?"Nether":"Overworld"));
+                lines.addAll(wrap(bossStructure(boss),pw-12));
+                lines.add("");lines.addAll(wrap("Busca la estructura con tu brújula de exploración y derrota al jefe para registrar la victoria.",pw-12));
+            }
             if(o.has("progress")&&o.has("target"))lines.add("Progreso: "+val(o,"progress")+" / "+val(o,"target"));
             if(secretEntry(o)&&!ok){lines.addAll(wrap("Pista: "+val(o,"hint"),pw-12));}
             else for(String key:new String[]{"detail","description","requires","origin","reward","items","xp","inventory","missing","threshold"}){
-                String v=val(o,key);if(!v.isEmpty())lines.addAll(wrap((key.equals("reward")?"Recompensa: ":key.equals("items")?"Objetos: ":key.equals("xp")?"XP: ":key.equals("threshold")?"Puntos: ":key.equals("inventory")?"Disponibles: ":key.equals("missing")?"Faltan: ":"")+v,pw-12));
+                String v=val(o,key);if(key.equals("detail")&&!boss.isEmpty())continue;if(!v.isEmpty())lines.addAll(wrap((key.equals("reward")?"Recompensa: ":key.equals("items")?"Objetos: ":key.equals("xp")?"XP: ":key.equals("threshold")?"Puntos: ":key.equals("inventory")?"Disponibles: ":key.equals("missing")?"Faltan: ":"")+v,pw-12));
             }
-            int dy=py(440),maxLines=Math.max(1,(py(815)-dy)/11);
+            if(boss.isEmpty()&&!secretEntry(o)){
+                String guide=explanation(o);
+                if(!guide.isEmpty()){lines.add("");lines.add("CÓMO COMPLETARLO");lines.addAll(wrap(guide,pw-12));}
+            }
+            int dy=py(440),maxLines=Math.max(1,(py(755)-dy)/11);
             detailPage=Math.min(detailPage,Math.max(0,(lines.size()-1)/maxLines));
             int first=detailPage*maxLines;
             for(int i=first;i<Math.min(lines.size(),first+maxLines);i++){text(g,lines.get(i),rx+4,dy,i==0?(ok?GREEN:RED):TEXT);dy+=11;}
-            if(lines.size()>maxLines)center(g,"Detalles "+(detailPage+1)+"/"+((lines.size()+maxLines-1)/maxLines)+" · rueda",rx+pw/2,py(825),MUTED);
+            if(lines.size()>maxLines)center(g,"Detalles "+(detailPage+1)+"/"+((lines.size()+maxLines-1)/maxLines)+" · rueda",rx+pw/2,py(770),MUTED);
             String act=action(o);
-            control(g,act.isEmpty()?"action_disabled":"action_highlight",act.isEmpty()?"Sin acción":act,rx,py(850),pw/2-2,20);
+            if(!act.isEmpty())control(g,"action_highlight",act,rx,py(790),pw/2-2,20);
             String secondary=tab==20&&flag(o,"delivery")?"ABANDONAR":section==4?"INSIGNIA":"";
-            if(!secondary.isEmpty())control(g,"action_normal",secondary,rx+pw/2,py(850),pw/2,20);
+            if(!secondary.isEmpty())control(g,"action_normal",secondary,rx+pw/2,py(790),pw/2,20);
         }else center(g,"Sin objetivos",rx+pw/2,py(420),MUTED);
         super.extractRenderState(g,mouseX,mouseY,delta);
     }

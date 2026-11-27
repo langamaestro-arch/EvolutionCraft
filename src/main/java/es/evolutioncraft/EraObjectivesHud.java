@@ -91,7 +91,7 @@ public final class EraObjectivesHud {
         String s=java.text.Normalizer.normalize(label.toLowerCase(java.util.Locale.ROOT),java.text.Normalizer.Form.NFD).replaceAll("\\p{M}","");
         if(s.contains("thoridrop"))return "objective_thoridrop";
         if(s.contains("tributo"))return "objective_tribute";
-        if(s.contains("pesca")||s.contains("pez"))return "category_fishing";
+        if(s.contains("pesca")||s.contains("pez")||s.contains("redes"))return "category_fishing";
         if(s.contains("bioma")||s.contains("explor")||s.contains("estructura"))return "hud_explore";
         if(s.contains("derrot")||s.contains("matar"))return "category_bosses";
         if(s.contains("cosecha")||s.contains("cultiv"))return "category_farming";
@@ -119,7 +119,12 @@ public final class EraObjectivesHud {
     }
     private static int pos(int size,int n,int base){return Math.round(size*n/(float)base);}
     private static void centered(GuiGraphicsExtractor g,Minecraft mc,String s,int x,int y,int w,int color){
-        s=fit(mc,s,w);g.text(mc.font,s,x+(w-mc.font.width(s))/2,y,color,false);
+        float scale=Math.min(1f,w/(float)Math.max(1,mc.font.width(s)));
+        g.pose().pushMatrix();
+        g.pose().translate(x+w/2f,y);
+        g.pose().scale(scale,scale);
+        g.text(mc.font,s,-mc.font.width(s)/2,0,color,false);
+        g.pose().popMatrix();
     }
     private static void render(GuiGraphicsExtractor g,net.minecraft.client.DeltaTracker unused){
         Minecraft mc=Minecraft.getInstance();
@@ -130,7 +135,7 @@ public final class EraObjectivesHud {
         int x=5,y=12,bottom=g.guiHeight()-42;
         int panels=(eraVisible?1:0)+(show?1:0);
         if(panels==0)return;
-        int w=Math.min(200,Math.min(g.guiWidth()/3,(bottom-y-6*(panels-1))*3/(4*panels)));
+        int w=Math.min(200,Math.min(g.guiWidth()/3,(bottom-y-6*(panels-1))*400/((eraVisible?533:0)+(show?456:0))));
         if(w<90)return;
         int h=Math.round(w*4f/3f);
         if(eraVisible){
@@ -147,14 +152,17 @@ public final class EraObjectivesHud {
                 int n=Math.min(2,ls.size());
                 for(int j=0;j<n;j++)g.text(mc.font,fit(mc,ls.get(j)+(j==1&&ls.size()>2?"…":""),tw),tx,cy-n*5+j*10,WHITE,false);
             }
-            centered(g,mc,entries.size()>count?"+"+(entries.size()-count)+" objetivos · P":"J: ocultar · P: guía",x+pos(w,65,400),y+pos(h,473,533),pos(w,270,400),WHITE);
+            centered(g,mc,entries.size()>count?"+"+(entries.size()-count)+" objetivos pendientes":"J: ocultar · P: guía",x+pos(w,85,400),y+pos(h,459,533),pos(w,230,400),WHITE);
             y+=h+6;
         }
         if(show){
-            art(g,"hud_contracts",x,y,w,h);
+            int cut=pos(h,350,533),skip=pos(h,77,533);
+            var texture=Identifier.fromNamespaceAndPath(EvolutionCraft.ID,"textures/gui/hud_contracts.png");
+            g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,texture,x,y,0f,0f,w,cut,w,h);
+            g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,texture,x,y+cut,0f,cut+skip,w,h-cut-skip,w,h);
             centered(g,mc,"CONTRATOS",x+pos(w,110,400),y+pos(h,37,533),pos(w,180,400),0xFFFFE3A0);
             centered(g,mc,"Activos",x+pos(w,137,400),y+pos(h,72,533),pos(w,126,400),WHITE);
-            int count=Math.min(4,contracts.size());
+            int count=Math.min(3,contracts.size());
             for(int i=0;i<count;i++){
                 JsonObject o=contracts.get(i).getAsJsonObject();
                 int cy=y+pos(h,159+i*77,533),cx=x+pos(w,92,400),sz=pos(w,55,400);
@@ -162,11 +170,11 @@ public final class EraObjectivesHud {
                 int tx=x+pos(w,128,400),tw=pos(w,165,400);
                 int current=o.get("current").getAsInt(),required=o.get("required").getAsInt();
                 boolean ready=o.get("ready").getAsBoolean();
-                g.text(mc.font,fit(mc,o.get("title").getAsString(),tw),tx,cy-9,WHITE,false);
+                centered(g,mc,o.get("title").getAsString(),tx,cy-9,tw,WHITE);
                 String progress=ready?"LISTO":Math.min(current,required)+"/"+required;
                 g.text(mc.font,fit(mc,progress,tw),tx,cy+2,ready?GREEN:WHITE,false);
             }
-            centered(g,mc,contracts.size()>count?"+"+(contracts.size()-count)+" contratos · K":"K: ocultar",x+pos(w,100,400),y+pos(h,459,533),pos(w,200,400),WHITE);
+            centered(g,mc,contracts.size()>count?"+"+(contracts.size()-count)+" contratos · K":"K: ocultar",x+pos(w,100,400),y+pos(h,459,533)-skip,pos(w,200,400),WHITE);
         }
     }
 }

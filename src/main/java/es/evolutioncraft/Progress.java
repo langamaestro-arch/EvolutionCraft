@@ -8,6 +8,10 @@ public final class Progress {
     public static final String[] ERA_NAMES = {"Madera", "Piedra y cuero", "Cobre", "Hierro", "Diamante", "Netherita"};
     /** Administrador: -1 = progresion natural; 0..5 = era fijada expresamente. */
     public int adminEraOverride=-1;
+    public java.util.Map<String,Integer> eliteMobKills=new java.util.HashMap<>();
+    public boolean eliteMobMigrated, eliteNetherGrandfathered, eliteEndGrandfathered;
+    public transient boolean eliteMobGateActive;
+    public transient int[] eliteNetherRequirements, eliteEndRequirements;
     /** Administrative correction of individual era objectives: key era goal index. */
     public java.util.Map<String,Boolean> adminEraObjectives=new java.util.HashMap<>();
 
@@ -251,7 +255,7 @@ public final class Progress {
                agricultureLevel() >= 3 && husbandryLevel() >= 3 &&
                advancements.size() >= achievements &&
                overworldBiomes.size() >= biomeCount && explorationLevel() >= 4;
-        return original && (!nicktaleDimensionGateActive || !nicktaleDimensionMigrated ||
+        return original && EliteMobGate.ready(this,false) && (!nicktaleDimensionGateActive || !nicktaleDimensionMigrated ||
                nicktaleNetherGrandfathered || NicktaleDimensionGate.netherReady(this));
     }
     public boolean canEnd() {

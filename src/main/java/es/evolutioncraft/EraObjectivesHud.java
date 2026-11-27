@@ -118,8 +118,7 @@ public final class EraObjectivesHud {
         return s+"…";
     }
     private static void frame(GuiGraphicsExtractor g,Minecraft mc,String texture,String title,int x,int y,int w,int h){
-        FantasySkin.fortressFrame(g,x,y,w,h);
-        FantasySkin.panel(g,x+5,y+5,w-10,h-10);
+        art(g,texture,x,y,w,h);
         // A clean parchment inset covers the fixed decorative slots, allowing variable row counts.
         
         FantasySkin.ribbon(g,x+14,y+12,w-28,18);
@@ -142,10 +141,10 @@ public final class EraObjectivesHud {
                 g.text(mc.font,fit(mc,"ERA: "+state.get("eraName").getAsString(),w-36),x+18,y+34,WHITE,false);
                 for(int i=0;i<count;i++){
                     String label=entries.get(i).getAsString();int yy=y+46+i*30;
-                    FantasySkin.card(g,x+14,yy,w-28,29,false);
+                    
                     art(g,icon(label),x+15,yy,28,28);
                     List<String> ls=lines(mc,label,w-65);
-                    for(int j=0;j<Math.min(2,ls.size());j++)g.text(mc.font,fit(mc,ls.get(j)+(j==1&&ls.size()>2?"…":""),w-65),x+46,yy+4+j*10,WHITE,false);
+                    for(int j=0;j<Math.min(2,ls.size());j++)g.text(mc.font,fit(mc,ls.get(j)+(j==1&&ls.size()>2?"…":""),w-65),x+46,yy+(ls.size()==1?10:4)+j*10,WHITE,false);
                 }
                 String footer=entries.size()>count?"+"+(entries.size()-count)+" objetivos · P":entries.size()==0?"Sin objetivos pendientes":"J: ocultar · P: guía";
                 g.text(mc.font,fit(mc,footer,w-36),x+18,y+h-23,MUTED,false);
@@ -164,7 +163,7 @@ public final class EraObjectivesHud {
             int yy=y+34+i*36,current=o.get("current").getAsInt(),required=o.get("required").getAsInt();
             boolean ready=o.get("ready").getAsBoolean();
             String label=o.get("title").getAsString(),progress=ready?"LISTO":Math.min(current,required)+"/"+required;
-            FantasySkin.card(g,x+14,yy,w-28,35,false);
+            
             art(g,icon(label),x+15,yy+2,30,30);
             List<String> ls=lines(mc,label,w-66);
             for(int j=0;j<Math.min(2,ls.size());j++)g.text(mc.font,fit(mc,ls.get(j),w-66),x+48,yy+3+j*9,WHITE,false);

@@ -522,6 +522,7 @@ public final class ProgressScreen extends Screen {
         if(s.contains("thoridrop"))return "objective_thoridrop";
         if(s.contains("tributo"))return "objective_tribute";
         if(s.contains("comerciar")||s.contains("intercambiar"))return "objective_trade";
+        if(s.contains("maestria")&&s.contains("explor"))return "hud_explore";
         if(s.contains("maestria"))return "objective_mastery";
         if(s.contains("crias"))return "objective_breeding";
         if(s.contains("ciudad antigua"))return "ancient_city";

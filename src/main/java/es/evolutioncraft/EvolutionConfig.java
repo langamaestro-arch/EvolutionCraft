@@ -20,6 +20,8 @@ import java.util.Properties;
  */
 public final class EvolutionConfig {
     private static final Map<Path, EvolutionConfig> CONFIGS=new HashMap<>();
+    public final boolean eliteMobsEnabled;
+    public final int[] eliteNether=new int[5], eliteEnd=new int[5];
     public final int netherAdvancements;
     public final int endAdvancements;
     public final int netherBiomes;
@@ -43,6 +45,12 @@ public final class EvolutionConfig {
         return v==null?fallback:v.equalsIgnoreCase("true")?true:v.equalsIgnoreCase("false")?false:fallback;
     }
     private EvolutionConfig(Properties p){
+        eliteMobsEnabled=booleanValue(p,"elitemobs.enabled",true);
+        for(int i=0;i<5;i++){
+            String tier=EliteMobGate.TIERS[i].toLowerCase(java.util.Locale.ROOT);
+            eliteNether[i]=bounded(p,"elitemobs.nether."+tier,new int[]{20,10,5,0,0}[i],0,1000000);
+            eliteEnd[i]=bounded(p,"elitemobs.end."+tier,new int[]{50,25,15,5,0}[i],0,1000000);
+        }
         netherAdvancements=bounded(p,"nether.advancements",40,0,500);
         endAdvancements=bounded(p,"end.advancements",70,0,500);
         netherBiomes=bounded(p,"nether.overworld_biomes",20,0,100);
@@ -71,6 +79,12 @@ public final class EvolutionConfig {
             EvolutionCraftLogger.warn("No se pudo leer configuracion: "+e.getMessage());
         }
         int oldCount=p.size();
+        def(p,"elitemobs.enabled","true");
+        for(int i=0;i<5;i++){
+            String tier=EliteMobGate.TIERS[i].toLowerCase(java.util.Locale.ROOT);
+            def(p,"elitemobs.nether."+tier,Integer.toString(new int[]{20,10,5,0,0}[i]));
+            def(p,"elitemobs.end."+tier,Integer.toString(new int[]{50,25,15,5,0}[i]));
+        }
         def(p,"nether.advancements","40");
         def(p,"end.advancements","70");
         def(p,"nether.overworld_biomes","20");

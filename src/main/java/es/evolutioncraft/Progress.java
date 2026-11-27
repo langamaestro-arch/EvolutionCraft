@@ -271,7 +271,7 @@ public final class Progress {
                agricultureLevel() >= 5 && husbandryLevel() >= 5 &&
                advancements.size() >= endAdvancements &&
                advancements.contains("minecraft:nether/explore_nether");
-        return original && (!nicktaleDimensionGateActive || !nicktaleDimensionMigrated ||
+        return original && EliteMobGate.ready(this,true) && (!nicktaleDimensionGateActive || !nicktaleDimensionMigrated ||
                nicktaleEndGrandfathered || NicktaleDimensionGate.endReady(this));
     }
     /**
